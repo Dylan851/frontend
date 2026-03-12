@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: animal_go_postgres
+    env_file:
+      - ../backend/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - animal_go_net
+
+  backend:
+    build: ../backend
+    container_name: animal_go_backend
+    env_file:
+      - ../backend/.env
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    networks:
+      - animal_go_net
+
+  frontend:
+    image: ghcr.io/cirruslabs/flutter:stable
+    container_name: animal_go_frontend
+    working_dir: /workspace
+    volumes:
+      - "./:/workspace"
+    command: >
+      sh -lc "flutter pub get &&
+      flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080
+      --dart-define=API_BASE_URL=http://localhost:8000"
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+    networks:
+      - animal_go_net
+
+volumes:
+  postgres_data:
+
+networks:
+  animal_go_net:
+    driver: bridge
