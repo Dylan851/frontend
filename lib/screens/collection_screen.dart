@@ -12,7 +12,8 @@ class CollectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = GameState();
-    final animals = AnimalCatalog.all;
+    // Incluye tanto el catálogo clásico como el Basic Pack (Kanto).
+    final animals = [...AnimalCatalog.all, ...AnimalCatalog.basicPack];
 
     return Scaffold(
       body: Stack(children: [
@@ -104,12 +105,34 @@ class _AnimalCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(children: [
-              // Emoji (o silueta si no descubierto)
-              Text(
-                discovered ? animal.emoji : '❓',
-                style: TextStyle(
-                  fontSize: 36,
-                  color: discovered ? null : Colors.white.withOpacity(0.1)),
+              // Sprite (primer frame) si está disponible y descubierto,
+              // si no → emoji o interrogante.
+              SizedBox(
+                width: 44, height: 44,
+                child: (discovered && animal.spriteAsset != null)
+                    ? ClipRect(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: 0.25, // mostrar solo el 1er frame (1/4)
+                          child: Image.asset(
+                            'assets/images/${animal.spriteAsset}',
+                            width: 176, height: 44,
+                            filterQuality: FilterQuality.none,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          discovered ? animal.emoji : '❓',
+                          style: TextStyle(
+                            fontSize: 36,
+                            color: discovered
+                                ? null
+                                : Colors.white.withOpacity(0.1),
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,6 +224,32 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
           // Descripción
           Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(a.description, style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13, height: 1.5))),
+
+          const SizedBox(height: 12),
+
+          // Dato Wikipedia
+          if (a.wikiFact.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.greenAccent.withOpacity(0.25)),
+                ),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('📚', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(a.wikiFact,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.82),
+                        fontSize: 11, height: 1.45)),
+                  ),
+                ]),
+              ),
+            ),
 
           const SizedBox(height: 14),
 

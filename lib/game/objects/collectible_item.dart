@@ -21,8 +21,16 @@ class CollectibleItem extends GameDecoration with Sensor {
     required Vector2 position,
     required this.itemType,
     required this.itemId,
-  }) : super(position: position, size: Vector2.all(_tileSize)) {
-    setupSensorArea(CircleHitbox(radius: _tileSize * 0.7));
+  }) : super(position: position, size: Vector2.all(_tileSize));
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    add(CircleHitbox(
+      radius: _tileSize * 0.7,
+      collisionType: CollisionType.passive,
+      isSolid: true,
+    ));
   }
 
   String get emoji {
@@ -105,7 +113,7 @@ class CollectibleItem extends GameDecoration with Sensor {
   void _collect() {
     _collected = true;
     _animating = true;
-    GameState().collectItem(itemId);
+    GameState().collectMapItem(itemId);
 
     // Mostrar +puntos flotando
     gameRef.add(

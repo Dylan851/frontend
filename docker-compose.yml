@@ -1,46 +1,49 @@
-services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: animal_go_postgres
-    env_file:
-      - ../backend/.env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - animal_go_net
+# docker-compose.yml
+# Entorno de desarrollo local para FastAPI + Flutter.
+#
+# IMPORTANTE SOBRE URLS:
+# - En el PC (Flutter desktop), "localhost" apunta al host real.
+# - En el emulador Android, "localhost" apunta al propio emulador (no al PC).
+# - 10.0.2.2 es un alias especial del emulador Android que apunta al host (tu PC).
+# - Los contenedores Docker tienen su propio "localhost" interno.
+#   Por eso el backend se expone con ports 8000:8000 y se accede desde el host.
+#
+# Listo para desarrollo local y fácil de migrar a Render (solo cambia variables de entorno).
 
+services:
   backend:
-    build: ../backend
-    container_name: animal_go_backend
-    env_file:
-      - ../backend/.env
-    depends_on:
-      - postgres
+    build:
+      context: ../backend
+    # DNS explícito para evitar fallos de resolución dentro del contenedor.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "8000:8000"
-    networks:
-      - animal_go_net
-
-  frontend:
-    image: ghcr.io/cirruslabs/flutter:stable
-    container_name: animal_go_frontend
-    working_dir: /workspace
+    # Montamos el código para desarrollo: cambios en el host se reflejan en el contenedor.
     volumes:
-      - "./:/workspace"
-    command: >
-      sh -lc "flutter pub get &&
-      flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080
-      --dart-define=API_BASE_URL=http://localhost:8000"
-    depends_on:
-      - backend
-    ports:
-      - "8080:8080"
-    networks:
-      - animal_go_net
+      - ../backend:/app
+    # Variables de entorno desde .env (buena práctica para separar config del código).
+    env_file:
+      # .env específico del backend (DATABASE_URL, JWT_SECRET, etc.)
+      - ../backend/.env
+    # Uvicorn en modo desarrollo con autoreload.
+    command: uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --reload
+    # Healthcheck para saber si el backend responde.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-volumes:
-  postgres_data:
-
-networks:
-  animal_go_net:
-    driver: bridge
+  flutter:
+    # Contenedor solo para preparar el entorno (NO ejecuta la app).
+    # Descarga dependencias y se mantiene vivo para reutilizar el SDK.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    working_dir: /app
+    # Solo prepara dependencias. La app se ejecuta en el host con: flutter run
+    command: bash -lc "flutter pub get && tail -f /dev/null"

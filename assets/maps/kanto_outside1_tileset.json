@@ -1,0 +1,1628 @@
+{
+  "columns": 8,
+  "image": "tiles/outside1_spring.png",
+  "imageheight": 6752,
+  "imagewidth": 256,
+  "margin": 0,
+  "name": "outside1_spring",
+  "spacing": 0,
+  "tilecount": 1688,
+  "tileheight": 32,
+  "tilewidth": 32,
+  "type": "tileset",
+  "version": "1.10",
+  "tiles": [
+    {
+      "id": 680,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 681,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 682,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 683,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 684,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 685,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 688,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 689,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 690,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 691,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 692,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 693,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 696,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 697,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 698,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 699,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 700,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 701,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1056,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1057,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1058,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1059,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1060,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1061,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1062,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1063,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1064,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1065,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1066,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1067,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1068,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1069,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1070,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1072,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1073,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1074,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1075,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1076,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1077,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1080,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1081,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1082,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1086,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1087,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1100,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1299,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1304,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1308,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1624,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1625,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1628,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1630,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1631,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1632,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1633,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1640,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1643,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1647,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1648,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1649,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1650,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 1685,
+      "type": "collision",
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 32,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "collision",
+            "visible": true,
+            "width": 32,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ]
+}

@@ -2,154 +2,114 @@
 import 'package:flutter/material.dart';
 import '../../data/game_state.dart';
 import '../../data/animal_data.dart';
-import '../../router/app_router.dart';
 import '../../theme/app_theme.dart';
 
 class HudOverlay extends StatefulWidget {
   static const String id = 'HudOverlay';
-  const HudOverlay({super.key});
+
+  final VoidCallback? onMenu;
+  final VoidCallback? onCollection;
+
+  const HudOverlay({
+    super.key,
+    this.onMenu,
+    this.onCollection,
+  });
+
   @override
   State<HudOverlay> createState() => _HudOverlayState();
 }
 
 class _HudOverlayState extends State<HudOverlay> {
-  final _state = GameState();
+  final _gs = GameState();
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Stack(
-        children: [
-          // ── TOP BAR ──
-          Positioned(
-            top: 8, left: 10, right: 10,
-            child: Row(children: [
-              // Botón volver
-              _hudBtn(
-                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
-                onTap: () => Navigator.of(context).pushReplacementNamed(AppRouter.mainMenu),
-              ),
-              const SizedBox(width: 8),
-              // Conteo animales
-              _chip('🦊', '${_state.discoveredCount}/${AnimalCatalog.all.length}'),
-              const Spacer(),
-              // Monedas
-              _chip('🪙', '${_state.coins}'),
-              const SizedBox(width: 8),
-              // Score
-              _chip('⭐', '${_state.score}'),
-              const SizedBox(width: 8),
-              // Colección
-              _hudBtn(
-                child: const Text('📖', style: TextStyle(fontSize: 18)),
-                onTap: () => Navigator.of(context).pushNamed(AppRouter.collection),
-              ),
-            ]),
-          ),
-
-          // ── MINI-MAPA (abajo derecha) ──
-          Positioned(
-            bottom: 70, right: 10,
-            child: _MiniMap(),
-          ),
-
-          // ── Indicador animales cercanos (abajo izq) ──
-          Positioned(
-            bottom: 70, left: 10,
-            child: _NearbyIndicator(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _hudBtn({required Widget child, required VoidCallback onTap}) =>
-    GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36, height: 36,
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
-        ),
-        child: Center(child: child),
-      ),
-    );
-
-  Widget _chip(String icon, String val) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(
-      color: Colors.black.withOpacity(0.5),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
-    ),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Text(icon, style: const TextStyle(fontSize: 13)),
-      const SizedBox(width: 4),
-      Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-    ]),
-  );
-}
-
-class _MiniMap extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 80, height: 80,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
-      ),
       child: Stack(children: [
-        Padding(
-          padding: const EdgeInsets.all(4),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
-            child: Container(color: const Color(0xFF2D7A3A),
-              child: const Center(child: Text('🗺️', style: TextStyle(fontSize: 30)))),
-          ),
-        ),
-        // Punto jugador
+        // ── Top bar ─────────────────────────────────────────────────────────
         Positioned(
-          left: 36, top: 36,
-          child: Container(
-            width: 8, height: 8,
-            decoration: BoxDecoration(
-              color: AppColors.greenAccent,
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: AppColors.greenAccent.withOpacity(0.8), blurRadius: 4)],
+          top: 8, left: 10, right: 10,
+          child: Row(children: [
+            // Back to menu
+            _iconBtn(
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 14),
+              onTap: widget.onMenu,
+            ),
+            const SizedBox(width: 8),
+            // Animal count
+            _chip('🐾', '${_gs.discoveredCount}/${AnimalCatalog.all.length}'),
+            const Spacer(),
+            // Coins
+            _chip('🪙', '${_gs.coins}'),
+            const SizedBox(width: 6),
+            // Score
+            _chip('⭐', '${_gs.score}'),
+            const SizedBox(width: 8),
+            // Collection
+            _iconBtn(
+              child: const Text('📖', style: TextStyle(fontSize: 16)),
+              onTap: widget.onCollection,
+            ),
+          ]),
+        ),
+
+        // ── Hint bar (bottom center) ─────────────────────────────────────
+        Positioned(
+          bottom: 82, left: 0, right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppColors.greenAccent.withOpacity(0.35), width: 1),
+              ),
+              child: Text(
+                '¡Explora y busca animales! 🦊 🦌 🦉 🦋 🐻 🐸',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.75), fontSize: 10),
+              ),
             ),
           ),
         ),
       ]),
     );
   }
-}
 
-class _NearbyIndicator extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.greenAccent.withOpacity(0.4), width: 1),
-      ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-          width: 8, height: 8,
+  Widget _iconBtn({required Widget child, VoidCallback? onTap}) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 34, height: 34,
           decoration: BoxDecoration(
-            color: AppColors.greenAccent,
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: AppColors.greenAccent.withOpacity(0.8), blurRadius: 5)],
+            color: Colors.black.withOpacity(0.52),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+                color: Colors.white.withOpacity(0.2), width: 1),
           ),
+          child: Center(child: child),
         ),
-        const SizedBox(width: 6),
-        Text('Explora el mapa', style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 11)),
-      ]),
-    );
-  }
+      );
+
+  Widget _chip(String icon, String val) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.52),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+              color: Colors.white.withOpacity(0.18), width: 1),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(icon, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Text(val,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11)),
+        ]),
+      );
 }

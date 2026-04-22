@@ -37,10 +37,9 @@ class _EncounterOverlayState extends State<EncounterOverlay>
     _fade  = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.4)));
     _ctrl.forward();
 
+    // Solo informamos si ya estaba descubierto; NO lo descubrimos aquí.
+    // El animal se desbloquea únicamente al ganar el minijuego.
     _alreadyDiscovered = GameState().isAnimalDiscovered(widget.animal.id);
-    if (!_alreadyDiscovered) {
-      GameState().discoverAnimal(widget.animal.id);
-    }
   }
 
   @override
@@ -76,7 +75,10 @@ class _EncounterOverlayState extends State<EncounterOverlay>
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                   child: Column(children: [
                     _buildInfo(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
+                    if (widget.animal.sound.isNotEmpty) _buildSoundBubble(),
+                    if (widget.animal.sound.isNotEmpty)
+                      const SizedBox(height: 10),
                     _buildFact(),
                     const SizedBox(height: 16),
                     _buildButtons(),
@@ -128,6 +130,34 @@ class _EncounterOverlayState extends State<EncounterOverlay>
         child: Container(width: 30, height: 30,
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
           child: const Icon(Icons.close, color: Colors.white, size: 16)),
+      ),
+    ]),
+  );
+
+  Widget _buildSoundBubble() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(colors: [
+        AppColors.greenAccent.withOpacity(0.18),
+        AppColors.greenAccent.withOpacity(0.05),
+      ]),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.greenAccent.withOpacity(0.35)),
+    ),
+    child: Row(children: [
+      const Text('🔊', style: TextStyle(fontSize: 18)),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          widget.animal.sound,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontStyle: FontStyle.italic,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     ]),
   );

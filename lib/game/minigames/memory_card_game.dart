@@ -2,6 +2,7 @@
 // Minijuego: Voltea las cartas y encuentra las parejas de animales
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'dart:math';
 import '../../data/animal_data.dart';
 import '../../theme/app_theme.dart';
@@ -13,7 +14,8 @@ class MemoryCardGame extends StatefulWidget {
   @override State<MemoryCardGame> createState() => _MemoryCardGameState();
 }
 
-class _MemoryCardGameState extends State<MemoryCardGame> {
+class _MemoryCardGameState extends State<MemoryCardGame>
+    with SingleTickerProviderStateMixin {
   static const _emojis = ['🦉','🦊','🐻','🦌','🦋','🐸'];
   late List<String> _cards;
   final List<bool> _flipped = List.filled(12, false);
@@ -31,7 +33,7 @@ class _MemoryCardGameState extends State<MemoryCardGame> {
     super.initState();
     final doubled = [..._emojis, ..._emojis]..shuffle(Random());
     _cards = doubled;
-    _ticker = Ticker(_onTick)..start();
+    _ticker = createTicker(_onTick)..start();
   }
 
   void _onTick(Duration d) {
