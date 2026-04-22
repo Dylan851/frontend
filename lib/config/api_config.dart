@@ -4,10 +4,14 @@
 /// You can change the baseUrl here based on your environment.
 
 class ApiConfig {
-  // API Base URL - Change this based on your environment
-  // For development: http://localhost:8000
-  // For production: Update with your production URL
-  static const String baseUrl = 'http://localhost:8000';
+  // Set with --dart-define=API_BASE_URL=https://your-backend.onrender.com
+  static const String _rawBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
+  static String get baseUrl => _rawBaseUrl.endsWith('/')
+      ? _rawBaseUrl.substring(0, _rawBaseUrl.length - 1)
+      : _rawBaseUrl;
 
   // API Endpoints
   static const String healthCheck = '/health';
@@ -15,26 +19,28 @@ class ApiConfig {
   // Auth endpoints
   static const String loginEndpoint = '/auth/login';
   static const String registerEndpoint = '/auth/register';
-  static const String logoutEndpoint = '/auth/logout';
 
   // Player endpoints
-  static const String playersEndpoint = '/players';
-  static String playerEndpoint(String playerId) => '/players/$playerId';
+  static const String playerProfileEndpoint = '/player/profile';
+  static const String playerLocationEndpoint = '/player/location';
+  static const String playerInventoryEndpoint = '/player/inventory';
 
   // Animal endpoints
   static const String animalsEndpoint = '/animals';
-  static String animalEndpoint(int animalId) => '/animals/$animalId';
-  static String captureAnimalEndpoint(int animalId) => '/animals/$animalId/capture';
+  static const String nearbyAnimalsEndpoint = '/animals/nearby';
+  static const String captureAnimalEndpoint = '/animals/capture';
 
   // Map endpoints
   static const String mapsEndpoint = '/maps';
-  static String mapEndpoint(int mapId) => '/maps/$mapId';
-  static String mapNpcsEndpoint(int mapId) => '/maps/$mapId/npcs';
-  static String mapEnemiesEndpoint(int mapId) => '/maps/$mapId/enemies';
+  static const String unlockedMapsEndpoint = '/maps/unlocked';
+  static const String unlockMapEndpoint = '/maps/unlock';
+  static String mapNpcsEndpoint(int mapId) => '/npc/map/$mapId';
+  static String mapEnemiesEndpoint(int mapId) => '/enemies/map/$mapId';
+  static String enemyDefeatEndpoint(int enemyId) => '/enemies/$enemyId/defeat';
 
   // Shop endpoints
-  static const String shopItemsEndpoint = '/shop/items';
-  static const String shopPurchaseEndpoint = '/shop/purchase';
+  static const String shopItemsEndpoint = '/shop';
+  static const String shopPurchaseEndpoint = '/shop/buy';
 
   // Request timeouts
   static const Duration connectionTimeout = Duration(seconds: 10);

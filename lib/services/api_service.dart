@@ -1,43 +1,43 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class ApiService {
-  static const String baseUrl = 'http://localhost:8000';
+import 'package:http/http.dart' as http;
 
-  // Endpoints
-  static const String healthEndpoint = '/health';
-  static const String authEndpoint = '/auth';
-  static const String playerEndpoint = '/players';
-  static const String animalsEndpoint = '/animals';
-  static const String mapsEndpoint = '/maps';
-  static const String shopEndpoint = '/shop';
+import '../config/api_config.dart';
+
+class ApiService {
+  static String get baseUrl => ApiConfig.baseUrl;
+
+  static Uri _uri(String endpoint) => Uri.parse('${ApiConfig.baseUrl}$endpoint');
+
+  static Map<String, String> _headers({String? token}) {
+    final headers = {'Content-Type': 'application/json'};
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
 
   static Future<Map<String, dynamic>> healthCheck() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl$healthEndpoint'),
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {'success': false, 'error': 'Health check failed'};
-      }
+      final response = await http
+          .get(_uri(ApiConfig.healthCheck), headers: _headers())
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  // Auth methods
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(String identifier, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl$authEndpoint/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .post(
+            _uri(ApiConfig.loginEndpoint),
+            headers: _headers(),
+            body: jsonEncode({'identifier': identifier, 'password': password}),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
@@ -49,198 +49,180 @@ class ApiService {
     String username,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl$authEndpoint/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'username': username,
-        }),
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .post(
+            _uri(ApiConfig.registerEndpoint),
+            headers: _headers(),
+            body: jsonEncode({
+              'email': email,
+              'password': password,
+              'username': username,
+            }),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  // Player methods
-  static Future<Map<String, dynamic>> getPlayerData(String playerId, {String? token}) async {
+  static Future<Map<String, dynamic>> getPlayerProfile({String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl$playerEndpoint/$playerId'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .get(_uri(ApiConfig.playerProfileEndpoint), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  static Future<Map<String, dynamic>> updatePlayerData(
-    String playerId,
-    Map<String, dynamic> data, {
+  static Future<Map<String, dynamic>> updatePlayerLocation(
+    double coordLat,
+    double coordLng, {
     String? token,
   }) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.put(
-        Uri.parse('$baseUrl$playerEndpoint/$playerId'),
-        headers: headers,
-        body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .put(
+            _uri(ApiConfig.playerLocationEndpoint),
+            headers: _headers(token: token),
+            body: jsonEncode({'coord_lat': coordLat, 'coord_lng': coordLng}),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  // Animals methods
-  static Future<Map<String, dynamic>> getAnimals({String? token}) async {
+  static Future<Map<String, dynamic>> getPlayerInventory({String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl$animalsEndpoint'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .get(_uri(ApiConfig.playerInventoryEndpoint), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  static Future<Map<String, dynamic>> getAnimal(int animalId, {String? token}) async {
+  static Future<Map<String, dynamic>> getNearbyAnimals({String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl$animalsEndpoint/$animalId'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .get(_uri(ApiConfig.nearbyAnimalsEndpoint), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  static Future<Map<String, dynamic>> captureAnimal(
-    String playerId,
-    int animalId, {
-    String? token,
-  }) async {
+  static Future<Map<String, dynamic>> captureAnimal(int animalId, {String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.post(
-        Uri.parse('$baseUrl$animalsEndpoint/$animalId/capture'),
-        headers: headers,
-        body: jsonEncode({'player_id': playerId}),
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .post(
+            _uri(ApiConfig.captureAnimalEndpoint),
+            headers: _headers(token: token),
+            body: jsonEncode({'animal_id': animalId}),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  // Maps methods
   static Future<Map<String, dynamic>> getMaps({String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl$mapsEndpoint'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .get(_uri(ApiConfig.mapsEndpoint), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  static Future<Map<String, dynamic>> getMapData(int mapId, {String? token}) async {
+  static Future<Map<String, dynamic>> getUnlockedMaps({String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl$mapsEndpoint/$mapId'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .get(_uri(ApiConfig.unlockedMapsEndpoint), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  // Shop methods
+  static Future<Map<String, dynamic>> unlockMap(int mapId, {String? token}) async {
+    try {
+      final response = await http
+          .post(
+            _uri('${ApiConfig.unlockMapEndpoint}?map_id=$mapId'),
+            headers: _headers(token: token),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMapNpcs(int mapId, {String? token}) async {
+    try {
+      final response = await http
+          .get(_uri(ApiConfig.mapNpcsEndpoint(mapId)), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMapEnemies(int mapId, {String? token}) async {
+    try {
+      final response = await http
+          .get(_uri(ApiConfig.mapEnemiesEndpoint(mapId)), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>> defeatEnemy(int enemyId, {String? token}) async {
+    try {
+      final response = await http
+          .post(_uri(ApiConfig.enemyDefeatEndpoint(enemyId)), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
   static Future<Map<String, dynamic>> getShopItems({String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl$shopEndpoint/items'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .get(_uri(ApiConfig.shopItemsEndpoint), headers: _headers(token: token))
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
 
-  static Future<Map<String, dynamic>> purchaseItem(
-    String playerId,
-    int itemId, {
-    String? token,
-  }) async {
+  static Future<Map<String, dynamic>> purchaseItem(int itemId, {String? token}) async {
     try {
-      final headers = {'Content-Type': 'application/json'};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.post(
-        Uri.parse('$baseUrl$shopEndpoint/purchase'),
-        headers: headers,
-        body: jsonEncode({'player_id': playerId, 'item_id': itemId}),
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(response.body);
+      final response = await http
+          .post(
+            _uri(ApiConfig.shopPurchaseEndpoint),
+            headers: _headers(token: token),
+            body: jsonEncode({'item_id': itemId}),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
