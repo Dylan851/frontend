@@ -3,7 +3,10 @@ set -euo pipefail
 
 # Ensure Flutter is available in Render build environment.
 if ! command -v flutter >/dev/null 2>&1; then
-  git clone https://github.com/flutter/flutter.git --depth 1 -b stable "$HOME/flutter"
+  # Reuse cached Flutter SDK directory on Render if it already exists.
+  if [ ! -d "$HOME/flutter" ]; then
+    git clone https://github.com/flutter/flutter.git --depth 1 -b stable "$HOME/flutter"
+  fi
   export PATH="$HOME/flutter/bin:$PATH"
 fi
 
