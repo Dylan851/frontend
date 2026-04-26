@@ -16,63 +16,80 @@ class CollectionScreen extends StatelessWidget {
     final animals = [...AnimalCatalog.all, ...AnimalCatalog.basicPack];
 
     return Scaffold(
-      body: Stack(children: [
-        // Fondo
-        Container(decoration: const BoxDecoration(gradient: LinearGradient(
-          begin: Alignment.topCenter, end: Alignment.bottomCenter,
-          colors: [AppColors.greenDark, AppColors.greenMid]))),
-
-        Column(children: [
-          // Header
-          SafeArea(child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(width: 38, height: 38,
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white.withOpacity(0.2))),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16)),
-              ),
-              const SizedBox(width: 14),
-              const Text('📖  Mi Colección', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: 1)),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.greenAccent.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.greenAccent.withOpacity(0.4))),
-                child: Text('${state.discoveredCount}/${animals.length} descubiertos',
-                  style: const TextStyle(color: AppColors.greenAccent, fontWeight: FontWeight.bold, fontSize: 13))),
-            ]),
-          )),
-
-          // Barra de progreso global
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ClipRRect(borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: state.discoveredCount / animals.length,
-                minHeight: 8,
-                backgroundColor: Colors.white.withOpacity(0.1),
-                valueColor: const AlwaysStoppedAnimation(AppColors.greenAccent)))),
-
-          const SizedBox(height: 16),
-
-          // Grid de animales
-          Expanded(child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.6),
-              itemCount: animals.length,
-              itemBuilder: (_, i) => _AnimalCard(animal: animals[i], state: state),
+      backgroundColor: const Color(0xFF0A1A10),
+      body: MenuBackdrop(
+        dim: 0.5,
+        child: SafeArea(
+          child: Column(children: [
+            GameHeader(
+              title: 'Mi Colección',
+              trailing: [
+                WoodChip(
+                  icon: '📖',
+                  label: '${state.discoveredCount}/${animals.length} descubiertos',
+                ),
+              ],
             ),
-          )),
-        ]),
-      ]),
+            // Barra de progreso global
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Container(
+                height: 12,
+                decoration: BoxDecoration(
+                  color: GameTone.woodOuter,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: GameTone.goldTrim, width: 1.2),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: FractionallySizedBox(
+                    widthFactor: animals.isEmpty ? 0 : (state.discoveredCount / animals.length),
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          Color(0xFFF6C76B), Color(0xFFD4A04A),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Grid de animales
+            Expanded(child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.4),
+                itemCount: animals.length,
+                itemBuilder: (_, i) => _AnimalCard(animal: animals[i], state: state),
+              ),
+            )),
+            // Bottom tip bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: PixelFrame(
+                radius: 12,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(children: const [
+                  Text('📗', style: TextStyle(fontSize: 18)),
+                  SizedBox(width: 10),
+                  Expanded(child: Text(
+                    'Explora los biomas para descubrir nuevas especies.',
+                    style: TextStyle(
+                      color: GameTone.textGold,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      letterSpacing: 0.4,
+                    ),
+                  )),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+      ),
     );
   }
 }
@@ -89,83 +106,96 @@ class _AnimalCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: discovered ? () => _showDetail(context) : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          gradient: discovered
-            ? const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)])
-            : LinearGradient(colors: [Colors.black.withOpacity(0.4), Colors.black.withOpacity(0.3)]),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: discovered ? AppColors.greenAccent.withOpacity(0.4) : Colors.white.withOpacity(0.08),
-            width: discovered ? 1.5 : 1),
-        ),
+      child: PixelFrame(
+        radius: 12,
+        innerFill: discovered
+            ? const Color(0xFF1F3A20)
+            : const Color(0xFF1A1A14),
+        padding: const EdgeInsets.all(8),
         child: Stack(children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(children: [
-              // Sprite (primer frame) si está disponible y descubierto,
-              // si no → emoji o interrogante.
-              SizedBox(
-                width: 44, height: 44,
+          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Expanded(
+              child: Center(
                 child: (discovered && animal.spriteAsset != null)
                     ? ClipRect(
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          widthFactor: 0.25, // mostrar solo el 1er frame (1/4)
+                          widthFactor: 0.25,
                           child: Image.asset(
                             'assets/images/${animal.spriteAsset}',
-                            width: 176, height: 44,
+                            width: 256, height: 64,
                             filterQuality: FilterQuality.none,
                             fit: BoxFit.fill,
                           ),
                         ),
                       )
-                    : Center(
-                        child: Text(
-                          discovered ? animal.emoji : '❓',
-                          style: TextStyle(
-                            fontSize: 36,
-                            color: discovered
-                                ? null
-                                : Colors.white.withOpacity(0.1),
+                    : Stack(alignment: Alignment.center, children: [
+                        // Silhouette of emoji (locked) or color (discovered)
+                        ColorFiltered(
+                          colorFilter: discovered
+                              ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+                              : const ColorFilter.mode(Color(0xFF050505), BlendMode.srcATop),
+                          child: Text(
+                            animal.emoji,
+                            style: const TextStyle(fontSize: 48),
                           ),
                         ),
-                      ),
+                        if (!discovered)
+                          const Text('?',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFD4A04A),
+                              )),
+                      ]),
               ),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(discovered ? animal.name : '???',
-                  style: TextStyle(
-                    color: discovered ? Colors.white : Colors.white.withOpacity(0.25),
-                    fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 3),
-                if (discovered) ...[
-                  Text(animal.habitat, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
-                  Text(animal.diet,    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 9)),
-                ] else
-                  Text('Sin descubrir', style: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 10)),
-              ])),
-            ]),
-          ),
-
-          // Insignia minijuego completado
-          if (discovered && minigameDone)
-            Positioned(top: 8, right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.gold.withOpacity(0.4))),
-                child: const Text('⭐ Completado', style: TextStyle(color: AppColors.gold, fontSize: 8, fontWeight: FontWeight.bold)))),
-
-          // Candado si no descubierto
+            ),
+            const SizedBox(height: 4),
+            Text(discovered ? animal.name : '???',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: discovered
+                      ? GameTone.textCream
+                      : GameTone.textCream.withOpacity(0.4),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 0.4,
+                  shadows: const [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 1), blurRadius: 0)],
+                )),
+            const SizedBox(height: 1),
+            Text(discovered ? animal.habitat : 'Sin descubrir',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: discovered
+                      ? GameTone.textGold.withOpacity(0.85)
+                      : GameTone.textCream.withOpacity(0.3),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  fontStyle: discovered ? FontStyle.normal : FontStyle.italic,
+                )),
+          ]),
+          // Lock badge centered for non-discovered
           if (!discovered)
-            Positioned.fill(child: Center(
-              child: Text('🔒', style: TextStyle(fontSize: 28, color: Colors.white.withOpacity(0.15))))),
+            const Positioned(
+              right: 0, left: 0, bottom: 28,
+              child: Center(child: Text('🔒', style: TextStyle(fontSize: 16))),
+            ),
+          // Star badge (minigame complete)
+          if (discovered && minigameDone)
+            Positioned(top: 0, right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFFFE48A), Color(0xFFB07A2A)]),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: GameTone.woodOuter, width: 1),
+                ),
+                child: const Text('⭐',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+              ),
+            ),
         ]),
       ),
     );

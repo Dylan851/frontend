@@ -162,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             color: Colors.white.withOpacity(0.07)),
                       ),
                       child: Column(children: [
-                        const Text('🌿 WildQuest',
+                        const Text('🌿 AnimalGO!',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w900,

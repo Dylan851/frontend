@@ -20,6 +20,10 @@ class AnimalNpc extends SimpleNpc with Sensor {
   double _bobBase    = 0.0;
   double _exclamT    = 0.0;
   bool   _playerNear = false;
+  // Fade-out + remove al ser descubierto
+  bool   _vanishing  = false;
+  double _vanishT    = 0.0;
+  static const double _vanishDur = 0.55; // segundos
 
   // Animación manual: lista de 4 frames extraídos del spritesheet 64×16.
   List<Sprite>? _frames;
@@ -96,57 +100,98 @@ class AnimalNpc extends SimpleNpc with Sensor {
     if (_playerNear && !GameState().isAnimalDiscovered(animalData.id)) {
       _exclamT += dt;
     }
+
+    // Si fue descubierto (al ganar el minijuego), arrancar desvanecimiento
+    // y eliminarse del mapa.
+    if (!_vanishing && GameState().isAnimalDiscovered(animalData.id)) {
+      _vanishing = true;
+    }
+    if (_vanishing) {
+      _vanishT += dt;
+      if (_vanishT >= _vanishDur) {
+        removeFromParent();
+      }
+    }
   }
 
   @override
   void render(Canvas canvas) {
-    // Sombra ovalada.
+    // Progreso 0..1 del desvanecimiento.
+    final vp = (_vanishT / _vanishDur).clamp(0.0, 1.0);
+    final opacity = _vanishing ? (1.0 - vp) : 1.0;
+    final liftY   = _vanishing ? -vp * 22.0 : 0.0;
+    final scale   = _vanishing ? (1.0 + vp * 0.15) : 1.0;
+
+    if (opacity <= 0.01) return;
+
+    // Sombra ovalada (se va con el desvanecimiento).
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(_size / 2, _size * 0.92),
         width: _size * 0.7,
         height: _size * 0.18,
       ),
-      Paint()..color = Colors.black.withOpacity(0.28),
+      Paint()..color = Colors.black.withOpacity(0.28 * opacity),
     );
 
-    final bob = math.sin(_bobT * 1.8 + _bobBase) * 1.2;
+    final bob = math.sin(_bobT * 1.8 + _bobBase) * 1.2 + liftY;
 
-    // Halo verde si ya está descubierto.
+    // Halo verde si está siendo descubierto (más intenso al desvanecerse).
     if (GameState().isAnimalDiscovered(animalData.id)) {
       canvas.drawCircle(
         Offset(_size / 2, _size / 2 + bob),
-        _size * 0.55,
+        _size * (0.55 + vp * 0.4),
         Paint()
-          ..color = const Color(0xFF56E39F).withOpacity(0.18)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+          ..color = const Color(0xFF56E39F).withOpacity(
+              (0.18 + vp * 0.45) * opacity)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
       );
+      // Estrellitas de captura
+      if (_vanishing) {
+        for (int i = 0; i < 4; i++) {
+          final a = vp * math.pi * 2 + i * math.pi / 2;
+          final r = _size * 0.7 * vp;
+          canvas.drawCircle(
+            Offset(_size / 2 + math.cos(a) * r, _size / 2 + bob + math.sin(a) * r),
+            1.6 * (1 - vp) + 0.4,
+            Paint()..color = const Color(0xFFFFE48A).withOpacity(opacity),
+          );
+        }
+      }
     }
 
     // Sprite animado (o emoji si no hay spritesheet).
+    canvas.save();
+    canvas.translate(_size / 2, _size / 2 + bob);
+    canvas.scale(scale);
+    canvas.translate(-_size / 2, -_size / 2);
     if (_frames != null) {
+      final paint = Paint()..color = Colors.white.withOpacity(opacity);
       _frames![_frame].render(
         canvas,
-        position: Vector2(0, bob),
+        position: Vector2.zero(),
         size: Vector2.all(_size),
+        overridePaint: paint,
       );
     } else {
       final tp = TextPainter(
         text: TextSpan(
           text: animalData.emoji,
-          style: TextStyle(fontSize: _size * 0.85),
+          style: TextStyle(
+            fontSize: _size * 0.85,
+            color: Colors.white.withOpacity(opacity),
+          ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(canvas, Offset((_size - tp.width) / 2, bob));
+      tp.paint(canvas, Offset((_size - tp.width) / 2, 0));
     }
+    canvas.restore();
 
     // Burbuja de exclamación si el jugador está cerca y no lo ha descubierto aún.
     if (_playerNear && !GameState().isAnimalDiscovered(animalData.id)) {
       _drawBubble(canvas, bob);
     }
-
-    super.render(canvas);
   }
 
   void _drawBubble(Canvas canvas, double bob) {

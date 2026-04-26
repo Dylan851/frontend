@@ -20,7 +20,7 @@ class _InventoryScreenState extends State<InventoryScreen>
     ('all',     'Todo'),
     ('food',    '🍎 Comida'),
     ('gear',    '🛡️ Equipo'),
-    ('special', '✨ Especial'),
+    ('powerup', '✨ Power-Ups'),
   ];
 
   static const _equipSlots = [
@@ -39,7 +39,7 @@ class _InventoryScreenState extends State<InventoryScreen>
       switch (_selectedCat) {
         case 'food':    return item.category == ItemCategory.food;
         case 'gear':    return item.category == ItemCategory.gear;
-        case 'special': return item.category == ItemCategory.special;
+        case 'powerup': return item.category == ItemCategory.powerup;
         default:        return true;
       }
     }).toList();
@@ -47,19 +47,37 @@ class _InventoryScreenState extends State<InventoryScreen>
 
   void _useItem(String id) {
     final item = ShopCatalog.findById(id);
-    if (item == null || item.category == ItemCategory.gear ||
-        item.category == ItemCategory.skin) {
+    if (item == null || !item.isUsableFromBag) {
       _showMsg('Este ítem no se puede usar directamente.');
       return;
     }
+    // Power-ups: se activan para el próximo minijuego (no se consumen aquí
+    // si ya estaban activos). activatePowerUp consume 1.
+    if (item.isMinigamePowerUp) {
+      final ok = _gs.activatePowerUp(id);
+      _showMsg(ok
+          ? '${item.emoji} ${item.name} listo para el próximo minijuego'
+          : 'Ya está activo o no queda ninguno');
+      setState(() => _focusedItem = null);
+      return;
+    }
+    // Efectos inmediatos (comida, etc.).
     _gs.useItem(id);
-    // Apply effects
-    for (final e in (item.effects).entries) {
-      if (e.key == 'health') {
-        _showMsg('+${e.value} ❤️ salud restaurada!');
-      } else if (e.key == 'energy') {
-        _showMsg('+${e.value} ⚡ energía restaurada!');
-      }
+    switch (item.effect) {
+      case ItemEffect.restoreHealth:
+        _showMsg('+${item.magnitude} ❤️ salud restaurada!');
+        break;
+      case ItemEffect.restoreEnergy:
+        _showMsg('+${item.magnitude} ⚡ energía restaurada!');
+        break;
+      case ItemEffect.speedBoost:
+        _showMsg('+${item.magnitude}% velocidad temporal!');
+        break;
+      case ItemEffect.radarAnimals:
+        _showMsg('📡 Radar activo: animales cercanos visibles');
+        break;
+      default:
+        _showMsg('${item.emoji} usado');
     }
     setState(() => _focusedItem = null);
   }
@@ -84,172 +102,122 @@ class _InventoryScreenState extends State<InventoryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(children: [
-        // Dark green bg
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1A2A0D), Color(0xFF2A3A1A), Color(0xFF1A2A0D)],
-            ),
+      backgroundColor: const Color(0xFF0A1A10),
+      body: MenuBackdrop(
+        dim: 0.55,
+        child: Stack(children: [
+          SafeArea(
+            child: Column(children: [
+              _topBar(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                    SizedBox(width: 160, child: _leftPanel()),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(children: [
+                      _catFilter(),
+                      const SizedBox(height: 6),
+                      Expanded(child: _itemGrid()),
+                      const SizedBox(height: 8),
+                      _statsBar(),
+                    ])),
+                  ]),
+                ),
+              ),
+            ]),
           ),
-        ),
-        CustomPaint(
-          painter: const HexPatternPainter(),
-          size: const Size(double.infinity, double.infinity),
-        ),
-        // Layout
-        Column(children: [
-          _topBar(),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                // Left panel: character + equip
-                SizedBox(width: 145, child: _leftPanel()),
-                const SizedBox(width: 10),
-                // Right panel: items + stats
-                Expanded(child: Column(children: [
-                  _catFilter(),
-                  const SizedBox(height: 6),
-                  Expanded(child: _itemGrid()),
-                  const SizedBox(height: 8),
-                  _statsBar(),
-                ])),
-              ]),
-            ),
-          ),
+          // Item detail popup
+          if (_focusedItem != null) _itemDetailPopup(),
         ]),
-        // Item detail popup
-        if (_focusedItem != null) _itemDetailPopup(),
-      ]),
+      ),
     );
   }
 
-  Widget _topBar() => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(children: [
-            BackBtn(),
-            const SizedBox(width: 10),
-            const Text('🎒  Mochila',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 17)),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.borderWhite),
-              ),
-              child: Text('$_usedSlots/$_totalSlots slots',
-                  style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ]),
-        ),
+  Widget _topBar() => GameHeader(
+        title: 'Mochila',
+        trailing: [
+          WoodChip(icon: '🎒', label: '$_usedSlots/$_totalSlots slots'),
+        ],
       );
 
   // ── Left panel ─────────────────────────────────────────────────────────
-  Widget _leftPanel() => Column(children: [
-        // Character box
-        Container(
-          width: double.infinity, height: 130,
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.35),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderWhite, width: 1.5),
+  Widget _leftPanel() => PixelFrame(
+        radius: 14,
+        padding: const EdgeInsets.all(8),
+        child: Column(children: [
+          // Character portrait
+          Expanded(
+            child: Center(
+              child: Text(_gs.selectedSkin, style: const TextStyle(fontSize: 70)),
+            ),
           ),
-          child: Stack(alignment: Alignment.center, children: [
-            // glow
-            Container(
-              width: 70, height: 70,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(
-                  color: AppColors.greenAccent.withOpacity(0.25),
-                  blurRadius: 30, spreadRadius: 10,
-                )],
+          // Level badge
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                colors: [Color(0xFF6BBA5B), Color(0xFF1F4E2A)],
               ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: GameTone.goldTrim, width: 1.4),
             ),
-            Text(_gs.selectedSkin, style: const TextStyle(fontSize: 60)),
-            Positioned(
-              bottom: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            child: Text('Nv. ${_gs.level}',
+                style: const TextStyle(
+                  color: GameTone.textCream,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  letterSpacing: 0.6,
+                  shadows: [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2), blurRadius: 0)],
+                )),
+          ),
+          // Equip slots 2×2
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
+            childAspectRatio: 1.0,
+            physics: const NeverScrollableScrollPhysics(),
+            children: _equipSlots.map((slot) {
+              final equippedId = _gs.equipped[slot.$1];
+              final item = equippedId != null
+                  ? ShopCatalog.findById(equippedId)
+                  : null;
+              return Container(
                 decoration: BoxDecoration(
-                  color: AppColors.greenAccent.withOpacity(0.2),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                    colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
+                  ),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: AppColors.greenAccent.withOpacity(0.4)),
+                  border: Border.all(color: GameTone.goldTrim.withOpacity(0.7), width: 1.2),
                 ),
-                child: Text('Nv. ${_gs.level}',
-                    style: const TextStyle(
-                        color: AppColors.greenAccent,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10)),
-              ),
-            ),
-          ]),
-        ),
-        const SizedBox(height: 8),
-        // Equip slots grid 2×2
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 6,
-          childAspectRatio: 1.2,
-          physics: const NeverScrollableScrollPhysics(),
-          children: _equipSlots.map((slot) {
-            final equippedId = _gs.equipped[slot.$1];
-            final item = equippedId != null
-                ? ShopCatalog.findById(equippedId)
-                : null;
-            return Container(
-              decoration: BoxDecoration(
-                color: item != null
-                    ? AppColors.greenAccent.withOpacity(0.08)
-                    : Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: item != null
-                      ? AppColors.greenAccent.withOpacity(0.4)
-                      : Colors.white.withOpacity(0.15),
-                  width: item != null ? 1.5 : 1,
-                  style: item != null
-                      ? BorderStyle.solid
-                      : BorderStyle.solid,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(item?.emoji ?? slot.$2,
+                        style: TextStyle(
+                            fontSize: 22,
+                            color: item != null
+                                ? null
+                                : GameTone.textCream.withOpacity(0.55))),
+                    const SizedBox(height: 2),
+                    Text(slot.$3,
+                        style: const TextStyle(
+                            fontSize: 9,
+                            color: GameTone.textCream,
+                            fontWeight: FontWeight.w800)),
+                  ],
                 ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(item?.emoji ?? slot.$2,
-                      style: TextStyle(
-                          fontSize: 18,
-                          color: item != null
-                              ? null
-                              : Colors.white.withOpacity(0.3))),
-                  const SizedBox(height: 2),
-                  Text(slot.$3,
-                      style: TextStyle(
-                          fontSize: 7.5,
-                          color: Colors.white.withOpacity(0.45),
-                          fontWeight: FontWeight.w700)),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ]);
+              );
+            }).toList(),
+          ),
+        ]),
+      );
 
   // ── Category filter ─────────────────────────────────────────────────────
   Widget _catFilter() => SingleChildScrollView(
@@ -257,31 +225,16 @@ class _InventoryScreenState extends State<InventoryScreen>
         child: Row(
           children: _cats.map((c) {
             final active = _selectedCat == c.$1;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedCat = c.$1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                margin: const EdgeInsets.only(right: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: active
-                      ? AppColors.greenAccent.withOpacity(0.2)
-                      : Colors.white.withOpacity(0.07),
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(
-                    color: active
-                        ? AppColors.greenAccent.withOpacity(0.6)
-                        : Colors.white.withOpacity(0.1),
-                    width: active ? 1.5 : 1,
-                  ),
-                ),
-                child: Text(c.$2,
-                    style: TextStyle(
-                        color: active
-                            ? AppColors.greenAccent
-                            : Colors.white.withOpacity(0.55),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 10)),
+            // Split label "🍎 Comida" → icon + label
+            final parts = c.$2.split(' ');
+            final hasEmoji = parts.length > 1 && parts.first.isNotEmpty;
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: WoodTab(
+                icon: hasEmoji ? parts.first : '🌿',
+                label: hasEmoji ? parts.sublist(1).join(' ') : c.$2,
+                active: active,
+                onTap: () => setState(() => _selectedCat = c.$1),
               ),
             );
           }).toList(),
@@ -315,23 +268,27 @@ class _InventoryScreenState extends State<InventoryScreen>
     if (item == null) return _emptySlot();
     return GestureDetector(
       onTap: () => setState(() => _focusedItem = item),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: Colors.white.withOpacity(0.12), width: 1),
-        ),
+      child: PixelFrame(
+        radius: 10,
+        innerFill: const Color(0xFF1F3A1F),
+        padding: const EdgeInsets.all(2),
         child: Stack(children: [
-          Center(child: Text(item.emoji,
-              style: const TextStyle(fontSize: 22))),
+          Center(child: Text(item.emoji, style: const TextStyle(fontSize: 28))),
           Positioned(
-            bottom: 3, right: 5,
-            child: Text('×$qty',
-                style: const TextStyle(
-                    color: AppColors.gold,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 8.5)),
+            bottom: 0, right: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: GameTone.woodOuter,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: GameTone.goldTrim.withOpacity(0.7), width: 0.8),
+              ),
+              child: Text('×$qty',
+                  style: const TextStyle(
+                      color: GameTone.textGold,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 9)),
+            ),
           ),
         ]),
       ),
@@ -355,52 +312,63 @@ class _InventoryScreenState extends State<InventoryScreen>
       );
 
   // ── Stats bar ───────────────────────────────────────────────────────────
-  Widget _statsBar() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.35),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderWhite, width: 1),
-        ),
-        child: Row(children: [
-          const Text('💪', style: TextStyle(fontSize: 18)),
-          const SizedBox(width: 10),
-          Expanded(child: _statRow('❤️ Salud', 0.75,
-              const [Color(0xFFff6b6b), Color(0xFFee5a24)])),
-          const SizedBox(width: 10),
-          Expanded(child: _statRow('⚡ Energía', 0.55,
-              [AppColors.gold, AppColors.goldDark])),
-          const SizedBox(width: 10),
-          Expanded(child: _statRow('⭐ XP', _gs.xpPercent,
-              [AppColors.greenAccent, AppColors.greenDeep])),
+  Widget _statsBar() => Row(children: [
+        Expanded(child: _statBar('❤️', 'Salud', 0.75,
+            const [Color(0xFFE85B5B), Color(0xFF8C2A2A)])),
+        const SizedBox(width: 8),
+        Expanded(child: _statBar('⚡', 'Energía', 0.55,
+            const [Color(0xFFF6C76B), Color(0xFFB07A2A)])),
+        const SizedBox(width: 8),
+        Expanded(child: _statBar('⭐', 'XP', _gs.xpPercent,
+            const [Color(0xFF6BBA5B), Color(0xFF1F4E2A)])),
+      ]);
+
+  Widget _statBar(String icon, String label, double fraction, List<Color> colors) =>
+      PixelFrame(
+        radius: 10,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Text(icon, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 5),
+            Text(label,
+                style: const TextStyle(
+                  color: GameTone.textCream,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  letterSpacing: 0.4,
+                )),
+          ]),
+          const SizedBox(height: 4),
+          // Pixel-art segmented bar
+          Container(
+            height: 10,
+            decoration: BoxDecoration(
+              color: GameTone.woodOuter,
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(color: GameTone.goldTrim, width: 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: FractionallySizedBox(
+                widthFactor: fraction.clamp(0.0, 1.0),
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: colors),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ]),
       );
-
-  Widget _statRow(String label, double fraction, List<Color> colors) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
-            style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 8,
-                fontWeight: FontWeight.w700)),
-        const SizedBox(height: 3),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: fraction,
-            minHeight: 6,
-            backgroundColor: Colors.white.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation(colors.first),
-          ),
-        ),
-      ]);
 
   // ── Item detail popup ────────────────────────────────────────────────────
   Widget _itemDetailPopup() {
     final item = _focusedItem!;
     final qty = _gs.getQty(item.id);
-    final canUse = item.category == ItemCategory.food ||
-        item.category == ItemCategory.special;
+    final canUse = item.isUsableFromBag;
 
     return GestureDetector(
       onTap: () => setState(() => _focusedItem = null),
@@ -409,99 +377,66 @@ class _InventoryScreenState extends State<InventoryScreen>
         child: Center(
           child: GestureDetector(
             onTap: () {}, // prevent dismiss
-            child: Container(
-              width: 280,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: AppColors.greenAccent.withOpacity(0.4), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                      color: AppColors.greenAccent.withOpacity(0.1),
-                      blurRadius: 30)
-                ],
-              ),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(item.emoji, style: const TextStyle(fontSize: 52)),
-                const SizedBox(height: 8),
-                Text(item.name,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18)),
-                const SizedBox(height: 4),
-                Text(item.description,
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.65),
-                        fontSize: 12),
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 290,
+              child: WoodPanel(
+                padding: const EdgeInsets.all(22),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Container(
+                    width: 88, height: 88,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(colors: [
+                        AppColors.amber.withOpacity(0.35),
+                        Colors.transparent,
+                      ]),
+                      border: Border.all(color: AppColors.amber.withOpacity(0.55), width: 2),
+                    ),
+                    child: Center(child: Text(item.emoji, style: const TextStyle(fontSize: 50))),
                   ),
-                  child: Text('En mochila: ×$qty',
+                  const SizedBox(height: 10),
+                  Text(item.name.toUpperCase(),
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13)),
-                ),
-                const SizedBox(height: 14),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  // Cancel
-                  GestureDetector(
-                    onTap: () => setState(() => _focusedItem = null),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.3), width: 1.5),
-                      ),
-                      child: const Text('Cerrar',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13)),
-                    ),
-                  ),
-                  if (canUse && qty > 0) ...[
-                    const SizedBox(width: 10),
+                          color: AppColors.parchment,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          letterSpacing: 1.6)),
+                  const SizedBox(height: 6),
+                  Text(item.description,
+                      style: AppText.bodyLight,
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  CurrencyChip(icon: '🎒', value: '×$qty EN MOCHILA'),
+                  const SizedBox(height: 16),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     GestureDetector(
-                      onTap: () => _useItem(item.id),
+                      onTap: () => setState(() => _focusedItem = null),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [AppColors.greenAccent, AppColors.greenDeep]),
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                                color: AppColors.greenAccent.withOpacity(0.35),
-                                blurRadius: 12)
-                          ],
+                          border: Border.all(
+                              color: AppColors.parchment.withOpacity(0.35), width: 1.5),
                         ),
-                        child: const Text('¡Usar!',
+                        child: const Text('CERRAR',
                             style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13)),
+                                color: AppColors.parchment,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                                letterSpacing: 1.4)),
                       ),
                     ),
-                  ],
+                    if (canUse && qty > 0) ...[
+                      const SizedBox(width: 10),
+                      ChunkyButton(
+                        label: '¡USAR!',
+                        height: 44,
+                        onTap: () => _useItem(item.id),
+                      ),
+                    ],
+                  ]),
                 ]),
-              ]),
+              ),
             ),
           ),
         ),

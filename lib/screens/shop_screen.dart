@@ -19,14 +19,28 @@ class _ShopScreenState extends State<ShopScreen>
   static const _tabs = [
     (icon: '🍎', label: 'Comida',   cat: ItemCategory.food),
     (icon: '🛡️', label: 'Equipo',   cat: ItemCategory.gear),
-    (icon: '✨', label: 'Especial', cat: ItemCategory.special),
+    (icon: '✨', label: 'Power-Ups', cat: ItemCategory.powerup),
     (icon: '🎨', label: 'Skins',    cat: ItemCategory.skin),
+    (icon: '💱', label: 'Canjear',  cat: null),
   ];
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: _tabs.length, vsync: this);
+  }
+
+  void _sell(ShopItem item, {required bool forXp}) {
+    final gained = _gs.sellItem(item.id, forXp: forXp);
+    if (gained <= 0) {
+      _showToast('No tienes ${item.emoji} para canjear', success: false);
+      return;
+    }
+    setState(() {});
+    _showToast(
+      '¡Canjeado ${item.emoji}! +$gained ${forXp ? "⭐ XP" : "🪙"}',
+      success: true,
+    );
   }
 
   @override
@@ -64,69 +78,50 @@ class _ShopScreenState extends State<ShopScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(children: [
-        // Purple-dark background
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1A0D2E), Color(0xFF2E1A4A), Color(0xFF1A0D2E)],
-            ),
+      backgroundColor: const Color(0xFF0A1A10),
+      body: MenuBackdrop(
+        dim: 0.55,
+        child: SafeArea(child: Column(children: [
+          GameHeader(
+            title: 'Tienda',
+            trailing: [
+              OvalGoldChip(icon: '🪙', value: '${_gs.coins}'),
+              OvalGoldChip(icon: '💎', value: '${_gs.gems}'),
+            ],
           ),
-        ),
-        CustomPaint(
-          painter: const HexPatternPainter(),
-          size: const Size(double.infinity, double.infinity),
-        ),
-        Column(children: [
-          // Top bar
-          SafeArea(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(children: [
-                BackBtn(),
-                const SizedBox(width: 10),
-                const Text('🛒  Tienda',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 17)),
-                const Spacer(),
-                CurrencyChip(icon: '🪙', value: '${_gs.coins}'),
-                const SizedBox(width: 6),
-                CurrencyChip(icon: '💎', value: '${_gs.gems}'),
-              ]),
-            ),
-          ),
+          const SizedBox(height: 4),
           // Tab bar
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF0A1F12).withOpacity(0.7),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                  color: Colors.white.withOpacity(0.08), width: 1),
+                  color: AppColors.amber.withOpacity(0.35), width: 1.5),
             ),
             child: TabBar(
               controller: _tabCtrl,
               indicator: BoxDecoration(
-                color: AppColors.shopPurple.withOpacity(0.35),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: AppColors.shopPurple.withOpacity(0.6), width: 1),
+                gradient: LinearGradient(colors: [
+                  AppColors.amber,
+                  AppColors.amberDeep,
+                ]),
+                borderRadius: BorderRadius.circular(11),
+                boxShadow: [
+                  BoxShadow(color: AppColors.amber.withOpacity(0.4), blurRadius: 10),
+                ],
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               labelStyle: const TextStyle(
                   fontFamily: 'Nunito',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  letterSpacing: 0.8),
               unselectedLabelStyle: const TextStyle(
-                  fontFamily: 'Nunito', fontSize: 10),
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white54,
+                  fontFamily: 'Nunito', fontSize: 10, letterSpacing: 0.6),
+              labelColor: const Color(0xFF221208),
+              unselectedLabelColor: AppColors.parchment.withOpacity(0.65),
               tabs: _tabs
                   .map((t) =>
                       Tab(text: '${t.icon} ${t.label}', height: 34))
@@ -138,15 +133,20 @@ class _ShopScreenState extends State<ShopScreen>
           Expanded(
             child: TabBarView(
               controller: _tabCtrl,
-              children: _tabs.map((t) => _ShopGrid(
-                items: ShopCatalog.byCategory(t.cat),
-                gs: _gs,
-                onBuy: _buy,
-              )).toList(),
+              children: _tabs.map((t) {
+                if (t.cat == null) {
+                  return _SellGrid(gs: _gs, onSell: _sell);
+                }
+                return _ShopGrid(
+                  items: ShopCatalog.byCategory(t.cat!),
+                  gs: _gs,
+                  onBuy: _buy,
+                );
+              }).toList(),
             ),
           ),
-        ]),
-      ]),
+        ])),
+      ),
     );
   }
 }
@@ -226,16 +226,29 @@ class _ShopItemCardState extends State<_ShopItemCard>
       onTap: widget.onBuy,
       child: Container(
         decoration: BoxDecoration(
-          color: item.isFeatured
-              ? Colors.amber.withOpacity(0.08)
-              : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(13),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: item.isFeatured
+                ? [const Color(0xFF1F4A2C), const Color(0xFF0E2914)]
+                : [const Color(0xFF143421), const Color(0xFF0A1F12)],
+          ),
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(
             color: item.isFeatured
-                ? Colors.amber.withOpacity(0.4)
-                : Colors.white.withOpacity(0.1),
-            width: item.isFeatured ? 1.5 : 1,
+                ? AppColors.amber.withOpacity(0.85)
+                : AppColors.amber.withOpacity(0.30),
+            width: item.isFeatured ? 2 : 1.2,
           ),
+          boxShadow: [
+            if (item.isFeatured)
+              BoxShadow(color: AppColors.amber.withOpacity(0.3), blurRadius: 14),
+            BoxShadow(
+              color: AppColors.leafShadow.withOpacity(0.45),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Stack(children: [
           // Content
@@ -254,49 +267,52 @@ class _ShopItemCardState extends State<_ShopItemCard>
                   ),
                 ),
                 const SizedBox(height: 5),
-                Text(item.name,
+                Text(item.name.toUpperCase(),
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 10),
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        letterSpacing: 1.0),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
                 Text(item.description,
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 8.5),
+                        color: AppColors.parchment.withOpacity(0.55),
+                        fontSize: 8.5,
+                        height: 1.2),
                     textAlign: TextAlign.center,
                     maxLines: 2),
                 const SizedBox(height: 6),
                 // Price button
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
+                      horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isGems
-                        ? Colors.blue.withOpacity(0.2)
-                        : Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isGems
-                          ? Colors.blue.withOpacity(0.5)
-                          : Colors.orange.withOpacity(0.5),
-                      width: 1,
+                    gradient: LinearGradient(
+                      colors: isGems
+                          ? [const Color(0xFF7BB6E8), const Color(0xFF3A6C9C)]
+                          : [AppColors.amber, AppColors.amberDeep],
                     ),
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isGems ? Colors.lightBlueAccent : AppColors.amber)
+                            .withOpacity(0.4),
+                        blurRadius: 8,
+                      ),
+                    ],
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Text(isGems ? '💎' : '🪙',
                         style: const TextStyle(fontSize: 10)),
                     const SizedBox(width: 3),
                     Text('${item.price}',
-                        style: TextStyle(
-                            color: isGems
-                                ? Colors.lightBlueAccent
-                                : AppColors.gold,
+                        style: const TextStyle(
+                            color: Color(0xFF221208),
                             fontWeight: FontWeight.w900,
-                            fontSize: 10)),
+                            fontSize: 11)),
                   ]),
                 ),
               ],
@@ -342,6 +358,213 @@ class _ShopItemCardState extends State<_ShopItemCard>
               ),
             ),
         ]),
+      ),
+    );
+  }
+}
+
+// ─── Sell grid (Canjear inventario por monedas o XP) ─────────────────────
+class _SellGrid extends StatelessWidget {
+  final GameState gs;
+  final void Function(ShopItem item, {required bool forXp}) onSell;
+  const _SellGrid({required this.gs, required this.onSell});
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = gs.inventory.entries
+        .where((e) => e.value > 0 && ShopCatalog.findById(e.key) != null)
+        .toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    if (entries.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A0E04).withOpacity(0.6),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: GameTone.goldTrim, width: 1.4),
+            ),
+            child: const Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('🎒', style: TextStyle(fontSize: 38)),
+              SizedBox(height: 8),
+              Text('Tu mochila está vacía',
+                  style: TextStyle(
+                      color: GameTone.textCream,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16)),
+              SizedBox(height: 4),
+              Text('Recoge ítems en el mapa o cómpralos para canjearlos',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: GameTone.textGold,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
+            ]),
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      itemCount: entries.length,
+      itemBuilder: (_, i) {
+        final e = entries[i];
+        final item = ShopCatalog.findById(e.key)!;
+        return _SellTile(
+          item: item,
+          qty: e.value,
+          coinPrice: gs.sellPriceCoins(item),
+          xpPrice: gs.sellPriceXp(item),
+          onSell: onSell,
+        );
+      },
+    );
+  }
+}
+
+class _SellTile extends StatelessWidget {
+  final ShopItem item;
+  final int qty;
+  final int coinPrice;
+  final int xpPrice;
+  final void Function(ShopItem item, {required bool forXp}) onSell;
+  const _SellTile({
+    required this.item,
+    required this.qty,
+    required this.coinPrice,
+    required this.xpPrice,
+    required this.onSell,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: PixelFrame(
+        radius: 12,
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        child: Row(children: [
+          // Emoji + qty badge
+          Container(
+            width: 54, height: 54,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: GameTone.goldTrim, width: 1.4),
+            ),
+            child: Stack(children: [
+              Center(child: Text(item.emoji, style: const TextStyle(fontSize: 28))),
+              Positioned(
+                bottom: 1, right: 3,
+                child: Text('×$qty',
+                    style: const TextStyle(
+                      color: GameTone.textGold,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      shadows: [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 1))],
+                    )),
+              ),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(item.name,
+                  style: const TextStyle(
+                      color: GameTone.textCream,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      shadows: [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2))])),
+              const SizedBox(height: 2),
+              Text(item.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: GameTone.textCream.withOpacity(0.7),
+                      fontSize: 10,
+                      height: 1.3)),
+            ],
+          )),
+          const SizedBox(width: 8),
+          // Sell buttons
+          Column(mainAxisSize: MainAxisSize.min, children: [
+            _SellButton(
+              icon: '🪙',
+              value: coinPrice,
+              colors: const [Color(0xFFFFE48A), Color(0xFFB07A2A)],
+              textColor: const Color(0xFF221208),
+              onTap: () => onSell(item, forXp: false),
+            ),
+            const SizedBox(height: 6),
+            _SellButton(
+              icon: '⭐',
+              value: xpPrice,
+              colors: const [Color(0xFF6BBA5B), Color(0xFF1F4E2A)],
+              textColor: Colors.white,
+              onTap: () => onSell(item, forXp: true),
+            ),
+          ]),
+        ]),
+      ),
+    );
+  }
+}
+
+class _SellButton extends StatelessWidget {
+  final String icon;
+  final int value;
+  final List<Color> colors;
+  final Color textColor;
+  final VoidCallback onTap;
+  const _SellButton({
+    required this.icon,
+    required this.value,
+    required this.colors,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 78, height: 30,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: colors,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF1A0E04), width: 1.4),
+          boxShadow: [
+            BoxShadow(
+                color: colors.first.withOpacity(0.45),
+                blurRadius: 8),
+          ],
+        ),
+        child: Center(
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Text(icon, style: const TextStyle(fontSize: 12)),
+            const SizedBox(width: 3),
+            Text('+$value',
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 0.3,
+                )),
+          ]),
+        ),
       ),
     );
   }

@@ -4,8 +4,28 @@ import 'package:flutter/material.dart';
 // ─────────────────────────────────────────────
 //  ITEM MODEL
 // ─────────────────────────────────────────────
-enum ItemCategory { food, gear, special, skin }
+enum ItemCategory { food, gear, powerup, skin }
 enum ItemCurrency { coins, gems }
+
+/// Efecto funcional que un item aplica al usarse.
+/// Los efectos de minijuego se consumen al entrar al minijuego.
+enum ItemEffect {
+  none,
+  // Comida (mundo): restaura vitales.
+  restoreHealth,
+  restoreEnergy,
+  // Power-ups para minijuegos (activos al entrar al minijuego):
+  luckyCharm,     // +1 estrella al resultado (máx 3)
+  coinDoubler,    // duplica monedas obtenidas
+  xpBoost,        // +2× XP obtenido
+  goldenPass,     // completa con 3★ sin jugar
+  reviveScroll,   // permite reintentar sin perder nada si fallas
+  timeExtender,   // +tiempo extra (minijuegos con tiempo)
+  hintReveal,     // revela una pista / respuesta correcta
+  // Mapa:
+  radarAnimals,   // muestra animales cercanos
+  speedBoost,     // +velocidad temporal en el mapa
+}
 
 class ShopItem {
   final String id;
@@ -17,7 +37,8 @@ class ShopItem {
   final ItemCurrency currency;
   final bool isFeatured;
   final String? badgeLabel;
-  final Map<String, int> effects; // e.g. {'health': 20, 'energy': 10}
+  final ItemEffect effect;
+  final int magnitude; // depende del efecto (p. ej. salud +X, tiempo +X s)
 
   const ShopItem({
     required this.id,
@@ -29,8 +50,34 @@ class ShopItem {
     this.currency = ItemCurrency.coins,
     this.isFeatured = false,
     this.badgeLabel,
-    this.effects = const {},
+    this.effect = ItemEffect.none,
+    this.magnitude = 0,
   });
+
+  /// True si el item puede usarse dentro de un minijuego.
+  bool get isMinigamePowerUp {
+    switch (effect) {
+      case ItemEffect.luckyCharm:
+      case ItemEffect.coinDoubler:
+      case ItemEffect.xpBoost:
+      case ItemEffect.goldenPass:
+      case ItemEffect.reviveScroll:
+      case ItemEffect.timeExtender:
+      case ItemEffect.hintReveal:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /// True si el item puede usarse fuera del minijuego (comida, etc.).
+  bool get isUsableFromBag {
+    return effect == ItemEffect.restoreHealth ||
+        effect == ItemEffect.restoreEnergy ||
+        effect == ItemEffect.speedBoost ||
+        effect == ItemEffect.radarAnimals ||
+        isMinigamePowerUp;
+  }
 }
 
 class InventoryItem {
@@ -43,40 +90,40 @@ class InventoryItem {
 //  SHOP CATALOG
 // ─────────────────────────────────────────────
 abstract class ShopCatalog {
-  // ── Food ──────────────────────────────────
+  // ── Food (restauración) ──────────────────────────────
   static const food = <ShopItem>[
-    ShopItem(id: 'apple',    name: 'Manzana',      emoji: '🍎', description: '+20 ❤️ salud',         category: ItemCategory.food,  price: 15,  isFeatured: true,  badgeLabel: '¡HOT!', effects: {'health': 20}),
-    ShopItem(id: 'steak',    name: 'Carne Asada',  emoji: '🥩', description: '+50 ❤️ salud',         category: ItemCategory.food,  price: 35,  effects: {'health': 50}),
-    ShopItem(id: 'honey',    name: 'Miel Silvestre',emoji: '🍯', description: '+30 ⚡ energía',       category: ItemCategory.food,  price: 25,  effects: {'energy': 30}),
-    ShopItem(id: 'mushroom', name: 'Seta Mágica',  emoji: '🍄', description: '+2× velocidad 30s',   category: ItemCategory.food,  price: 40,  effects: {'speed': 2}),
-    ShopItem(id: 'berries',  name: 'Arándanos',    emoji: '🫐', description: '+10 ❤️ +5 ⚡',         category: ItemCategory.food,  price: 12,  effects: {'health': 10, 'energy': 5}),
-    ShopItem(id: 'chestnut', name: 'Castaña',      emoji: '🌰', description: '+15 ⚡ energía',       category: ItemCategory.food,  price: 10,  effects: {'energy': 15}),
-    ShopItem(id: 'drumstick',name: 'Pierna Asada', emoji: '🍖', description: '+100 ❤️ salud',        category: ItemCategory.food,  price: 5,   currency: ItemCurrency.gems, isFeatured: true, badgeLabel: '💎'),
-    ShopItem(id: 'carrot',   name: 'Zanahoria',    emoji: '🥕', description: '+25 ❤️ salud',         category: ItemCategory.food,  price: 18,  effects: {'health': 25}),
+    ShopItem(id: 'apple',     name: 'Manzana',       emoji: '🍎', description: 'Restaura 20 ❤️ de salud',       category: ItemCategory.food, price: 15, effect: ItemEffect.restoreHealth, magnitude: 20),
+    ShopItem(id: 'steak',     name: 'Carne Asada',   emoji: '🥩', description: 'Restaura 50 ❤️ de salud',       category: ItemCategory.food, price: 35, effect: ItemEffect.restoreHealth, magnitude: 50),
+    ShopItem(id: 'drumstick', name: 'Pierna Asada',  emoji: '🍗', description: 'Restaura 100 ❤️ al instante',   category: ItemCategory.food, price: 5,  currency: ItemCurrency.gems, isFeatured: true, badgeLabel: '💎', effect: ItemEffect.restoreHealth, magnitude: 100),
+    ShopItem(id: 'honey',     name: 'Miel Silvestre',emoji: '🍯', description: 'Restaura 30 ⚡ de energía',      category: ItemCategory.food, price: 25, effect: ItemEffect.restoreEnergy, magnitude: 30),
+    ShopItem(id: 'berries',   name: 'Arándanos',     emoji: '🫐', description: 'Restaura 10 ❤️ + 15 ⚡',         category: ItemCategory.food, price: 12, effect: ItemEffect.restoreEnergy, magnitude: 15),
+    ShopItem(id: 'chestnut',  name: 'Castaña',       emoji: '🌰', description: 'Restaura 15 ⚡ de energía',      category: ItemCategory.food, price: 10, effect: ItemEffect.restoreEnergy, magnitude: 15),
+    ShopItem(id: 'carrot',    name: 'Zanahoria',     emoji: '🥕', description: 'Restaura 25 ❤️ de salud',       category: ItemCategory.food, price: 18, effect: ItemEffect.restoreHealth, magnitude: 25),
+    ShopItem(id: 'banana',    name: 'Plátano',       emoji: '🍌', description: 'Restaura 35 ⚡ de energía',      category: ItemCategory.food, price: 20, effect: ItemEffect.restoreEnergy, magnitude: 35),
   ];
 
-  // ── Gear ──────────────────────────────────
+  // ── Gear (equipo pasivo) ─────────────────────────────
   static const gear = <ShopItem>[
-    ShopItem(id: 'backpack', name: 'Mochila Pro',  emoji: '🎒', description: '+10 slots inventario', category: ItemCategory.gear,    price: 20, currency: ItemCurrency.gems, isFeatured: true, badgeLabel: 'NEW'),
-    ShopItem(id: 'torch',    name: 'Linterna',     emoji: '🔦', description: '+Visión nocturna',      category: ItemCategory.gear,    price: 80),
-    ShopItem(id: 'compass',  name: 'Brújula',      emoji: '🧭', description: 'Radar de animales',     category: ItemCategory.gear,    price: 120),
-    ShopItem(id: 'camera',   name: 'Cámara',       emoji: '📷', description: 'Foto bonus x2',         category: ItemCategory.gear,    price: 95),
-    ShopItem(id: 'gloves',   name: 'Guantes',      emoji: '🧤', description: 'Recoger más rápido',    category: ItemCategory.gear,    price: 55),
-    ShopItem(id: 'boots',    name: 'Botas',        emoji: '👢', description: '+15% velocidad',        category: ItemCategory.gear,    price: 70),
-    ShopItem(id: 'trap',     name: 'Trampa Cámara',emoji: '🪤', description: 'Fotos automáticas',     category: ItemCategory.gear,    price: 15, currency: ItemCurrency.gems),
-    ShopItem(id: 'scope',    name: 'Catalejo',     emoji: '🔭', description: 'Ver animales lejanos',  category: ItemCategory.gear,    price: 25, currency: ItemCurrency.gems),
+    ShopItem(id: 'backpack', name: 'Mochila Pro',  emoji: '🎒', description: '+10 slots de inventario',        category: ItemCategory.gear, price: 20, currency: ItemCurrency.gems, isFeatured: true, badgeLabel: 'NEW'),
+    ShopItem(id: 'torch',    name: 'Linterna',     emoji: '🔦', description: 'Visión nocturna en el mapa',     category: ItemCategory.gear, price: 80),
+    ShopItem(id: 'compass',  name: 'Brújula',      emoji: '🧭', description: 'Radar: revela animales cercanos',category: ItemCategory.gear, price: 120, effect: ItemEffect.radarAnimals),
+    ShopItem(id: 'camera',   name: 'Cámara',       emoji: '📷', description: 'Foto bonus: +2× monedas al descubrir', category: ItemCategory.gear, price: 95),
+    ShopItem(id: 'gloves',   name: 'Guantes',      emoji: '🧤', description: 'Recoger más rápido del mapa',    category: ItemCategory.gear, price: 55),
+    ShopItem(id: 'boots',    name: 'Botas Ágiles', emoji: '👢', description: '+15% velocidad al caminar',      category: ItemCategory.gear, price: 70, effect: ItemEffect.speedBoost, magnitude: 15),
+    ShopItem(id: 'trap',     name: 'Trampa Cámara',emoji: '🪤', description: 'Fotos automáticas cada minuto',  category: ItemCategory.gear, price: 15, currency: ItemCurrency.gems),
+    ShopItem(id: 'scope',    name: 'Catalejo',     emoji: '🔭', description: 'Ver animales lejanos',           category: ItemCategory.gear, price: 25, currency: ItemCurrency.gems),
   ];
 
-  // ── Special ──────────────────────────────
-  static const special = <ShopItem>[
-    ShopItem(id: 'xp_potion',  name: 'Poción XP',     emoji: '🧪', description: '+2× XP durante 10 min', category: ItemCategory.special, price: 10, currency: ItemCurrency.gems, isFeatured: true, badgeLabel: '⭐'),
-    ShopItem(id: 'aura',       name: 'Aura Brillante', emoji: '🌟', description: 'Atrae animales',         category: ItemCategory.special, price: 30, currency: ItemCurrency.gems, isFeatured: true),
-    ShopItem(id: 'map_key',    name: 'Llave de Mapa',  emoji: '🗝️', description: 'Desbloquea 1 mapa',      category: ItemCategory.special, price: 50, currency: ItemCurrency.gems),
-    ShopItem(id: 'mystery_box',name: 'Caja Sorpresa',  emoji: '🎁', description: 'Ítem aleatorio',         category: ItemCategory.special, price: 200),
-    ShopItem(id: 'turbo',      name: 'Turbo Sprint',   emoji: '⚡', description: '+3× velocidad 15s',      category: ItemCategory.special, price: 60),
-    ShopItem(id: 'shield',     name: 'Escudo',         emoji: '🛡️', description: 'Invulnerable 20s',       category: ItemCategory.special, price: 8,  currency: ItemCurrency.gems),
-    ShopItem(id: 'orb',        name: 'Orbe Animal',    emoji: '🔮', description: 'Revela un animal',       category: ItemCategory.special, price: 12, currency: ItemCurrency.gems),
-    ShopItem(id: 'coins_pack', name: 'Pack Monedas',   emoji: '💫', description: '500 monedas de golpe',   category: ItemCategory.special, price: 3,  currency: ItemCurrency.gems),
+  // ── Power-Ups (consumibles en minijuegos) ────────────
+  static const powerups = <ShopItem>[
+    ShopItem(id: 'lucky_charm',   name: 'Amuleto de Suerte', emoji: '🍀', description: '+1 estrella al completar un minijuego',  category: ItemCategory.powerup, price: 40, effect: ItemEffect.luckyCharm,   magnitude: 1, isFeatured: true, badgeLabel: '⭐'),
+    ShopItem(id: 'coin_doubler',  name: 'Moneda Dorada',     emoji: '🪙', description: 'Duplica las monedas del próximo minijuego', category: ItemCategory.powerup, price: 60, effect: ItemEffect.coinDoubler,  magnitude: 2),
+    ShopItem(id: 'xp_potion',     name: 'Poción XP',         emoji: '🧪', description: '+2× XP del próximo minijuego',             category: ItemCategory.powerup, price: 10, currency: ItemCurrency.gems, effect: ItemEffect.xpBoost, magnitude: 2, isFeatured: true),
+    ShopItem(id: 'golden_pass',   name: 'Pase Dorado',       emoji: '🎫', description: '¡3★ automáticas sin jugar!',               category: ItemCategory.powerup, price: 25, currency: ItemCurrency.gems, effect: ItemEffect.goldenPass, magnitude: 3, badgeLabel: 'OP'),
+    ShopItem(id: 'revive_scroll', name: 'Pergamino Vida',    emoji: '📜', description: 'Si pierdes, reintentas gratis',            category: ItemCategory.powerup, price: 8,  currency: ItemCurrency.gems, effect: ItemEffect.reviveScroll),
+    ShopItem(id: 'time_hourglass',name: 'Reloj de Arena',    emoji: '⌛', description: '+15s de tiempo extra',                     category: ItemCategory.powerup, price: 55, effect: ItemEffect.timeExtender, magnitude: 15),
+    ShopItem(id: 'hint_crystal',  name: 'Cristal de Pista',  emoji: '🔮', description: 'Revela la respuesta correcta 1 vez',       category: ItemCategory.powerup, price: 35, effect: ItemEffect.hintReveal,   magnitude: 1),
+    ShopItem(id: 'mystery_box',   name: 'Caja Sorpresa',     emoji: '🎁', description: 'Abre para ganar un item aleatorio',        category: ItemCategory.powerup, price: 200),
   ];
 
   // ── Skins ────────────────────────────────
@@ -95,17 +142,23 @@ abstract class ShopCatalog {
     switch (cat) {
       case ItemCategory.food:    return food;
       case ItemCategory.gear:    return gear;
-      case ItemCategory.special: return special;
+      case ItemCategory.powerup: return powerups;
       case ItemCategory.skin:    return skins;
     }
   }
 
   static ShopItem? findById(String id) {
-    for (final list in [food, gear, special, skins]) {
+    for (final list in [food, gear, powerups, skins]) {
       try { return list.firstWhere((i) => i.id == id); } catch (_) {}
     }
     return null;
   }
+
+  /// Items que pueden salir en cofres del mundo.
+  static List<ShopItem> get lootPool => [
+        ...food,
+        ...powerups.where((p) => p.currency == ItemCurrency.coins),
+      ];
 }
 
 // ─────────────────────────────────────────────

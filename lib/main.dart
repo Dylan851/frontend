@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'data/game_state.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  // Cargar progreso persistido antes de arrancar la UI.
+  await GameState().load();
   runApp(const WildQuestApp());
 }
 
@@ -20,7 +23,7 @@ class WildQuestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WildQuest',
+      title: 'AnimalGO!',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
       initialRoute: AppRouter.loading,

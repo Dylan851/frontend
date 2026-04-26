@@ -173,23 +173,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0A1A10),
       body: FadeTransition(
         opacity: _fade,
-        child: Stack(children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0D1A2E), Color(0xFF1A2E4A), Color(0xFF0D1A2E)],
-              ),
-            ),
-          ),
-          CustomPaint(
-            painter: const HexPatternPainter(),
-            size: const Size(double.infinity, double.infinity),
-          ),
+        child: MenuBackdrop(
+          dim: 0.55,
+          child: Stack(children: [
           Column(children: [
             _topBar(),
             Expanded(child: SingleChildScrollView(
@@ -205,53 +194,47 @@ class _ProfileScreenState extends State<ProfileScreen>
           ]),
         ]),
       ),
+      ),
     );
   }
 
   Widget _topBar() => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(children: [
-            BackBtn(),
-            const SizedBox(width: 10),
-            const Text('👤  Mi Perfil',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 17)),
-            const Spacer(),
-            CurrencyChip(icon: '🪙', value: '${_gs.coins}'),
-            const SizedBox(width: 6),
-            CurrencyChip(icon: '💎', value: '${_gs.gems}'),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          child: Column(children: [
+            Row(children: [
+              const BackBtn(),
+              const Spacer(),
+              CurrencyChip(icon: '🪙', value: '${_gs.coins}'),
+              const SizedBox(width: 6),
+              CurrencyChip(icon: '💎', value: '${_gs.gems}'),
+            ]),
+            const SizedBox(height: 8),
+            const OrnateTitle(
+              eyebrow: '— TU TRAVESÍA —',
+              text: 'PERFIL',
+            ),
           ]),
         ),
       );
 
-  Widget _heroCard() => Container(
+  Widget _heroCard() => WoodPanel(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.greenAccent.withOpacity(0.12),
-              Colors.white.withOpacity(0.04),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-              color: AppColors.greenAccent.withOpacity(0.3), width: 1.5),
-        ),
         child: Row(children: [
           // Avatar
           GestureDetector(
             onTap: _pickSkin,
             child: Stack(children: [
               Container(
-                width: 72, height: 72,
+                width: 78, height: 78,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                      colors: [AppColors.goldDark, Color(0xFFFF5500)]),
-                  border: Border.all(color: Colors.white, width: 3),
+                  gradient: const RadialGradient(
+                      colors: [AppColors.amber, AppColors.amberDeep]),
+                  border: Border.all(color: AppColors.parchment, width: 3),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.amber.withOpacity(0.4), blurRadius: 14),
+                  ],
                 ),
                 child: Center(
                   child: Text(_gs.selectedSkin,
@@ -264,16 +247,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.greenAccent,
+                    gradient: const LinearGradient(
+                        colors: [AppColors.emeraldGlow, AppColors.emerald]),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: const Color(0xFF0D2B1A), width: 2),
+                        color: AppColors.parchment, width: 2),
                   ),
-                  child: Text('Nv.${_gs.level}',
+                  child: Text('LV ${_gs.level}',
                       style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 9)),
+                          fontSize: 9,
+                          letterSpacing: 1.0)),
                 ),
               ),
             ]),
@@ -285,11 +270,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text(_gs.playerName,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 19)),
+                  Flexible(
+                    child: Text(_gs.playerName.toUpperCase(),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: AppColors.parchment,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 17,
+                            letterSpacing: 1.6)),
+                  ),
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: _editName,
@@ -336,13 +325,14 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(width: 12),
           // Rank
           Column(children: [
-            Text(_rankEmoji, style: const TextStyle(fontSize: 28)),
+            Text(_rankEmoji, style: const TextStyle(fontSize: 30)),
             const SizedBox(height: 3),
-            Text(_rankName,
+            Text(_rankName.toUpperCase(),
                 style: const TextStyle(
-                    color: AppColors.greenAccent,
+                    color: AppColors.amber,
                     fontWeight: FontWeight.w900,
-                    fontSize: 10)),
+                    fontSize: 10,
+                    letterSpacing: 1.2)),
           ]),
         ]),
       );
@@ -377,23 +367,37 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _statCard(String val, String label) => Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.09), width: 1),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF143421), Color(0xFF0A1F12)],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.amber.withOpacity(0.35), width: 1.4),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.leafShadow.withOpacity(0.45),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(val,
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.parchment,
                     fontWeight: FontWeight.w900,
-                    fontSize: 17)),
+                    fontSize: 17,
+                    letterSpacing: 0.6)),
             const SizedBox(height: 3),
-            Text(label,
+            Text(label.toUpperCase(),
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.45),
-                    fontSize: 8.5),
+                    color: AppColors.amber.withOpacity(0.85),
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8),
                 textAlign: TextAlign.center),
           ],
         ),
@@ -402,13 +406,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _achievementsSection() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('LOGROS',
-              style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5)),
-          const SizedBox(height: 8),
+          const OrnateTitle(
+            eyebrow: '— TUS HAZAÑAS —',
+            text: 'LOGROS',
+          ),
+          const SizedBox(height: 10),
           GridView.count(
             crossAxisCount: 4,
             shrinkWrap: true,
@@ -438,16 +440,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   decoration: BoxDecoration(
-                    color: earned
-                        ? AppColors.gold.withOpacity(0.1)
-                        : Colors.white.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: earned
+                          ? [const Color(0xFF1F4A2C), const Color(0xFF0E2914)]
+                          : [const Color(0xFF0F2418), const Color(0xFF071A0F)],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: earned
-                          ? AppColors.gold.withOpacity(0.4)
-                          : Colors.white.withOpacity(0.12),
-                      width: earned ? 1.5 : 1,
+                          ? AppColors.amber.withOpacity(0.7)
+                          : AppColors.amber.withOpacity(0.12),
+                      width: earned ? 1.8 : 1,
                     ),
+                    boxShadow: earned
+                        ? [BoxShadow(color: AppColors.amber.withOpacity(0.25), blurRadius: 10)]
+                        : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -459,13 +468,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   ? null
                                   : Colors.white.withOpacity(0.2))),
                       const SizedBox(height: 4),
-                      Text(a.$3,
+                      Text(a.$3.toUpperCase(),
                           style: TextStyle(
                               color: earned
-                                  ? Colors.white.withOpacity(0.85)
-                                  : Colors.white.withOpacity(0.25),
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w700),
+                                  ? AppColors.parchment
+                                  : AppColors.parchment.withOpacity(0.3),
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8),
                           textAlign: TextAlign.center,
                           maxLines: 2),
                     ],

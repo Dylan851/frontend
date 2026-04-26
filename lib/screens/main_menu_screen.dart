@@ -1,11 +1,23 @@
 // lib/screens/main_menu_screen.dart
+//
+// Adaptive layout (works on phone landscape, tablet, desktop):
+//   ┌─ profile ───────────────────────── coins · gems · ⚙ ─┐
+//   │                                                       │
+//   │              ┌── WildQuest ──┐                        │
+//   │                                                       │
+//   │   Tienda     Animales                                 │
+//   │   Misiones   Mochila                                  │
+//   │                                                       │
+//   │  ┌─ Mundo seleccionado ───┐    ┌── ¡JUGAR! ──┐        │
+//   └──┘                        └────┘             └────────┘
+//
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../data/game_state.dart';
 import '../data/animal_data.dart';
 import '../data/item_data.dart';
+import '../game/overlays/tutorial_overlay.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -15,443 +27,405 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen>
     with TickerProviderStateMixin {
-  late AnimationController _charCtrl, _fadeCtrl;
-  late Animation<double> _charBob, _fade;
+  late final AnimationController _fadeCtrl;
   final _gs = GameState();
+  bool _showTutorial = false;
 
   @override
   void initState() {
     super.initState();
-    _charCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 1800))
-      ..repeat(reverse: true);
-    _fadeCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 500))
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500))
       ..forward();
-    _charBob = Tween<double>(begin: 0, end: -12).animate(
-        CurvedAnimation(parent: _charCtrl, curve: Curves.easeInOut));
-    _fade = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut));
+    if (!_gs.hasSeenAppTutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _showTutorial = true);
+      });
+    }
   }
 
   @override
   void dispose() {
-    _charCtrl.dispose();
     _fadeCtrl.dispose();
     super.dispose();
   }
 
-  void _push(String route) =>
-      Navigator.pushNamed(context, route).then((_) {
+  void _push(String r) =>
+      Navigator.pushNamed(context, r).then((_) {
         if (mounted) setState(() {});
       });
 
   String get _mapName {
-    try {
-      return MapCatalog.all.firstWhere((m) => m.id == _gs.currentMapId).name;
-    } catch (_) {
-      return 'Aldea Canta';
-    }
+    try { return MapCatalog.all.firstWhere((m) => m.id == _gs.currentMapId).name; }
+    catch (_) { return 'Aldea Canta'; }
   }
-
   String get _mapEmoji {
-    try {
-      return MapCatalog.all.firstWhere((m) => m.id == _gs.currentMapId).emoji;
-    } catch (_) {
-      return '🗺️';
-    }
+    try { return MapCatalog.all.firstWhere((m) => m.id == _gs.currentMapId).emoji; }
+    catch (_) { return '🗺️'; }
+  }
+  int get _mapAnimals {
+    try { return MapCatalog.all.firstWhere((m) => m.id == _gs.currentMapId).animalsCount; }
+    catch (_) { return 6; }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: FadeTransition(
-        opacity: _fade,
+        opacity: _fadeCtrl,
         child: Stack(children: [
-          _bg(),
-          _character(),
-          _topBar(),
-          _sideCol(),
-          _bottomBar(),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/backgrounds/main_menu_bg.png',
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.none,
+            ),
+          ),
+          Positioned.fill(child: Container(color: const Color(0x33000000))),
+
+          SafeArea(
+            child: LayoutBuilder(builder: (context, c) {
+              final w = c.maxWidth;
+              final h = c.maxHeight;
+              // scale UI to fit small phones
+              final scale = (w / 720).clamp(0.65, 1.15);
+              return _buildContent(w, h, scale.toDouble());
+            }),
+          ),
+
+          if (_showTutorial)
+            TutorialOverlay(onFinish: () {
+              _gs.hasSeenAppTutorial = true;
+              _gs.autosave();
+              setState(() => _showTutorial = false);
+            }),
         ]),
       ),
     );
   }
 
-  // ── Background ──────────────────────────────────────────────────────────
-  Widget _bg() => Stack(children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF1A6B3C), Color(0xFF2D9E5F),
-                Color(0xFF1A6B3C), Color(0xFF0D3D20),
-              ],
-              stops: [0.0, 0.3, 0.7, 1.0],
-            ),
-          ),
-        ),
-        Opacity(
-          opacity: 0.04,
-          child: CustomPaint(
-            painter: _HexPainter(),
-            size: const Size(double.infinity, double.infinity),
-          ),
-        ),
-        Positioned(
-          bottom: 0, left: 0, right: 0, height: 120,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [Color(0xFF0A2214), Colors.transparent],
-              ),
-            ),
-          ),
-        ),
-        const Positioned(top: 28, right: 22,
-            child: Text('🍃', style: TextStyle(fontSize: 26, color: Colors.white38))),
-        const Positioned(top: 74, left: 115,
-            child: Text('🌿', style: TextStyle(fontSize: 20, color: Colors.white24))),
-        const Positioned(bottom: 70, right: 54,
-            child: Text('🌺', style: TextStyle(fontSize: 24, color: Colors.white38))),
-        const Positioned(top: 46, right: 172,
-            child: Text('🦋', style: TextStyle(fontSize: 16, color: Colors.white24))),
-      ]);
+  Widget _buildContent(double w, double h, double s) {
+    final pad = 12.0 * s;
+    return Stack(children: [
+      // ─ Top-left: profile pill
+      Positioned(top: pad, left: pad, child: _profileCard(s)),
 
-  // ── Character ───────────────────────────────────────────────────────────
-  Widget _character() => Positioned(
-        bottom: 48, left: 0, right: 0,
+      // ─ Top-right: coins / gems / settings
+      Positioned(top: pad + 4, right: pad, child: Row(children: [
+        OvalGoldChip(icon: '🪙', value: '${_gs.coins}'),
+        SizedBox(width: 8 * s),
+        OvalGoldChip(icon: '💎', value: '${_gs.gems}'),
+        SizedBox(width: 8 * s),
+        _settingsBtn(s),
+      ])),
+
+      // ─ Centered WildQuest logo (top-center)
+      Positioned(
+        top: pad + 4,
+        left: 0, right: 0,
         child: IgnorePointer(
-          child: AnimatedBuilder(
-            animation: _charBob,
-            builder: (_, __) => Transform.translate(
-              offset: Offset(0, _charBob.value),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  width: 88, height: 12,
+          child: Center(child: GameLogo(
+            title: 'AnimalGO!',
+            subtitle: '🌿  Descubre el mundo animal  🌿',
+            fontSize: (w < 520 ? 38 : 56) * s,
+          )),
+        ),
+      ),
+
+      // ─ Side menu (left), vertically centered between profile and bottom row
+      Positioned(
+        top: pad + 90 * s,
+        bottom: pad + 100 * s,
+        left: pad,
+        child: Center(child: _menuGrid(s, w)),
+      ),
+
+      // ─ Bottom-left: map card
+      Positioned(left: pad, bottom: pad, child: _mapCard(s, w)),
+
+      // ─ Bottom-right: ¡JUGAR!
+      Positioned(right: pad, bottom: pad, child: _playButton(s, w)),
+    ]);
+  }
+
+  // ── Profile pill (compact, mobile-friendly) ─────────────────────────
+  Widget _profileCard(double s) => GestureDetector(
+    onTap: () => _push(AppRouter.profile),
+    child: SizedBox(
+      width: 200 * s, height: 64 * s,
+      child: PixelFrame(
+        radius: 12,
+        padding: EdgeInsets.fromLTRB(6 * s, 5 * s, 8 * s, 5 * s),
+        child: Row(children: [
+          Container(
+            width: 42 * s, height: 42 * s,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const RadialGradient(colors: [
+                Color(0xFFFFE48A), Color(0xFFB07A2A),
+              ]),
+              border: Border.all(color: GameTone.goldTrim, width: 1.6),
+            ),
+            child: Center(child: Text(_gs.selectedSkin, style: TextStyle(fontSize: 24 * s))),
+          ),
+          SizedBox(width: 7 * s),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_gs.playerName,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: GameTone.textCream,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13 * s,
+                    height: 1.0,
+                    shadows: const [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2), blurRadius: 0)],
+                  )),
+              SizedBox(height: 2 * s),
+              Text('Nv. ${_gs.level}',
+                  style: TextStyle(
+                    color: GameTone.textGold,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 10 * s,
+                  )),
+              SizedBox(height: 3 * s),
+              Row(children: [
+                Text('⭐', style: TextStyle(fontSize: 9 * s)),
+                SizedBox(width: 3 * s),
+                Expanded(child: Container(
+                  height: 6 * s,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    boxShadow: [BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 14, spreadRadius: 4,
-                    )],
+                    color: GameTone.woodOuter,
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(color: GameTone.goldTrim.withOpacity(0.7), width: 0.7),
                   ),
+                  child: FractionallySizedBox(
+                    widthFactor: AnimalCatalog.all.isEmpty ? 0 : (_gs.discoveredCount / AnimalCatalog.all.length),
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [
+                          Color(0xFFF6C76B), Color(0xFFD4A04A),
+                        ]),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                )),
+                SizedBox(width: 4 * s),
+                Text('${_gs.discoveredCount}/${AnimalCatalog.all.length}',
+                    style: TextStyle(
+                      color: GameTone.textCream,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 9 * s,
+                    )),
+              ]),
+            ],
+          )),
+        ]),
+      ),
+    ),
+  );
+
+  Widget _settingsBtn(double s) => GestureDetector(
+    onTap: () => _push(AppRouter.settings),
+    child: Container(
+      width: 38 * s, height: 38 * s,
+      decoration: BoxDecoration(
+        color: GameTone.woodOuter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: GameTone.goldTrim, width: 1.4),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 4, offset: const Offset(0, 2))],
+      ),
+      child: Center(child: Text('⚙️', style: TextStyle(fontSize: 18 * s))),
+    ),
+  );
+
+  // ── Vertical menu column (left-aligned) ─────────────────────────────
+  Widget _menuGrid(double s, double w) {
+    final btnW = (w < 520 ? 210.0 : 250.0) * s;
+    final gap  = 12.0 * s;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MenuPill(icon: '🛒', label: 'Tienda',   width: btnW, onTap: () => _push(AppRouter.shop)),
+        SizedBox(height: gap),
+        MenuPill(icon: '📖', label: 'Animales', width: btnW, onTap: () => _push(AppRouter.collection)),
+        SizedBox(height: gap),
+        MenuPill(icon: '🎯', label: 'Misiones', width: btnW, onTap: () => _push(AppRouter.missions)),
+        SizedBox(height: gap),
+        MenuPill(icon: '🎒', label: 'Mochila',  width: btnW, onTap: () => _push(AppRouter.inventory)),
+      ],
+    );
+  }
+
+  // ── Bottom-left: Mundo seleccionado card ────────────────────────────
+  Widget _mapCard(double s, double w) {
+    final cardW = (w < 520 ? 240.0 : 380.0) * s;
+    return GestureDetector(
+      onTap: () => _push(AppRouter.mapSelect),
+      child: SizedBox(
+        width: cardW, height: 86 * s,
+        child: PixelFrame(
+          radius: 12,
+          padding: EdgeInsets.fromLTRB(6 * s, 5 * s, 12 * s, 5 * s),
+          child: Row(children: [
+            Container(
+              width: 60 * s, height: 60 * s,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: GameTone.goldTrim, width: 1.4),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                  colors: [Color(0xFF6BBA5B), Color(0xFF1F4E2A)],
                 ),
-                Text(_gs.selectedSkin,
-                    style: const TextStyle(fontSize: 88)),
+              ),
+              child: Center(child: Text(_mapEmoji, style: TextStyle(fontSize: 30 * s))),
+            ),
+            SizedBox(width: 10 * s),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('🌿  MUNDO SELECCIONADO',
+                    style: TextStyle(
+                      color: GameTone.textGold,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10 * s,
+                      letterSpacing: 1.2,
+                    )),
+                SizedBox(height: 3 * s),
+                Text(_mapName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: GameTone.textCream,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18 * s,
+                      height: 1.0,
+                      shadows: const [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2), blurRadius: 0)],
+                    )),
+                SizedBox(height: 3 * s),
+                Container(height: 1, color: GameTone.goldTrim.withOpacity(0.4)),
+                SizedBox(height: 3 * s),
+                Text('$_mapAnimals animales 🌳',
+                    style: TextStyle(
+                      color: GameTone.textCream.withOpacity(0.85),
+                      fontSize: 11 * s,
+                      fontWeight: FontWeight.w700,
+                    )),
+              ],
+            )),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ── Bottom-right: ¡JUGAR! button ────────────────────────────────────
+  Widget _playButton(double s, double w) {
+    final btnW = (w < 520 ? 180.0 : 240.0) * s;
+    return GestureDetector(
+      onTap: () => _push(AppRouter.characterSelect),
+      child: SizedBox(
+        width: btnW,
+        height: 86 * s,
+        child: const _PlayBtnInline(),
+      ),
+    );
+  }
+}
+
+// Inline version of JUGAR that fills its parent height/width.
+class _PlayBtnInline extends StatefulWidget {
+  const _PlayBtnInline();
+  @override
+  State<_PlayBtnInline> createState() => _PlayBtnInlineState();
+}
+
+class _PlayBtnInlineState extends State<_PlayBtnInline>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _c;
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
+      ..repeat(reverse: true);
+  }
+  @override
+  void dispose() { _c.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, __) => Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6BE095).withOpacity(0.3 + 0.3 * _c.value),
+              blurRadius: 22, spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: CustomPaint(
+            painter: _GreenButtonPainterInline(),
+            child: Center(
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: const [
+                Text('🌿', style: TextStyle(fontSize: 18)),
+                SizedBox(width: 6),
+                Text('¡JUGAR!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      letterSpacing: 1.6,
+                      shadows: [
+                        Shadow(color: Color(0xFF0E2C18), offset: Offset(-2, 0), blurRadius: 0),
+                        Shadow(color: Color(0xFF0E2C18), offset: Offset(2, 0), blurRadius: 0),
+                        Shadow(color: Color(0xFF0E2C18), offset: Offset(0, -2), blurRadius: 0),
+                        Shadow(color: Color(0xFF0E2C18), offset: Offset(0, 3), blurRadius: 0),
+                      ],
+                    )),
+                SizedBox(width: 6),
+                Text('🌿', style: TextStyle(fontSize: 18)),
               ]),
             ),
           ),
         ),
-      );
-
-  // ── Top Bar ─────────────────────────────────────────────────────────────
-  Widget _topBar() => Positioned(
-        top: 0, left: 0, right: 0,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(children: [
-              // Profile pill → opens profile screen
-              GestureDetector(
-                onTap: () => _push(AppRouter.profile),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.overlay45,
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(
-                        color: AppColors.borderWhite, width: 1.5),
-                  ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Container(
-                      width: 34, height: 34,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                            colors: [AppColors.goldDark, Color(0xFFFF5500)]),
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Center(
-                        child: Text(_gs.selectedSkin,
-                            style: const TextStyle(fontSize: 19)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_gs.playerName,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12)),
-                        Text(
-                          '⭐ Nv.${_gs.level} · '
-                          '${_gs.discoveredCount}/${AnimalCatalog.all.length} 🐾',
-                          style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 9.5),
-                        ),
-                      ],
-                    ),
-                  ]),
-                ),
-              ),
-              const Spacer(),
-              CurrencyChip(icon: '🪙', value: '${_gs.coins}'),
-              const SizedBox(width: 6),
-              CurrencyChip(icon: '💎', value: '${_gs.gems}'),
-              const SizedBox(width: 8),
-              // Settings button
-              GestureDetector(
-                onTap: () => _push(AppRouter.settings),
-                child: Container(
-                  width: 38, height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.overlay45,
-                    borderRadius: BorderRadius.circular(11),
-                    border: Border.all(
-                        color: AppColors.borderWhite, width: 1.5),
-                  ),
-                  child: const Center(
-                      child: Text('⚙️', style: TextStyle(fontSize: 19))),
-                ),
-              ),
-            ]),
-          ),
-        ),
-      );
-
-  // ── Side column with 4 buttons ──────────────────────────────────────────
-  Widget _sideCol() => Positioned(
-        left: 10, top: 0, bottom: 0,
-        child: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            _sideTile('🛒', 'Tienda', const Color(0xFFFF6B35),
-                badge: '2',
-                onTap: () => _push(AppRouter.shop)),
-            const SizedBox(height: 9),
-            _sideTile('📖', 'Animales', const Color(0xFF4ECDC4),
-                badge: '${_gs.discoveredCount}',
-                onTap: () => _push(AppRouter.collection)),
-            const SizedBox(height: 9),
-            _sideTile('🎯', 'Misiones', const Color(0xFFFFE66D),
-                badge: '!'),
-            const SizedBox(height: 9),
-            _sideTile('🎒', 'Mochila', AppColors.greenAccent,
-                onTap: () => _push(AppRouter.inventory)),
-          ]),
-        ),
-      );
-
-  Widget _sideTile(String icon, String label, Color accent,
-      {String? badge, VoidCallback? onTap}) =>
-    GestureDetector(
-      onTap: onTap,
-      child: Stack(clipBehavior: Clip.none, children: [
-        Container(
-          width: 66,
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(
-            color: AppColors.overlay45,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: accent.withOpacity(0.6), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                  color: accent.withOpacity(0.12),
-                  blurRadius: 8, offset: const Offset(0, 2)),
-            ],
-          ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(icon, style: const TextStyle(fontSize: 24)),
-            const SizedBox(height: 3),
-            Text(label,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w800),
-                textAlign: TextAlign.center),
-          ]),
-        ),
-        if (badge != null)
-          Positioned(
-            top: -6, right: -6,
-            child: Container(
-              width: 20, height: 20,
-              decoration: BoxDecoration(
-                color: badge == '!'
-                    ? const Color(0xFFFF6B35)
-                    : AppColors.greenAccent,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: Center(
-                child: Text(badge,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 7.5,
-                        fontWeight: FontWeight.w900)),
-              ),
-            ),
-          ),
-      ]),
+      ),
     );
-
-  // ── Bottom Bar ──────────────────────────────────────────────────────────
-  Widget _bottomBar() => Positioned(
-        bottom: 14, left: 88, right: 12,
-        child: Row(children: [
-          // Map selector pill
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _push(AppRouter.mapSelect),
-              child: Container(
-                height: 58,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFF1B5E3B), AppColors.greenBright]),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: Colors.white.withOpacity(0.2), width: 1.5),
-                  boxShadow: [BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4))],
-                ),
-                child: Row(children: [
-                  Text(_mapEmoji,
-                      style: const TextStyle(fontSize: 22)),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('SELECCIONAR MAPA',
-                          style: TextStyle(
-                              color: Colors.white.withOpacity(0.55),
-                              fontSize: 7.5,
-                              letterSpacing: 1.5)),
-                      Text(_mapName,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13)),
-                    ],
-                  ),
-                  const Spacer(),
-                  Icon(Icons.chevron_right_rounded,
-                      color: Colors.white.withOpacity(0.4)),
-                ]),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // Play button → character select → game
-          GestureDetector(
-            onTap: () => _push(AppRouter.characterSelect),
-            child: const _GlowingPlayButton(),
-          ),
-        ]),
-      );
-}
-
-// ─── Glowing play button ────────────────────────────────────────────────────
-class _GlowingPlayButton extends StatefulWidget {
-  const _GlowingPlayButton();
-  @override
-  State<_GlowingPlayButton> createState() => _GlowingPlayButtonState();
-}
-
-class _GlowingPlayButtonState extends State<_GlowingPlayButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _c;
-  late Animation<double> _g;
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 1600))
-      ..repeat(reverse: true);
-    _g = Tween<double>(begin: 0.4, end: 1.0)
-        .animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
   }
-  @override
-  void dispose() { _c.dispose(); super.dispose(); }
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _g,
-        builder: (_, __) => Container(
-          height: 58,
-          padding: const EdgeInsets.symmetric(horizontal: 22),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-                colors: [AppColors.greenAccent, AppColors.greenDeep]),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                  color: AppColors.greenAccent.withOpacity(_g.value * 0.7),
-                  blurRadius: 28),
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.35),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4)),
-            ],
-          ),
-          child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Text('¡JUGAR!',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                    letterSpacing: 1,
-                    shadows: [
-                      Shadow(color: Color(0xFF0A3A1A),
-                          offset: Offset(0, 2), blurRadius: 4)
-                    ])),
-            SizedBox(width: 8),
-            Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26),
-          ]),
-        ),
-      );
 }
 
-// ─── Hex background painter ─────────────────────────────────────────────────
-class _HexPainter extends CustomPainter {
+class _GreenButtonPainterInline extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    const r = 30.0;
-    const h = r * 1.732;
-    int col = 0;
-    for (double x = 0; x < size.width + r * 2; x += r * 1.5) {
-      for (double y = col.isEven ? 0.0 : h / 2;
-          y < size.height + h;
-          y += h) {
-        final path = Path();
-        for (int i = 0; i < 6; i++) {
-          final a = math.pi / 180 * (60 * i - 30);
-          i == 0
-              ? path.moveTo(x + r * math.cos(a), y + r * math.sin(a))
-              : path.lineTo(x + r * math.cos(a), y + r * math.sin(a));
-        }
-        path.close();
-        canvas.drawPath(path, p);
-      }
-      col++;
-    }
+    final outer = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(14));
+    canvas.drawRRect(outer, Paint()..color = const Color(0xFF1A0E04));
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(const Offset(2, 2) & Size(size.width - 4, size.height - 4), const Radius.circular(12)),
+      Paint()..color = GameTone.goldTrim,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(const Offset(5, 5) & Size(size.width - 10, size.height - 10), const Radius.circular(10)),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          colors: [Color(0xFF6BBA5B), Color(0xFF3A7A3A), Color(0xFF1F4E2A)],
+        ).createShader(const Offset(5, 5) & Size(size.width - 10, size.height - 10)),
+    );
+    canvas.drawLine(
+      const Offset(10, 8.5),
+      Offset(size.width - 10, 8.5),
+      Paint()..color = const Color(0x55FFFFFF)..strokeWidth = 1.4,
+    );
   }
-
   @override
   bool shouldRepaint(_) => false;
 }

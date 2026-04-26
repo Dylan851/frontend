@@ -136,31 +136,10 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
   }
 
   // ─── Título ──────────────────────────────────────────────────────────────
-  Widget _buildTitle() => Column(children: [
-        ShaderMask(
-          shaderCallback: (b) => const LinearGradient(
-            colors: [AppColors.gold, AppColors.goldDark],
-          ).createShader(b),
-          child: const Text(
-            'ELIGE TU PERSONAJE',
-            style: TextStyle(
-              color:       Colors.white,
-              fontSize:    22,
-              fontWeight:  FontWeight.w900,
-              letterSpacing: 2.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '¿Quién explorará el bosque?',
-          style: TextStyle(
-            color:      Colors.white.withOpacity(0.55),
-            fontSize:   12,
-            fontStyle:  FontStyle.italic,
-          ),
-        ),
-      ]);
+  Widget _buildTitle() => const OrnateTitle(
+        eyebrow: '— ¿QUIÉN PARTIRÁ AL BOSQUE? —',
+        text: 'ELIGE TU HÉROE',
+      );
 
   // ─── Tarjeta de personaje ────────────────────────────────────────────────
   Widget _buildCard(int i) {
@@ -419,46 +398,33 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
     final locked = info.locked;
     final accent = Color(info.colorValue);
 
-    return GestureDetector(
-      onTap: locked ? null : _confirm,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height:  58,
+    if (locked) {
+      return Container(
+        height: 58,
         padding: const EdgeInsets.symmetric(horizontal: 36),
         decoration: BoxDecoration(
-          gradient: locked
-              ? const LinearGradient(
-                  colors: [Color(0xFF444444), Color(0xFF222222)])
-              : LinearGradient(
-                  colors: [accent, accent.withOpacity(0.7)]),
+          color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: locked
-              ? []
-              : [
-                  BoxShadow(
-                    color:      accent.withOpacity(0.55),
-                    blurRadius: 22,
-                    spreadRadius: 2,
-                  )
-                ],
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(
-            locked ? '🔒  BLOQUEADO' : '¡JUGAR AHORA!',
-            style: TextStyle(
-              color:       locked ? Colors.white38 : Colors.white,
-              fontSize:    18,
-              fontWeight:  FontWeight.w900,
-              letterSpacing: 1,
-            ),
-          ),
-          if (!locked) ...[
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_rounded,
-                color: Colors.white, size: 22),
-          ],
+        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+          Text('🔒  BLOQUEADO',
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.4,
+              )),
         ]),
-      ),
+      );
+    }
+    return ChunkyButton(
+      label: '¡JUGAR AHORA!',
+      icon: Icons.arrow_forward_rounded,
+      color: accent,
+      height: 58,
+      wide: true,
+      onTap: _confirm,
     );
   }
 }
@@ -476,12 +442,12 @@ class _BgPainter extends CustomPainter {
       rect,
       Paint()
         ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end:   Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end:   Alignment.bottomCenter,
           colors: [
-            Color(0xFF0D3D20),
-            Color(0xFF1A6B3C),
-            Color(0xFF0A2214),
+            Color(0xFF0F2A18),
+            Color(0xFF0A1A10),
+            Color(0xFF050E08),
           ],
         ).createShader(rect),
     );
@@ -494,7 +460,7 @@ class _BgPainter extends CustomPainter {
       final y   = (rng.nextDouble() + t * rng.nextDouble() * 0.3) % 1.0 * size.height;
       final a   = math.sin((t + i * 0.31) * math.pi * 2) * 0.4 + 0.4;
       final rad = 2.0 + rng.nextDouble() * 3;
-      paint.color = const Color(0xFF56E39F).withOpacity(a * 0.55);
+      paint.color = const Color(0xFFE8B452).withOpacity(a * 0.45);
       canvas.drawCircle(Offset(x, y), rad, paint);
     }
   }

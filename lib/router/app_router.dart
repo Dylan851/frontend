@@ -12,6 +12,7 @@ import '../screens/shop_screen.dart';
 import '../screens/inventory_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/missions_screen.dart';
 import '../data/animal_data.dart';
 
 abstract class AppRouter {
@@ -27,6 +28,7 @@ abstract class AppRouter {
   static const String inventory       = '/inventory';
   static const String profile         = '/profile';
   static const String settings        = '/settings';
+  static const String missions        = '/missions';
 
   static Route<dynamic> generateRoute(RouteSettings s) {
     switch (s.name) {
@@ -41,6 +43,7 @@ abstract class AppRouter {
       case inventory:  return _slide(const InventoryScreen());
       case profile:    return _slide(const ProfileScreen());
       case settings:   return _slide(const SettingsScreen());
+      case missions:   return _slide(const MissionsScreen());
       case minigame:
         final animal = s.arguments as AnimalData;
         return _slide(MinigameScreen(animal: animal));

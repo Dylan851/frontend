@@ -12,6 +12,7 @@ import '../data/item_data.dart';
 import '../data/game_state.dart';
 import '../data/map_walkable.dart';
 import '../game/map/maps_reader.dart';
+import '../game/overlays/tutorial_overlay.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -22,6 +23,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   AnimalData? currentAnimal;
   static const double _tile = 32.0;
+  bool _showMapIntro = false;
 
   late final AnimationController _fadeInCtrl;
   late final AnimationController _ambientCtrl;
@@ -39,6 +41,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _ambientCtrl =
         AnimationController(vsync: this, duration: const Duration(seconds: 6))
           ..repeat();
+    // Intro de mapa la primera vez que se entra a este mapa.
+    final gs = GameState();
+    if (!gs.mapsIntroSeen.contains(gs.currentMapId)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _showMapIntro = true);
+      });
+    }
   }
 
   @override
@@ -107,6 +116,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final gs = GameState();
+    // Context usado por los cofres para abrir el diálogo de botín.
+    CollectibleItem.uiContext = context;
 
     return Scaffold(
       body: Stack(children: [
@@ -119,7 +130,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               position: _playerStart,
               characterId: gs.selectedCharacter,
             ),
-            components: [..._buildAnimals(), ..._buildItems()],
+            components: [..._buildAnimals(), ..._buildItems(), ..._buildBorders()],
             cameraConfig: CameraConfig(
               speed: 4.0, // más bajo = cámara más suave; infinito = instantáneo
               zoom: 2.6, // algo menos de zoom para mejor visibilidad
@@ -221,6 +232,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
+
+        // ── Intro de mapa (primera vez) ──────────────────────────────────
+        if (_showMapIntro)
+          MapIntroOverlay(
+            mapId: gs.currentMapId,
+            onClose: () {
+              gs.mapsIntroSeen.add(gs.currentMapId);
+              setState(() => _showMapIntro = false);
+            },
+          ),
       ]),
     );
   }
@@ -238,7 +259,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final rng = math.Random(DateTime.now().millisecondsSinceEpoch);
     final walk = MapWalkable.byMap[_walkKey] ?? const <(int, int)>[];
     if (walk.isEmpty) return const [];
-    final pool = List.of(AnimalCatalog.basicPack)..shuffle(rng);
+    final gs = GameState();
+    // Excluir animales ya descubiertos para que no reaparezcan en el mapa.
+    final pool = AnimalCatalog.basicPack
+        .where((a) => !gs.discoveredAnimals.contains(a.id))
+        .toList()
+      ..shuffle(rng);
+    if (pool.isEmpty) return const [];
     final animals = pool.take(6).toList();
     final used = <(int, int)>{};
     final list = <AnimalNpc>[];
@@ -266,7 +293,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final rng = math.Random(gs.currentMapId.hashCode);
     final walk = MapWalkable.byMap[_walkKey] ?? const <(int, int)>[];
     if (walk.isEmpty) return const [];
-    const types = ItemType.values;
+    // Ítems sueltos (no cofres): dan recursos pequeños.
+    const lootTypes = [
+      ItemType.mushroom, ItemType.gem, ItemType.star,
+      ItemType.leaf, ItemType.berry,
+    ];
     final items = <CollectibleItem>[];
     final used = <(int, int)>{};
     for (int i = 0; i < 10; i++) {
@@ -281,11 +312,74 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       if (gs.isMapItemCollected(id)) continue;
       items.add(CollectibleItem(
         position: Vector2(p.$1 * _tile, p.$2 * _tile),
-        itemType: types[rng.nextInt(types.length)],
+        itemType: lootTypes[rng.nextInt(lootTypes.length)],
         itemId: id,
       ));
     }
+    // Cofres: 3 normales + 1 grande por mapa. Siempre en tiles BORDE de la
+    // zona caminable (un tile caminable con al menos 1 vecino no caminable).
+    final walkSet = walk.toSet();
+    final edgeTiles = walk.where((t) {
+      final (x, y) = t;
+      return !walkSet.contains((x + 1, y)) ||
+             !walkSet.contains((x - 1, y)) ||
+             !walkSet.contains((x, y + 1)) ||
+             !walkSet.contains((x, y - 1));
+    }).toList()..shuffle(rng);
+    final chestPool = edgeTiles.isNotEmpty ? edgeTiles : walk;
+    for (int i = 0; i < 4; i++) {
+      (int, int) p;
+      int tries = 0;
+      do {
+        p = chestPool[rng.nextInt(chestPool.length)];
+        tries++;
+      } while (used.contains(p) && tries < 40);
+      used.add(p);
+      final chestId = '${gs.currentMapId}_chest_$i';
+      if (gs.isChestOpened(chestId)) continue;
+      items.add(CollectibleItem(
+        position: Vector2(p.$1 * _tile, p.$2 * _tile),
+        itemType: i == 0 ? ItemType.treasureChest : ItemType.chest,
+        itemId: chestId,
+      ));
+    }
     return items;
+  }
+
+  /// Muros invisibles en los 4 bordes del mapa para que el jugador no
+  /// se salga por arriba/abajo/izq/der.
+  List<GameComponent> _buildBorders() {
+    final s = _spec;
+    final w = s.w * _tile;
+    final h = s.h * _tile;
+    const thick = 32.0;
+    return [
+      _MapBorder(position: Vector2(-thick, -thick), size: Vector2(w + thick * 2, thick)),            // top
+      _MapBorder(position: Vector2(-thick, h),       size: Vector2(w + thick * 2, thick)),            // bottom
+      _MapBorder(position: Vector2(-thick, 0),       size: Vector2(thick, h)),                        // left
+      _MapBorder(position: Vector2(w, 0),            size: Vector2(thick, h)),                        // right
+    ];
+  }
+}
+
+/// Muro invisible sólido usado para encerrar al jugador dentro del mapa.
+class _MapBorder extends GameDecoration {
+  _MapBorder({required Vector2 position, required Vector2 size})
+      : super(position: position, size: size);
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    add(RectangleHitbox(
+      size: size,
+      collisionType: CollisionType.passive,
+      isSolid: true,
+    ));
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // invisible
   }
 }
 

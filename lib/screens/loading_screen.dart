@@ -1,8 +1,17 @@
 // lib/screens/loading_screen.dart
+//
+// Pantalla de carga al estilo del resto del juego:
+//   · Fondo pixel-art forest (mismo asset que las otras pantallas)
+//   · Logo "AnimalGO!" idéntico al del menú principal (degradado dorado,
+//     borde negro grueso, hojita)
+//   · Marco PixelFrame con barra de progreso pixel-art (oro sobre madera)
+//   · Tip rotativo dentro de un WoodChip
+//   · Luciérnagas doradas para mantener vida
+//
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
-import 'dart:math' as math;
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -12,8 +21,9 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen>
     with TickerProviderStateMixin {
-  late AnimationController _logoCtrl, _progressCtrl, _particleCtrl, _bobCtrl;
-  late Animation<double> _logoScale, _logoFade, _progress, _bob;
+  late final AnimationController _logoCtrl, _progressCtrl,
+      _particleCtrl, _bobCtrl;
+  late final Animation<double> _logoScale, _logoFade, _progress, _bob;
   int _tipIndex = 0;
 
   static const _tips = [
@@ -28,15 +38,24 @@ class _LoadingScreenState extends State<LoadingScreen>
   @override
   void initState() {
     super.initState();
-    _logoCtrl    = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..forward();
-    _particleCtrl= AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
-    _progressCtrl= AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
-    _bobCtrl     = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))..repeat(reverse: true);
+    _logoCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1000))..forward();
+    _particleCtrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 4))..repeat();
+    _progressCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3000));
+    _bobCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1800))
+      ..repeat(reverse: true);
 
-    _logoScale = Tween<double>(begin: 0.2, end: 1.0).animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut));
-    _logoFade  = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _logoCtrl, curve: const Interval(0, 0.3)));
-    _progress  = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut));
-    _bob       = Tween<double>(begin: 0.0, end: -8.0).animate(CurvedAnimation(parent: _bobCtrl, curve: Curves.easeInOut));
+    _logoScale = Tween<double>(begin: 0.2, end: 1.0)
+        .animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut));
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _logoCtrl, curve: const Interval(0, 0.3)));
+    _progress = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut));
+    _bob = Tween<double>(begin: 0.0, end: -10.0)
+        .animate(CurvedAnimation(parent: _bobCtrl, curve: Curves.easeInOut));
 
     _progressCtrl.addListener(() {
       final idx = (_progressCtrl.value * (_tips.length - 1)).round();
@@ -47,7 +66,9 @@ class _LoadingScreenState extends State<LoadingScreen>
       if (mounted) {
         _progressCtrl.forward().then((_) {
           Future.delayed(const Duration(milliseconds: 200), () {
-            if (mounted) Navigator.of(context).pushReplacementNamed(AppRouter.mainMenu);
+            if (mounted) {
+              Navigator.of(context).pushReplacementNamed(AppRouter.mainMenu);
+            }
           });
         });
       }
@@ -56,87 +77,188 @@ class _LoadingScreenState extends State<LoadingScreen>
 
   @override
   void dispose() {
-    _logoCtrl.dispose(); _progressCtrl.dispose();
-    _particleCtrl.dispose(); _bobCtrl.dispose();
+    _logoCtrl.dispose();
+    _progressCtrl.dispose();
+    _particleCtrl.dispose();
+    _bobCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(children: [
-        Container(decoration: const BoxDecoration(gradient: LinearGradient(
-          begin: Alignment.topCenter, end: Alignment.bottomCenter,
-          colors: [AppColors.greenDark, AppColors.greenMid, AppColors.greenDark],
-        ))),
-        AnimatedBuilder(animation: _particleCtrl, builder: (_, __) =>
-            CustomPaint(painter: _FireflyPainter(_particleCtrl.value), size: Size.infinite)),
-        _vignette(),
-        Center(child: FadeTransition(opacity: _logoFade, child: ScaleTransition(scale: _logoScale,
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            AnimatedBuilder(animation: _bob, builder: (_, __) => Transform.translate(
-              offset: Offset(0, _bob.value),
-              child: Container(width: 110, height: 110,
-                decoration: BoxDecoration(shape: BoxShape.circle,
-                  gradient: const LinearGradient(colors: [AppColors.greenAccent, AppColors.greenDeep]),
-                  boxShadow: [BoxShadow(color: AppColors.greenAccent.withOpacity(0.5), blurRadius: 35, spreadRadius: 6)],
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 3)),
-                child: const Center(child: Text('🌿', style: TextStyle(fontSize: 55)))),
-            )),
-            const SizedBox(width: 40),
-            Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              ShaderMask(shaderCallback: (b) => const LinearGradient(colors: [AppColors.gold, AppColors.goldDark]).createShader(b),
-                child: const Text('WILDQUEST', style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 4))),
-              Text('Descubre el mundo animal', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.6), fontStyle: FontStyle.italic, letterSpacing: 1.5)),
-            ]),
-          ]),
-        ))),
-        Positioned(bottom: 20, left: 60, right: 60, child: AnimatedBuilder(animation: _progress, builder: (_, __) =>
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            AnimatedSwitcher(duration: const Duration(milliseconds: 400),
-              child: Text(_tips[_tipIndex], key: ValueKey(_tipIndex),
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11))),
-            const SizedBox(height: 8),
-            ClipRRect(borderRadius: BorderRadius.circular(10), child: Stack(children: [
-              Container(height: 10, color: Colors.black.withOpacity(0.4)),
-              FractionallySizedBox(widthFactor: _progress.value, child: Container(height: 10,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),
-                  gradient: const LinearGradient(colors: [AppColors.greenAccent, AppColors.gold]),
-                  boxShadow: [BoxShadow(color: AppColors.greenAccent.withOpacity(0.6), blurRadius: 8)]))),
-            ])),
-            const SizedBox(height: 4),
-            Text('${(_progress.value * 100).toInt()}%', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10)),
-          ]),
-        )),
-      ]),
+      backgroundColor: const Color(0xFF0A1A10),
+      body: MenuBackdrop(
+        dim: 0.45,
+        child: Stack(children: [
+          // Luciérnagas doradas
+          AnimatedBuilder(
+            animation: _particleCtrl,
+            builder: (_, __) => CustomPaint(
+              painter: _GoldFireflyPainter(_particleCtrl.value),
+              size: Size.infinite,
+            ),
+          ),
+          // Logo + tagline
+          Center(
+            child: FadeTransition(
+              opacity: _logoFade,
+              child: ScaleTransition(
+                scale: _logoScale,
+                child: AnimatedBuilder(
+                  animation: _bob,
+                  builder: (_, child) => Transform.translate(
+                    offset: Offset(0, _bob.value),
+                    child: child,
+                  ),
+                  child: const _LogoBlock(),
+                ),
+              ),
+            ),
+          ),
+          // Bottom: progress + tip
+          Positioned(
+            left: 40, right: 40, bottom: 30,
+            child: AnimatedBuilder(
+              animation: _progress,
+              builder: (_, __) => Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Tip
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: WoodChip(
+                      key: ValueKey(_tipIndex),
+                      label: _tips[_tipIndex],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Progress bar (pixel art) — borde madera + interior dorado
+                  Container(
+                    height: 24,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                        colors: [Color(0xFF4A2D14), Color(0xFF2A1A0C)],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: GameTone.goldTrim, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 8, offset: const Offset(0, 3)),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Stack(children: [
+                        // Inner well (darker wood)
+                        Container(color: const Color(0xFF1A0E04)),
+                        // Filled gold gradient
+                        FractionallySizedBox(
+                          widthFactor: _progress.value,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(colors: [
+                                Color(0xFFFFE48A),
+                                Color(0xFFE8B452),
+                                Color(0xFFB07A2A),
+                              ]),
+                            ),
+                          ),
+                        ),
+                        // Top highlight stroke
+                        Positioned(
+                          left: 0, right: 0, top: 1, height: 2,
+                          child: FractionallySizedBox(
+                            widthFactor: _progress.value,
+                            child: Container(color: Colors.white.withOpacity(0.35)),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Cargando…  ${(_progress.value * 100).toInt()}%',
+                    style: const TextStyle(
+                      color: GameTone.textGold,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      letterSpacing: 1.2,
+                      shadows: [
+                        Shadow(
+                            color: Color(0xFF1A0E04),
+                            offset: Offset(0, 2),
+                            blurRadius: 0),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]),
+      ),
     );
   }
-
-  Widget _vignette() => Stack(children: [
-    _vig(Alignment.centerLeft, Alignment.centerRight, left: 0, width: 70, isH: true),
-    _vig(Alignment.centerRight, Alignment.centerLeft, right: 0, width: 70, isH: true),
-    _vig(Alignment.topCenter, Alignment.bottomCenter, top: 0, height: 45, isH: false),
-    _vig(Alignment.bottomCenter, Alignment.topCenter, bottom: 0, height: 45, isH: false),
-  ]);
-
-  Widget _vig(AlignmentGeometry b, AlignmentGeometry e, {double? left, double? right, double? top, double? bottom, double? width, double? height, required bool isH}) =>
-    Positioned(left: left, right: right, top: top, bottom: bottom, width: width, height: height,
-      child: Container(decoration: BoxDecoration(gradient: LinearGradient(begin: b, end: e,
-        colors: [const Color(0xFF0A2214), Colors.transparent]))));
 }
 
-class _FireflyPainter extends CustomPainter {
+/// Bloque de logo idéntico al del menú principal — usa el GameLogo con el
+/// nombre AnimalGO! para mantener consistencia.
+class _LogoBlock extends StatelessWidget {
+  const _LogoBlock();
+  @override
+  Widget build(BuildContext context) {
+    return Column(mainAxisSize: MainAxisSize.min, children: const [
+      GameLogo(
+        title: 'AnimalGO!',
+        subtitle: '🌿  Descubre el mundo animal  🌿',
+        fontSize: 64,
+      ),
+    ]);
+  }
+}
+
+/// Luciérnagas en tonos amarillos/dorados.
+class _GoldFireflyPainter extends CustomPainter {
   final double p;
-  static final _ff = List.generate(18, (i) => {'x': (i * 137.5) % 1.0, 'y': (i * 97.3) % 1.0, 'spd': 0.3 + (i % 5) * 0.08, 'ph': (i * 0.7) % 1.0, 'sz': 2.0 + (i % 3).toDouble()});
-  const _FireflyPainter(this.p);
+  static final _ff = List.generate(20, (i) => {
+        'x': (i * 137.5) % 1.0,
+        'y': (i * 97.3) % 1.0,
+        'spd': 0.25 + (i % 5) * 0.07,
+        'ph': (i * 0.7) % 1.0,
+        'sz': 1.6 + (i % 3) * 0.8,
+      });
+  const _GoldFireflyPainter(this.p);
+
   @override
   void paint(Canvas c, Size s) {
     for (final f in _ff) {
       final ph = (f['ph']! + p * f['spd']!) % 1.0;
-      final a  = math.sin(ph * math.pi * 2) * 0.5 + 0.5;
-      c.drawCircle(Offset(f['x']! * s.width, (f['y']! + math.sin(ph * math.pi) * 0.04) * s.height), f['sz']!,
-        Paint()..color = const Color(0xFF56E39F).withOpacity(a * 0.7)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+      final a = math.sin(ph * math.pi * 2) * 0.5 + 0.5;
+      final dx = f['x']! * s.width;
+      final dy = (f['y']! + math.sin(ph * math.pi) * 0.04) * s.height;
+      // soft halo
+      c.drawCircle(
+        Offset(dx, dy),
+        f['sz']! * 2.6,
+        Paint()
+          ..color = const Color(0xFFFFE48A).withOpacity(a * 0.18)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
+      // bright core
+      c.drawCircle(
+        Offset(dx, dy),
+        f['sz']!,
+        Paint()
+          ..color = const Color(0xFFFFE48A).withOpacity(a * 0.85)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
+      );
     }
   }
-  @override bool shouldRepaint(_FireflyPainter o) => o.p != p;
+
+  @override
+  bool shouldRepaint(_GoldFireflyPainter o) => o.p != p;
 }
