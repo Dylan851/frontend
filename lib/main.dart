@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 import 'data/game_state.dart';
+import 'services/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,11 +15,12 @@ Future<void> main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   // Cargar progreso persistido antes de arrancar la UI.
   await GameState().load();
-  runApp(const WildQuestApp());
+  GameState.autosaveSyncHook = AuthService.syncGameStateToBackend;
+  runApp(const AnimalGoApp());
 }
 
-class WildQuestApp extends StatelessWidget {
-  const WildQuestApp({super.key});
+class AnimalGoApp extends StatelessWidget {
+  const AnimalGoApp({super.key});
 
   @override
   Widget build(BuildContext context) {

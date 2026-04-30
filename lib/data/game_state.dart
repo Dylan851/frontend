@@ -16,92 +16,98 @@ class ChestReward {
 
 class GameState {
   static final GameState _instance = GameState._internal();
+  static Future<void> Function(GameState state)? autosaveSyncHook;
   factory GameState() => _instance;
   GameState._internal();
 
-  // ── Progreso ──────────────────────────────
-  final Set<String> discoveredAnimals   = {};
-  final Set<String> completedMinigames  = {};
-  final Set<String> earnedAchievements  = {'first_animal', 'first_items', 'first_minigame'};
-  // Ítems recogidos del mapa — persisten entre entradas al mismo mapa.
-  final Set<String> collectedMapItems   = {};
+  // â”€â”€ Progreso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  final Set<String> discoveredAnimals = {};
+  final Set<String> completedMinigames = {};
+  final Set<String> earnedAchievements = {
+    'first_animal',
+    'first_items',
+    'first_minigame'
+  };
+  // Ãtems recogidos del mapa â€” persisten entre entradas al mismo mapa.
+  final Set<String> collectedMapItems = {};
   // Cofres abiertos del mapa (persistentes).
-  final Set<String> openedChests        = {};
-  // Tutoriales vistos (persistentes dentro de la sesión).
-  bool hasSeenAppTutorial               = false;
-  final Set<String> mapsIntroSeen       = {};
+  final Set<String> openedChests = {};
+  // Tutoriales vistos (persistentes dentro de la sesiÃ³n).
+  bool hasSeenAppTutorial = false;
+  final Set<String> mapsIntroSeen = {};
   // Misiones reclamadas (recompensa cobrada).
-  final Set<String> claimedMissions     = {};
+  final Set<String> claimedMissions = {};
   // Acumulados para las metas de misiones.
-  int coinsEarnedTotal  = 0;
-  int itemsBoughtTotal  = 0;
+  int coinsEarnedTotal = 0;
+  int itemsBoughtTotal = 0;
 
-  // ── Economía ──────────────────────────────
-  int score = 2150;
-  int coins = 1240;
-  int gems  = 85;
+  // â”€â”€ EconomÃ­a â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  int score = 0;
+  int coins = 0;
+  int gems = 0;
 
-  // ── Perfil ────────────────────────────────
-  String playerName  = 'Explorador';
-  String selectedSkin = '🧑';
-  int    level        = 7;
-  int    currentXp    = 680;
-  int    maxXp        = 1000;
+  // â”€â”€ Perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  String playerName = 'Explorador';
+  String selectedSkin = 'ðŸ§‘';
+  int level = 7;
+  int currentXp = 680;
+  int maxXp = 1000;
   String currentMapId = 'jungle';
 
-  // ── Inventario ────────────────────────────
+  // â”€â”€ Inventario â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   final Map<String, int> inventory = {
-    'apple':     3, 'steak':  2, 'honey':   1,
-    'berries':   5, 'chestnut': 6, 'carrot': 2,
-    'banana':    2,
-    'torch':     1, 'compass': 1, 'camera': 1,
-    'gloves':    1, 'boots':   1,
+    'apple': 3, 'steak': 2, 'honey': 1,
+    'berries': 5, 'chestnut': 6, 'carrot': 2,
+    'banana': 2,
+    'torch': 1, 'compass': 1, 'camera': 1,
+    'gloves': 1, 'boots': 1,
     // Power-ups iniciales para que el jugador pruebe el sistema.
-    'lucky_charm':  1,
+    'lucky_charm': 1,
     'time_hourglass': 1,
-    'hint_crystal':  1,
+    'hint_crystal': 1,
     'revive_scroll': 1,
-    'xp_potion':     2,
+    'xp_potion': 2,
   };
 
   // Slots de equipo: head, hands, body, feet
   final Map<String, String?> equipped = {
-    'head':  'skin_cowboy',
+    'head': 'skin_cowboy',
     'hands': 'gloves',
-    'body':  null,
-    'feet':  'boots',
+    'body': null,
+    'feet': 'boots',
   };
 
-  // ── Buffs activos para el PRÓXIMO minijuego ───────────
-  // Consumidos automáticamente al entrar/finalizar el minijuego.
+  // â”€â”€ Buffs activos para el PRÃ“XIMO minijuego â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Consumidos automÃ¡ticamente al entrar/finalizar el minijuego.
   final Set<ItemEffect> _pendingMinigameEffects = <ItemEffect>{};
 
-  // ── Mapa ──────────────────────────────────
+  // â”€â”€ Mapa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   double savedX = 0;
   double savedY = 0;
   String? savedMapId;
 
-  // ── Personaje seleccionado ─────────────────
+  // â”€â”€ Personaje seleccionado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   String selectedCharacter = 'hero';
 
-  // ── Ajustes ───────────────────────────────
-  bool  musicOn     = true;
-  bool  sfxOn       = true;
-  double musicVol   = 0.7;
-  bool  joystickOn  = true;
-  bool  vibrationOn = false;
+  // â”€â”€ Ajustes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  bool musicOn = true;
+  bool sfxOn = true;
+  double musicVol = 0.7;
+  bool joystickOn = true;
+  bool vibrationOn = false;
   double sensitivity = 0.55;
-  bool  nightMode   = false;
+  bool nightMode = false;
   double hudBrightness = 0.8;
-  bool  cloudSave   = true;
-  String language   = 'Español';
+  bool cloudSave = true;
+  String language = 'EspaÃ±ol';
 
-  // ── Getters ───────────────────────────────
-  bool get allAnimalsDiscovered => discoveredAnimals.length >= AnimalCatalog.all.length;
-  int  get discoveredCount      => discoveredAnimals.length;
-  double get xpPercent          => currentXp / maxXp;
+  // â”€â”€ Getters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  bool get allAnimalsDiscovered =>
+      discoveredAnimals.length >= AnimalCatalog.all.length;
+  int get discoveredCount => discoveredAnimals.length;
+  double get xpPercent => currentXp / maxXp;
 
-  // ── Animales ──────────────────────────────
+  // â”€â”€ Animales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void discoverAnimal(String id) {
     if (!discoveredAnimals.contains(id)) {
       discoveredAnimals.add(id);
@@ -125,8 +131,9 @@ class GameState {
     if (_pendingMinigameEffects.contains(ItemEffect.goldenPass)) {
       finalStars = 3;
     }
-    int coinMult = _pendingMinigameEffects.contains(ItemEffect.coinDoubler) ? 2 : 1;
-    int xpMult   = _pendingMinigameEffects.contains(ItemEffect.xpBoost)     ? 2 : 1;
+    int coinMult =
+        _pendingMinigameEffects.contains(ItemEffect.coinDoubler) ? 2 : 1;
+    int xpMult = _pendingMinigameEffects.contains(ItemEffect.xpBoost) ? 2 : 1;
 
     if (finalStars >= 2) {
       discoverAnimal(animalId);
@@ -137,33 +144,43 @@ class GameState {
     coins += cReward;
     coinsEarnedTotal += cReward;
     currentXp += finalStars * 30 * xpMult;
-    if (currentXp >= maxXp) { level++; currentXp -= maxXp; maxXp = (maxXp * 1.2).round(); }
+    if (currentXp >= maxXp) {
+      level++;
+      currentXp -= maxXp;
+      maxXp = (maxXp * 1.2).round();
+    }
 
     // Consumir todos los buffs tras completar (revive se consume al reintentar).
     _pendingMinigameEffects.removeAll([
-      ItemEffect.luckyCharm, ItemEffect.coinDoubler, ItemEffect.xpBoost,
-      ItemEffect.goldenPass, ItemEffect.timeExtender, ItemEffect.hintReveal,
+      ItemEffect.luckyCharm,
+      ItemEffect.coinDoubler,
+      ItemEffect.xpBoost,
+      ItemEffect.goldenPass,
+      ItemEffect.timeExtender,
+      ItemEffect.hintReveal,
     ]);
     autosave();
   }
 
-  // ── Buffs de minijuego ────────────────────
+  // â”€â”€ Buffs de minijuego â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool hasPendingEffect(ItemEffect e) => _pendingMinigameEffects.contains(e);
-  Set<ItemEffect> get pendingEffects => Set.unmodifiable(_pendingMinigameEffects);
+  Set<ItemEffect> get pendingEffects =>
+      Set.unmodifiable(_pendingMinigameEffects);
 
-  /// Activa un power-up para el próximo minijuego. Consume 1 del inventario.
-  /// Devuelve true si se activó correctamente.
+  /// Activa un power-up para el prÃ³ximo minijuego. Consume 1 del inventario.
+  /// Devuelve true si se activÃ³ correctamente.
   bool activatePowerUp(String itemId) {
     final item = ShopCatalog.findById(itemId);
     if (item == null || !item.isMinigamePowerUp) return false;
     if ((inventory[itemId] ?? 0) <= 0) return false;
-    if (_pendingMinigameEffects.contains(item.effect)) return false; // ya activo
+    if (_pendingMinigameEffects.contains(item.effect))
+      return false; // ya activo
     _pendingMinigameEffects.add(item.effect);
     useItem(itemId);
     return true;
   }
 
-  /// Consume un efecto específico (usado por el minijuego cuando se aplica).
+  /// Consume un efecto especÃ­fico (usado por el minijuego cuando se aplica).
   void consumeEffect(ItemEffect e) {
     _pendingMinigameEffects.remove(e);
   }
@@ -173,8 +190,8 @@ class GameState {
     _pendingMinigameEffects.clear();
   }
 
-  // ── Inventario ────────────────────────────
-  int  getQty(String itemId)  => inventory[itemId] ?? 0;
+  // â”€â”€ Inventario â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  int getQty(String itemId) => inventory[itemId] ?? 0;
   bool hasItem(String itemId) => (inventory[itemId] ?? 0) > 0;
 
   bool buyItem(ShopItem item) {
@@ -210,8 +227,8 @@ class GameState {
   int sellPriceXp(ShopItem item) =>
       (item.price * (item.currency == ItemCurrency.gems ? 8 : 1) * 0.4).round();
 
-  /// Canjea 1 unidad del ítem. Si [forXp] es true se otorga XP, si no monedas.
-  /// Devuelve la cantidad otorgada (0 si no había stock).
+  /// Canjea 1 unidad del Ã­tem. Si [forXp] es true se otorga XP, si no monedas.
+  /// Devuelve la cantidad otorgada (0 si no habÃ­a stock).
   int sellItem(String itemId, {required bool forXp}) {
     if ((inventory[itemId] ?? 0) <= 0) return 0;
     final item = ShopCatalog.findById(itemId);
@@ -223,7 +240,9 @@ class GameState {
       gained = sellPriceXp(item);
       currentXp += gained;
       while (currentXp >= maxXp) {
-        level++; currentXp -= maxXp; maxXp = (maxXp * 1.2).round();
+        level++;
+        currentXp -= maxXp;
+        maxXp = (maxXp * 1.2).round();
       }
     } else {
       gained = sellPriceCoins(item);
@@ -243,13 +262,15 @@ class GameState {
     if (collectedMapItems.contains(itemId)) return;
     collectedMapItems.add(itemId);
     inventory[itemId] = (inventory[itemId] ?? 0) + 1;
-    score += 25; coins += 5; coinsEarnedTotal += 5;
+    score += 25;
+    coins += 5;
+    coinsEarnedTotal += 5;
     autosave();
   }
 
   bool isMapItemCollected(String itemId) => collectedMapItems.contains(itemId);
 
-  // ── Cofres del mundo ──────────────────────
+  // â”€â”€ Cofres del mundo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool isChestOpened(String chestId) => openedChests.contains(chestId);
 
   /// Abre un cofre. Otorga monedas (50-200), posible gema (10%) y 60% prob. de un item.
@@ -269,23 +290,24 @@ class GameState {
     }
     coins += gold;
     coinsEarnedTotal += gold;
-    gems  += gemBonus;
+    gems += gemBonus;
     score += gold;
     autosave();
     return ChestReward(coins: gold, gems: gemBonus, bonusItem: bonus);
   }
 
-  // ── Logros ────────────────────────────────
+  // â”€â”€ Logros â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool hasAchievement(String id) => earnedAchievements.contains(id);
   void _checkAchievements() {
     if (discoveredCount >= 1) earnedAchievements.add('first_animal');
     if (discoveredCount >= 6) earnedAchievements.add('all_animals');
   }
 
-  // ── Misiones ──────────────────────────────
-  /// Reclama la recompensa de una misión completada (idempotente).
-  /// Devuelve true si se aplicó la recompensa.
-  bool claimMission(String missionId, {int coins = 0, int gems = 0, int xp = 0}) {
+  // â”€â”€ Misiones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  /// Reclama la recompensa de una misiÃ³n completada (idempotente).
+  /// Devuelve true si se aplicÃ³ la recompensa.
+  bool claimMission(String missionId,
+      {int coins = 0, int gems = 0, int xp = 0}) {
     if (claimedMissions.contains(missionId)) return false;
     claimedMissions.add(missionId);
     this.coins += coins;
@@ -294,68 +316,86 @@ class GameState {
     if (xp > 0) {
       currentXp += xp;
       while (currentXp >= maxXp) {
-        level++; currentXp -= maxXp; maxXp = (maxXp * 1.2).round();
+        level++;
+        currentXp -= maxXp;
+        maxXp = (maxXp * 1.2).round();
       }
     }
     autosave();
     return true;
   }
 
-  // ── Persistencia (SharedPreferences) ─────────────────────────────────
+  // â”€â”€ Persistencia (SharedPreferences) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static const _prefsKey = 'wq_state_v1';
   Timer? _saveDebounce;
   bool _loaded = false;
   bool get isLoaded => _loaded;
 
   Map<String, dynamic> _toJson() => {
-    'discoveredAnimals': discoveredAnimals.toList(),
-    'completedMinigames': completedMinigames.toList(),
-    'earnedAchievements': earnedAchievements.toList(),
-    'collectedMapItems': collectedMapItems.toList(),
-    'openedChests': openedChests.toList(),
-    'hasSeenAppTutorial': hasSeenAppTutorial,
-    'mapsIntroSeen': mapsIntroSeen.toList(),
-    'claimedMissions': claimedMissions.toList(),
-    'coinsEarnedTotal': coinsEarnedTotal,
-    'itemsBoughtTotal': itemsBoughtTotal,
-    'score': score, 'coins': coins, 'gems': gems,
-    'playerName': playerName, 'selectedSkin': selectedSkin,
-    'level': level, 'currentXp': currentXp, 'maxXp': maxXp,
-    'currentMapId': currentMapId,
-    'inventory': inventory,
-    'equipped': equipped,
-    'savedX': savedX, 'savedY': savedY, 'savedMapId': savedMapId,
-    'selectedCharacter': selectedCharacter,
-    'musicOn': musicOn, 'sfxOn': sfxOn, 'musicVol': musicVol,
-    'joystickOn': joystickOn, 'vibrationOn': vibrationOn,
-    'sensitivity': sensitivity, 'nightMode': nightMode,
-    'hudBrightness': hudBrightness, 'cloudSave': cloudSave,
-    'language': language,
-  };
+        'discoveredAnimals': discoveredAnimals.toList(),
+        'completedMinigames': completedMinigames.toList(),
+        'earnedAchievements': earnedAchievements.toList(),
+        'collectedMapItems': collectedMapItems.toList(),
+        'openedChests': openedChests.toList(),
+        'hasSeenAppTutorial': hasSeenAppTutorial,
+        'mapsIntroSeen': mapsIntroSeen.toList(),
+        'claimedMissions': claimedMissions.toList(),
+        'coinsEarnedTotal': coinsEarnedTotal,
+        'itemsBoughtTotal': itemsBoughtTotal,
+        'score': score,
+        'coins': coins,
+        'gems': gems,
+        'playerName': playerName,
+        'selectedSkin': selectedSkin,
+        'level': level,
+        'currentXp': currentXp,
+        'maxXp': maxXp,
+        'currentMapId': currentMapId,
+        'inventory': inventory,
+        'equipped': equipped,
+        'savedX': savedX,
+        'savedY': savedY,
+        'savedMapId': savedMapId,
+        'selectedCharacter': selectedCharacter,
+        'musicOn': musicOn,
+        'sfxOn': sfxOn,
+        'musicVol': musicVol,
+        'joystickOn': joystickOn,
+        'vibrationOn': vibrationOn,
+        'sensitivity': sensitivity,
+        'nightMode': nightMode,
+        'hudBrightness': hudBrightness,
+        'cloudSave': cloudSave,
+        'language': language,
+      };
 
   void _fromJson(Map<String, dynamic> j) {
     void setS(Set<String> s, String key) {
       final v = j[key];
-      if (v is List) { s.clear(); s.addAll(v.cast<String>()); }
+      if (v is List) {
+        s.clear();
+        s.addAll(v.cast<String>());
+      }
     }
-    setS(discoveredAnimals,  'discoveredAnimals');
+
+    setS(discoveredAnimals, 'discoveredAnimals');
     setS(completedMinigames, 'completedMinigames');
     setS(earnedAchievements, 'earnedAchievements');
-    setS(collectedMapItems,  'collectedMapItems');
-    setS(openedChests,       'openedChests');
-    setS(mapsIntroSeen,      'mapsIntroSeen');
-    setS(claimedMissions,    'claimedMissions');
+    setS(collectedMapItems, 'collectedMapItems');
+    setS(openedChests, 'openedChests');
+    setS(mapsIntroSeen, 'mapsIntroSeen');
+    setS(claimedMissions, 'claimedMissions');
     coinsEarnedTotal = j['coinsEarnedTotal'] ?? coinsEarnedTotal;
     itemsBoughtTotal = j['itemsBoughtTotal'] ?? itemsBoughtTotal;
     hasSeenAppTutorial = j['hasSeenAppTutorial'] ?? hasSeenAppTutorial;
     score = j['score'] ?? score;
     coins = j['coins'] ?? coins;
-    gems  = j['gems']  ?? gems;
-    playerName   = j['playerName']   ?? playerName;
+    gems = j['gems'] ?? gems;
+    playerName = j['playerName'] ?? playerName;
     selectedSkin = j['selectedSkin'] ?? selectedSkin;
-    level     = j['level']     ?? level;
+    level = j['level'] ?? level;
     currentXp = j['currentXp'] ?? currentXp;
-    maxXp     = j['maxXp']     ?? maxXp;
+    maxXp = j['maxXp'] ?? maxXp;
     currentMapId = j['currentMapId'] ?? currentMapId;
     if (j['inventory'] is Map) {
       inventory.clear();
@@ -373,16 +413,16 @@ class GameState {
     savedY = (j['savedY'] as num?)?.toDouble() ?? savedY;
     savedMapId = j['savedMapId'] as String?;
     selectedCharacter = j['selectedCharacter'] ?? selectedCharacter;
-    musicOn       = j['musicOn']      ?? musicOn;
-    sfxOn         = j['sfxOn']        ?? sfxOn;
-    musicVol      = (j['musicVol']      as num?)?.toDouble() ?? musicVol;
-    joystickOn    = j['joystickOn']   ?? joystickOn;
-    vibrationOn   = j['vibrationOn']  ?? vibrationOn;
-    sensitivity   = (j['sensitivity']   as num?)?.toDouble() ?? sensitivity;
-    nightMode     = j['nightMode']    ?? nightMode;
+    musicOn = j['musicOn'] ?? musicOn;
+    sfxOn = j['sfxOn'] ?? sfxOn;
+    musicVol = (j['musicVol'] as num?)?.toDouble() ?? musicVol;
+    joystickOn = j['joystickOn'] ?? joystickOn;
+    vibrationOn = j['vibrationOn'] ?? vibrationOn;
+    sensitivity = (j['sensitivity'] as num?)?.toDouble() ?? sensitivity;
+    nightMode = j['nightMode'] ?? nightMode;
     hudBrightness = (j['hudBrightness'] as num?)?.toDouble() ?? hudBrightness;
-    cloudSave     = j['cloudSave']    ?? cloudSave;
-    language      = j['language']     ?? language;
+    cloudSave = j['cloudSave'] ?? cloudSave;
+    language = j['language'] ?? language;
   }
 
   /// Cargar el estado guardado (llamar al arrancar la app).
@@ -406,23 +446,39 @@ class GameState {
     } catch (_) {/* disk error: ignore */}
   }
 
-  /// Guardado con debounce (500 ms) — agrupa varias mutaciones.
+  /// Guardado con debounce (500 ms) â€” agrupa varias mutaciones.
   void autosave() {
     _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 500), save);
+    _saveDebounce = Timer(const Duration(milliseconds: 500), () async {
+      await save();
+      final hook = autosaveSyncHook;
+      if (hook != null) {
+        unawaited(hook(this));
+      }
+    });
   }
 
-  // ── Reset ─────────────────────────────────
+  // â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void reset() {
-    discoveredAnimals.clear(); completedMinigames.clear();
-    earnedAchievements.clear(); inventory.clear();
-    openedChests.clear(); _pendingMinigameEffects.clear();
-    hasSeenAppTutorial = false; mapsIntroSeen.clear();
+    discoveredAnimals.clear();
+    completedMinigames.clear();
+    earnedAchievements.clear();
+    inventory.clear();
+    openedChests.clear();
+    _pendingMinigameEffects.clear();
+    hasSeenAppTutorial = false;
+    mapsIntroSeen.clear();
     claimedMissions.clear();
-    coinsEarnedTotal = 0; itemsBoughtTotal = 0;
-    score = 0; coins = 0; gems = 0;
-    level = 1; currentXp = 0; maxXp = 1000;
-    savedX = 0; savedY = 0;
+    coinsEarnedTotal = 0;
+    itemsBoughtTotal = 0;
+    score = 0;
+    coins = 0;
+    gems = 0;
+    level = 1;
+    currentXp = 0;
+    maxXp = 1000;
+    savedX = 0;
+    savedY = 0;
     selectedCharacter = 'hero';
   }
 }

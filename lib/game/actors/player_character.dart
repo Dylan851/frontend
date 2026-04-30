@@ -62,7 +62,7 @@ class CharacterCatalog {
 }
 
 // ─── Jugador ────────────────────────────────────────────────────────────────
-class WildQuestPlayer extends SimplePlayer with BlockMovementCollision {
+class AnimalGoPlayer extends SimplePlayer with BlockMovementCollision {
   /// Id del botón de interacción en el joystick
   static const int kActionInteract = 1;
 
@@ -72,7 +72,7 @@ class WildQuestPlayer extends SimplePlayer with BlockMovementCollision {
   static const double _h     = 32.0;
   static const double _speed = 90.0; // px/s
 
-  WildQuestPlayer({
+  AnimalGoPlayer({
     required Vector2 position,
     String characterId = 'hero',
   }) : super(

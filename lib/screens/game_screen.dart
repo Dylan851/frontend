@@ -126,7 +126,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           opacity: _fadeIn,
           child: BonfireWidget(
             map: WorldMapByTiled(MapsAssetReader(_mapFile)),
-            player: WildQuestPlayer(
+            player: AnimalGoPlayer(
               position: _playerStart,
               characterId: gs.selectedCharacter,
             ),
@@ -146,7 +146,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ),
                 actions: [
                   JoystickAction(
-                    actionId: WildQuestPlayer.kActionInteract,
+                    actionId: AnimalGoPlayer.kActionInteract,
                     size: 56,
                     color: const Color(0xFF56E39F).withOpacity(0.6),
                     margin: const EdgeInsets.only(right: 26, bottom: 28),

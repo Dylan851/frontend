@@ -14,4 +14,10 @@ fi
 
 flutter config --enable-web
 flutter pub get
-flutter build web --release --dart-define=API_BASE_URL="${API_BASE_URL%/}"
+if [ -n "${GOOGLE_WEB_CLIENT_ID:-}" ]; then
+  flutter build web --release \
+    --dart-define=API_BASE_URL="${API_BASE_URL%/}" \
+    --dart-define=GOOGLE_WEB_CLIENT_ID="${GOOGLE_WEB_CLIENT_ID}"
+else
+  flutter build web --release --dart-define=API_BASE_URL="${API_BASE_URL%/}"
+fi

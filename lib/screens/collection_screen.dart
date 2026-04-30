@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/animal_data.dart';
 import '../data/game_state.dart';
 import '../theme/app_theme.dart';
+import 'animal_3d_viewer.dart';
 
 class CollectionScreen extends StatelessWidget {
   const CollectionScreen({super.key});
@@ -314,6 +315,52 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
               decoration: BoxDecoration(
                 color: i == _factIdx ? AppColors.greenAccent : Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(3))))),
+
+          // Botón "Ver en 3D" (solo si hay modelo disponible)
+          if (animalHas3DModel(a.id)) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => Animal3DViewer(animal: a),
+                  ));
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                      colors: [Color(0xFF6BBA5B), Color(0xFF3A7A3A), Color(0xFF1F4E2A)],
+                    ),
+                    border: Border.all(color: GameTone.goldTrim, width: 1.6),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFF6BE095).withOpacity(0.45), blurRadius: 14),
+                      BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 4, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Icon(Icons.threesixty_rounded, color: Colors.white, size: 22),
+                    SizedBox(width: 10),
+                    Text('VER EN 3D',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        letterSpacing: 1.6,
+                        shadows: [
+                          Shadow(color: Color(0xFF0E2C18), offset: Offset(0, 2), blurRadius: 0),
+                        ],
+                      )),
+                  ]),
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 16),
         ]),

@@ -8,12 +8,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:wildquest_game/main.dart';
+import 'package:animalgo_game/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const WildQuestApp());
+    await tester.pumpWidget(const AnimalGoApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

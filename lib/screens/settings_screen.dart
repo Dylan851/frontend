@@ -1,7 +1,8 @@
-// lib/screens/settings_screen.dart
+﻿// lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/game_state.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -93,20 +94,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                 children: [
                   // Left column
                   Expanded(child: Column(children: [
-                    _sectionCard('🔊 Audio', [
-                      _toggleRow('🎵', 'Música', 'Tema del bosque',
+                    _sectionCard('Audio', [
+                      _toggleRow('♪', 'Música', 'Tema del bosque',
                           _gs.musicOn,
                           (v) => setState(() => _gs.musicOn = v)),
                       _toggleRow('🔉', 'Efectos de sonido', '',
                           _gs.sfxOn,
                           (v) => setState(() => _gs.sfxOn = v)),
-                      _sliderRow('🎚️', 'Volumen música',
+                      _sliderRow('🎚', 'Volumen música',
                           _gs.musicVol,
                           (v) => setState(() => _gs.musicVol = v)),
                     ]),
                     const SizedBox(height: 8),
-                    _sectionCard('🎮 Controles', [
-                      _toggleRow('🕹️', 'Joystick virtual', '',
+                    _sectionCard('Controles', [
+                      _toggleRow('🕹', 'Joystick virtual', '',
                           _gs.joystickOn,
                           (v) => setState(() => _gs.joystickOn = v)),
                       _toggleRow('📳', 'Vibración', '',
@@ -115,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             setState(() => _gs.vibrationOn = v);
                             if (v) HapticFeedback.mediumImpact();
                           }),
-                      _sliderRow('👆', 'Sensibilidad',
+                      _sliderRow('☝', 'Sensibilidad',
                           _gs.sensitivity,
                           (v) => setState(() => _gs.sensitivity = v)),
                     ]),
@@ -123,7 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(width: 8),
                   // Right column
                   Expanded(child: Column(children: [
-                    _sectionCard('📱 Pantalla', [
+                    _sectionCard('Pantalla', [
                       _selectRow('✨', 'Calidad gráfica',
                           _qualityOptions[_qualityIdx], () {
                         setState(() =>
@@ -137,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           (v) => setState(() => _gs.hudBrightness = v)),
                     ]),
                     const SizedBox(height: 8),
-                    _sectionCard('👤 Cuenta', [
+                    _sectionCard('Cuenta', [
                       _selectRow('🌐', 'Idioma',
                           _languages[_langIdx], () {
                         setState(() {
@@ -148,6 +149,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                       _toggleRow('☁️', 'Guardar en nube', '',
                           _gs.cloudSave,
                           (v) => setState(() => _gs.cloudSave = v)),
+                      _actionRow('↩', 'Cerrar sesión', 'Volver a inicio', () async {
+                        await AuthService.logout();
+                        if (!mounted) return;
+                        Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+                      }),
                       _dangerRow('🗑️', 'Borrar progreso',
                           'Acción irreversible', _confirmReset),
                     ]),
@@ -162,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             color: Colors.white.withOpacity(0.07)),
                       ),
                       child: Column(children: [
-                        const Text('🌿 AnimalGO!',
+                        const Text('AnimalGO!',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w900,
@@ -332,6 +338,48 @@ class _SettingsScreenState extends State<SettingsScreen>
       ]),
     );
 
+  Widget _actionRow(String icon, String label, String sub,
+      VoidCallback onTap) =>
+    Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(children: [
+        Text(icon, style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 8),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.5)),
+            Text(sub,
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.45),
+                    fontSize: 9)),
+          ],
+        )),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: Colors.white.withOpacity(0.15), width: 1),
+            ),
+            child: const Text('Salir',
+                style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700)),
+          ),
+        ),
+      ]),
+    );
+
   Widget _dangerRow(String icon, String label, String sub,
       VoidCallback onTap) =>
     Padding(
@@ -374,7 +422,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
 }
 
-// ─── Custom toggle widget ────────────────────────────────────────────────────
+// Custom toggle widget
 class _Toggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
@@ -410,3 +458,5 @@ class _Toggle extends StatelessWidget {
     );
   }
 }
+
+

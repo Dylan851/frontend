@@ -759,7 +759,7 @@ class _PixelFramePainter extends CustomPainter {
   bool shouldRepaint(_) => false;
 }
 
-/// "WILDQUEST"-style chunky gold logo with black outline and drop shadow.
+/// "ANIMALGO"-style chunky gold logo with black outline and drop shadow.
 class GameLogo extends StatelessWidget {
   final String title;
   final String? subtitle;

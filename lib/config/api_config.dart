@@ -1,13 +1,16 @@
-/// API Configuration for WildQuest Game
+/// API Configuration for AnimalGO Game
 ///
 /// This file contains the configuration for connecting to the backend API.
 /// You can change the baseUrl here based on your environment.
 
 class ApiConfig {
-  // API Base URL - Change this based on your environment
-  // For development: http://localhost:8000
-  // For production: Update with your production URL
-  static const String baseUrl = 'http://localhost:8000';
+  // API Base URL (single source of truth)
+  // - Production/Render: pass with --dart-define=API_BASE_URL=https://your-backend.onrender.com
+  // - Local fallback: http://localhost:8000
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
 
   // API Endpoints
   static const String healthCheck = '/health';

@@ -11,6 +11,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../router/app_router.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -21,27 +22,31 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen>
     with TickerProviderStateMixin {
-  late final AnimationController _logoCtrl, _progressCtrl,
-      _particleCtrl, _bobCtrl;
+  late final AnimationController _logoCtrl,
+      _progressCtrl,
+      _particleCtrl,
+      _bobCtrl;
   late final Animation<double> _logoScale, _logoFade, _progress, _bob;
   int _tipIndex = 0;
 
   static const _tips = [
-    '🦊 Los zorros pueden escuchar un ratón bajo la nieve',
-    '🦉 Los búhos pueden girar la cabeza 270 grados',
-    '🦋 Las mariposas prueban la comida con los pies',
-    '🐸 Las ranas respiran por la piel',
-    '🐻 El olfato del oso es 7 veces más potente que el de un perro',
-    '🦌 Las astas del ciervo crecen 3 cm por día',
+    ' Los zorros pueden escuchar un ratón bajo la nieve',
+    ' Los búhos pueden girar la cabeza 270 grados',
+    ' Las mariposas prueban la comida con los pies',
+    ' Las ranas respiran por la piel',
+    ' El olfato del oso es 7 veces más potente que el de un perro',
+    ' Las astas del ciervo crecen 3 cm por día',
   ];
 
   @override
   void initState() {
     super.initState();
     _logoCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000))..forward();
-    _particleCtrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 4))..repeat();
+        vsync: this, duration: const Duration(milliseconds: 1000))
+      ..forward();
+    _particleCtrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 4))
+          ..repeat();
     _progressCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 3000));
     _bobCtrl = AnimationController(
@@ -52,8 +57,8 @@ class _LoadingScreenState extends State<LoadingScreen>
         .animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut));
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(parent: _logoCtrl, curve: const Interval(0, 0.3)));
-    _progress = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut));
+    _progress = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut));
     _bob = Tween<double>(begin: 0.0, end: -10.0)
         .animate(CurvedAnimation(parent: _bobCtrl, curve: Curves.easeInOut));
 
@@ -67,12 +72,23 @@ class _LoadingScreenState extends State<LoadingScreen>
         _progressCtrl.forward().then((_) {
           Future.delayed(const Duration(milliseconds: 200), () {
             if (mounted) {
-              Navigator.of(context).pushReplacementNamed(AppRouter.mainMenu);
+              _finishLoadingAndRoute();
             }
           });
         });
       }
     });
+  }
+
+  Future<void> _finishLoadingAndRoute() async {
+    final session = await AuthService.restoreSession();
+    if (session != null) {
+      AuthService.applySessionToGameState(session);
+      await AuthService.refreshSessionFromServer(session);
+    }
+    if (!mounted) return;
+    final route = session == null ? AppRouter.login : AppRouter.mainMenu;
+    Navigator.of(context).pushReplacementNamed(route);
   }
 
   @override
@@ -118,7 +134,9 @@ class _LoadingScreenState extends State<LoadingScreen>
           ),
           // Bottom: progress + tip
           Positioned(
-            left: 40, right: 40, bottom: 30,
+            left: 40,
+            right: 40,
+            bottom: 30,
             child: AnimatedBuilder(
               animation: _progress,
               builder: (_, __) => Column(
@@ -133,13 +151,14 @@ class _LoadingScreenState extends State<LoadingScreen>
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Progress bar (pixel art) — borde madera + interior dorado
+                  // Progress bar (pixel art) - borde madera + interior dorado
                   Container(
                     height: 24,
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                         colors: [Color(0xFF4A2D14), Color(0xFF2A1A0C)],
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -147,7 +166,8 @@ class _LoadingScreenState extends State<LoadingScreen>
                       boxShadow: [
                         BoxShadow(
                             color: Colors.black.withOpacity(0.5),
-                            blurRadius: 8, offset: const Offset(0, 3)),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3)),
                       ],
                     ),
                     child: ClipRRect(
@@ -170,10 +190,14 @@ class _LoadingScreenState extends State<LoadingScreen>
                         ),
                         // Top highlight stroke
                         Positioned(
-                          left: 0, right: 0, top: 1, height: 2,
+                          left: 0,
+                          right: 0,
+                          top: 1,
+                          height: 2,
                           child: FractionallySizedBox(
                             widthFactor: _progress.value,
-                            child: Container(color: Colors.white.withOpacity(0.35)),
+                            child: Container(
+                                color: Colors.white.withOpacity(0.35)),
                           ),
                         ),
                       ]),
@@ -181,7 +205,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Cargando…  ${(_progress.value * 100).toInt()}%',
+                    'Cargando...  ${(_progress.value * 100).toInt()}%',
                     style: const TextStyle(
                       color: GameTone.textGold,
                       fontWeight: FontWeight.w900,
@@ -205,7 +229,7 @@ class _LoadingScreenState extends State<LoadingScreen>
   }
 }
 
-/// Bloque de logo idéntico al del menú principal — usa el GameLogo con el
+/// Bloque de logo idéntico al del menú principal - usa el GameLogo con el
 /// nombre AnimalGO! para mantener consistencia.
 class _LogoBlock extends StatelessWidget {
   const _LogoBlock();
@@ -214,7 +238,7 @@ class _LogoBlock extends StatelessWidget {
     return Column(mainAxisSize: MainAxisSize.min, children: const [
       GameLogo(
         title: 'AnimalGO!',
-        subtitle: '🌿  Descubre el mundo animal  🌿',
+        subtitle: '  Descubre el mundo animal  ',
         fontSize: 64,
       ),
     ]);
@@ -224,13 +248,15 @@ class _LogoBlock extends StatelessWidget {
 /// Luciérnagas en tonos amarillos/dorados.
 class _GoldFireflyPainter extends CustomPainter {
   final double p;
-  static final _ff = List.generate(20, (i) => {
-        'x': (i * 137.5) % 1.0,
-        'y': (i * 97.3) % 1.0,
-        'spd': 0.25 + (i % 5) * 0.07,
-        'ph': (i * 0.7) % 1.0,
-        'sz': 1.6 + (i % 3) * 0.8,
-      });
+  static final _ff = List.generate(
+      20,
+      (i) => {
+            'x': (i * 137.5) % 1.0,
+            'y': (i * 97.3) % 1.0,
+            'spd': 0.25 + (i % 5) * 0.07,
+            'ph': (i * 0.7) % 1.0,
+            'sz': 1.6 + (i % 3) * 0.8,
+          });
   const _GoldFireflyPainter(this.p);
 
   @override

@@ -1,6 +1,8 @@
 // lib/router/app_router.dart
 import 'package:flutter/material.dart';
 import '../screens/loading_screen.dart';
+import '../screens/login_screen.dart';
+import '../screens/register_screen.dart';
 import '../screens/main_menu_screen.dart';
 import '../screens/game_screen.dart';
 import '../screens/map_loading_screen.dart';
@@ -18,6 +20,8 @@ import '../data/animal_data.dart';
 abstract class AppRouter {
   static const String loading         = '/';
   static const String mainMenu        = '/menu';
+  static const String login           = '/login';
+  static const String register        = '/register';
   static const String characterSelect = '/character-select';
   static const String game            = '/game';
   static const String gameDirect      = '/game-direct';
@@ -34,6 +38,8 @@ abstract class AppRouter {
     switch (s.name) {
       case loading:         return _fade(const LoadingScreen());
       case mainMenu:        return _fade(const MainMenuScreen());
+      case login:           return _fade(const LoginScreen());
+      case register:        return _fade(const RegisterScreen());
       case characterSelect: return _slide(const CharacterSelectScreen());
       case game:            return _fade(const MapLoadingScreen());
       case gameDirect:      return _fade(const GameScreen());
