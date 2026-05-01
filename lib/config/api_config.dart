@@ -11,6 +11,10 @@ class ApiConfig {
     'API_BASE_URL',
     defaultValue: 'http://localhost:8000',
   );
+  static const String stripePublishableKey = String.fromEnvironment(
+    'STRIPE_PUBLISHABLE_KEY',
+    defaultValue: '',
+  );
 
   // API Endpoints
   static const String healthCheck = '/health';

@@ -229,8 +229,6 @@ class AuthService {
           token: session.token,
           nickname:
               state.playerName.trim().isEmpty ? null : state.playerName.trim(),
-          coins: state.coins,
-          gems: state.gems,
         );
 
         if (response['success'] == true) {

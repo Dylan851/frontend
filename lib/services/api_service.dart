@@ -14,6 +14,7 @@ class ApiService {
   static const String animalsEndpoint = '/animals';
   static const String mapsEndpoint = '/maps';
   static const String shopEndpoint = '/shop';
+  static const String paymentsEndpoint = '/payments';
 
   static Future<Map<String, dynamic>> healthCheck() async {
     try {
@@ -329,6 +330,66 @@ class ApiService {
       return jsonDecode(response.body);
     } catch (e) {
       return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>> createPaymentIntent({
+    required String token,
+    required String userId,
+    required String packId,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$paymentsEndpoint/create-payment-intent'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'user_id': int.parse(userId),
+              'pack_id': packId,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+      return _decodeResponse(response);
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'No se pudo iniciar el pago.'
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> createCheckoutSession({
+    required String token,
+    required String userId,
+    required String packId,
+    required String successUrl,
+    required String cancelUrl,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$paymentsEndpoint/create-checkout-session'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'user_id': int.parse(userId),
+              'pack_id': packId,
+              'success_url': successUrl,
+              'cancel_url': cancelUrl,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+      return _decodeResponse(response);
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'No se pudo iniciar Stripe Checkout.'
+      };
     }
   }
 }

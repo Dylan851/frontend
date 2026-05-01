@@ -352,6 +352,13 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         ),
         SizedBox(height: gap),
         MenuPill(
+          icon: '\u{1F4B3}',
+          label: 'Pagos',
+          width: btnW,
+          onTap: () => _push(AppRouter.payments),
+        ),
+        SizedBox(height: gap),
+        MenuPill(
           icon: '\u{1F4D6}',
           label: 'Animales',
           width: btnW,
