@@ -106,6 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AuthScaffold(
       child: AuthPanel(
         title: 'ANIMAL GO',
+        subtitle: '',
         child: Form(
           key: _formKey,
           child: Column(

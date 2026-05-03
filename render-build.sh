@@ -26,7 +26,24 @@ fi
 
 "$FLUTTER_BIN" --version
 "$FLUTTER_BIN" config --enable-web
-"$FLUTTER_BIN" pub get
+
+# pub.dev advisory feed can intermittently return malformed payloads.
+# Retry pub get and fallback to offline if dependencies were already cached.
+pub_get_ok=0
+for i in 1 2 3; do
+  echo "Running flutter pub get (attempt $i/3)..."
+  if "$FLUTTER_BIN" pub get; then
+    pub_get_ok=1
+    break
+  fi
+  echo "flutter pub get failed on attempt $i."
+  sleep 2
+done
+
+if [ "$pub_get_ok" -ne 1 ]; then
+  echo "Retrying with --offline as fallback..."
+  "$FLUTTER_BIN" pub get --offline
+fi
 if [ -n "${GOOGLE_WEB_CLIENT_ID:-}" ]; then
   "$FLUTTER_BIN" build web --release \
     --dart-define=API_BASE_URL="${API_BASE_URL%/}" \

@@ -100,6 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return AuthScaffold(
       child: AuthPanel(
         title: 'ANIMAL GO',
+        subtitle: '',
         child: Form(
           key: _formKey,
           child: Column(
