@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../data/game_state.dart';
 import '../data/animal_data.dart';
+import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -19,23 +20,32 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // Available skins the user can pick
   static const _skins = [
-    '🧑', '👦', '👧', '🧒', '👨‍🔬', '🧙', '👷', '🥷', '🧑‍🚀', '🤠',
+    '🧑',
+    '👦',
+    '👧',
+    '🧒',
+    '👨‍🔬',
+    '🧙',
+    '👷',
+    '🥷',
+    '🧑‍🚀',
+    '🤠',
   ];
 
   static const _achievements = [
-    ('first_animal',  '🐾', 'Primer Animal',   'Descubre tu primer animal'),
-    ('first_items',   '📦', 'Recolector',       'Recoge 5 ítems'),
-    ('first_minigame','🎮', 'Primer Minijuego', 'Completa un minijuego'),
-    ('all_animals',   '🌟', 'Maestro Animal',   'Descubre todos los animales'),
-    ('complete_map',  '🗺️', 'Mapa Completo',    'Completa un mapa entero'),
-    ('level20',       '🏆', 'Veterano',         'Llega al nivel 20'),
-    ('coins100',      '💎', 'Coleccionista',    'Acumula 100 gemas'),
-    ('master',        '👑', 'Maestro',          'Logra todos los logros'),
+    ('first_animal', '🐾', 'Primer Animal', 'Descubre tu primer animal'),
+    ('first_items', '📦', 'Recolector', 'Recoge 5 ítems'),
+    ('first_minigame', '🎮', 'Primer Minijuego', 'Completa un minijuego'),
+    ('all_animals', '🌟', 'Maestro Animal', 'Descubre todos los animales'),
+    ('complete_map', '🗺️', 'Mapa Completo', 'Completa un mapa entero'),
+    ('level20', '🏆', 'Veterano', 'Llega al nivel 20'),
+    ('coins100', '💎', 'Coleccionista', 'Acumula 100 gemas'),
+    ('master', '👑', 'Maestro', 'Logra todos los logros'),
   ];
 
   static const _ranks = [
-    (1,  '🌱', 'Novato'),
-    (5,  '🌿', 'Rastreador'),
+    (1, '🌱', 'Novato'),
+    (5, '🌿', 'Rastreador'),
     (10, '🌲', 'Explorador'),
     (20, '🦅', 'Guardabosques'),
     (35, '🏆', 'Maestro'),
@@ -60,114 +70,129 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 400))
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400))
       ..forward();
     _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
   }
 
   @override
-  void dispose() { _fadeCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
 
   void _editName() {
     final ctrl = TextEditingController(text: _gs.playerName);
-    showDialog(context: context, builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF1B4A2E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('Cambiar nombre',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-      content: TextField(
-        controller: ctrl,
-        style: const TextStyle(color: Colors.white),
-        maxLength: 16,
-        decoration: InputDecoration(
-          hintText: 'Tu nombre...',
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppColors.greenAccent),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-                color: AppColors.greenAccent, width: 2),
-          ),
-          counterStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancelar',
-              style: TextStyle(color: Colors.white.withOpacity(0.6))),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (ctrl.text.trim().isNotEmpty) {
-              setState(() => _gs.playerName = ctrl.text.trim());
-            }
-            Navigator.pop(context);
-          },
-          child: const Text('Guardar'),
-        ),
-      ],
-    ));
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+              backgroundColor: const Color(0xFF1B4A2E),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: const Text('Cambiar nombre',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w800)),
+              content: TextField(
+                controller: ctrl,
+                style: const TextStyle(color: Colors.white),
+                maxLength: 16,
+                decoration: InputDecoration(
+                  hintText: 'Tu nombre...',
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.greenAccent),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                        color: AppColors.greenAccent, width: 2),
+                  ),
+                  counterStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancelar',
+                      style: TextStyle(color: Colors.white.withOpacity(0.6))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (ctrl.text.trim().isNotEmpty) {
+                      setState(() => _gs.playerName = ctrl.text.trim());
+                    }
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Guardar'),
+                ),
+              ],
+            ));
   }
 
   void _pickSkin() {
-    showDialog(context: context, builder: (_) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)]),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: AppColors.greenAccent.withOpacity(0.3), width: 1.5),
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Elige tu personaje',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16)),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 10, runSpacing: 10,
-            children: _skins.map((s) => GestureDetector(
-              onTap: () {
-                setState(() => _gs.selectedSkin = s);
-                Navigator.pop(context);
-              },
+    showDialog(
+        context: context,
+        builder: (_) => Dialog(
+              backgroundColor: Colors.transparent,
               child: Container(
-                width: 52, height: 52,
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: _gs.selectedSkin == s
-                      ? AppColors.greenAccent.withOpacity(0.2)
-                      : Colors.white.withOpacity(0.07),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)]),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: _gs.selectedSkin == s
-                        ? AppColors.greenAccent
-                        : Colors.white.withOpacity(0.15),
-                    width: _gs.selectedSkin == s ? 2 : 1,
-                  ),
+                      color: AppColors.greenAccent.withOpacity(0.3),
+                      width: 1.5),
                 ),
-                child: Center(
-                    child: Text(s, style: const TextStyle(fontSize: 28))),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Text('Elige tu personaje',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16)),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _skins
+                        .map((s) => GestureDetector(
+                              onTap: () {
+                                setState(() => _gs.selectedSkin = s);
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: _gs.selectedSkin == s
+                                      ? AppColors.greenAccent.withOpacity(0.2)
+                                      : Colors.white.withOpacity(0.07),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _gs.selectedSkin == s
+                                        ? AppColors.greenAccent
+                                        : Colors.white.withOpacity(0.15),
+                                    width: _gs.selectedSkin == s ? 2 : 1,
+                                  ),
+                                ),
+                                child: Center(
+                                    child: Text(s,
+                                        style: const TextStyle(fontSize: 28))),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Cancelar',
+                        style: TextStyle(color: Colors.white.withOpacity(0.6))),
+                  ),
+                ]),
               ),
-            )).toList(),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar',
-                style: TextStyle(color: Colors.white.withOpacity(0.6))),
-          ),
-        ]),
-      ),
-    ));
+            ));
   }
 
   @override
@@ -179,21 +204,22 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: MenuBackdrop(
           dim: 0.55,
           child: Stack(children: [
-          Column(children: [
-            _topBar(),
-            Expanded(child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              child: Column(children: [
-                _heroCard(),
-                const SizedBox(height: 10),
-                _statsGrid(),
-                const SizedBox(height: 10),
-                _achievementsSection(),
-              ]),
-            )),
+            Column(children: [
+              _topBar(),
+              Expanded(
+                  child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: Column(children: [
+                  _heroCard(),
+                  const SizedBox(height: 10),
+                  _statsGrid(),
+                  const SizedBox(height: 10),
+                  _achievementsSection(),
+                ]),
+              )),
+            ]),
           ]),
-        ]),
-      ),
+        ),
       ),
     );
   }
@@ -205,9 +231,19 @@ class _ProfileScreenState extends State<ProfileScreen>
             Row(children: [
               const BackBtn(),
               const Spacer(),
-              CurrencyChip(icon: '🪙', value: '${_gs.coins}'),
+              OvalGoldChip(
+                icon: '\u{1FA99}',
+                value: '',
+                onPlusTap: () =>
+                    Navigator.pushNamed(context, AppRouter.payments),
+              ),
               const SizedBox(width: 6),
-              CurrencyChip(icon: '💎', value: '${_gs.gems}'),
+              OvalGoldChip(
+                icon: '\u{1F48E}',
+                value: '',
+                onPlusTap: () =>
+                    Navigator.pushNamed(context, AppRouter.payments),
+              ),
             ]),
             const SizedBox(height: 8),
             const OrnateTitle(
@@ -226,14 +262,17 @@ class _ProfileScreenState extends State<ProfileScreen>
             onTap: _pickSkin,
             child: Stack(children: [
               Container(
-                width: 78, height: 78,
+                width: 78,
+                height: 78,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const RadialGradient(
                       colors: [AppColors.amber, AppColors.amberDeep]),
                   border: Border.all(color: AppColors.parchment, width: 3),
                   boxShadow: [
-                    BoxShadow(color: AppColors.amber.withOpacity(0.4), blurRadius: 14),
+                    BoxShadow(
+                        color: AppColors.amber.withOpacity(0.4),
+                        blurRadius: 14),
                   ],
                 ),
                 child: Center(
@@ -242,16 +281,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               Positioned(
-                bottom: -2, right: -2,
+                bottom: -2,
+                right: -2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                         colors: [AppColors.emeraldGlow, AppColors.emerald]),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: AppColors.parchment, width: 2),
+                    border: Border.all(color: AppColors.parchment, width: 2),
                   ),
                   child: Text('LV ${_gs.level}',
                       style: const TextStyle(
@@ -288,16 +327,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                         color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('✏️',
-                          style: TextStyle(fontSize: 11)),
+                      child: const Text('✏️', style: TextStyle(fontSize: 11)),
                     ),
                   ),
                 ]),
                 const SizedBox(height: 3),
                 Text('Miembro desde Enero 2025 · ${_mapName()}',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.55),
-                        fontSize: 11)),
+                        color: Colors.white.withOpacity(0.55), fontSize: 11)),
                 const SizedBox(height: 7),
                 // XP bar
                 Row(children: [
@@ -308,16 +345,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                         value: _gs.xpPercent,
                         minHeight: 8,
                         backgroundColor: Colors.white.withOpacity(0.12),
-                        valueColor: const AlwaysStoppedAnimation(
-                            AppColors.greenAccent),
+                        valueColor:
+                            const AlwaysStoppedAnimation(AppColors.greenAccent),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text('${_gs.currentXp}/${_gs.maxXp} XP',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
-                          fontSize: 10)),
+                          color: Colors.white.withOpacity(0.5), fontSize: 10)),
                 ]),
               ],
             ),
@@ -340,8 +376,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _mapName() {
     try {
       return [
-        'Aldea Canta', 'Sabana Africana', 'Granja Rural',
-        'Fondo Oceánico', 'Ártico Polar',
+        'Aldea Canta',
+        'Sabana Africana',
+        'Granja Rural',
+        'Fondo Oceánico',
+        'Ártico Polar',
       ][0];
     } catch (_) {
       return 'Aldea Canta';
@@ -358,8 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           _statCard('${_gs.discoveredCount}/${AnimalCatalog.all.length}',
               '🐾 Animales'),
-          _statCard('${_gs.completedMinigames.length}',
-              '🎮 Minijuegos'),
+          _statCard('${_gs.completedMinigames.length}', '🎮 Minijuegos'),
           _statCard('${_gs.coins}', '🪙 Monedas'),
           _statCard('${_gs.score}', '⭐ Puntos'),
         ],
@@ -373,7 +411,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             colors: [Color(0xFF143421), Color(0xFF0A1F12)],
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.amber.withOpacity(0.35), width: 1.4),
+          border:
+              Border.all(color: AppColors.amber.withOpacity(0.35), width: 1.4),
           boxShadow: [
             BoxShadow(
               color: AppColors.leafShadow.withOpacity(0.45),
@@ -425,11 +464,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text('${a.$3}: ${a.$4}',
                         style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white)),
-                    backgroundColor: earned
-                        ? AppColors.greenDeep
-                        : Colors.grey.shade800,
+                            fontWeight: FontWeight.w700, color: Colors.white)),
+                    backgroundColor:
+                        earned ? AppColors.greenDeep : Colors.grey.shade800,
                     duration: const Duration(milliseconds: 1600),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
@@ -455,7 +492,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                       width: earned ? 1.8 : 1,
                     ),
                     boxShadow: earned
-                        ? [BoxShadow(color: AppColors.amber.withOpacity(0.25), blurRadius: 10)]
+                        ? [
+                            BoxShadow(
+                                color: AppColors.amber.withOpacity(0.25),
+                                blurRadius: 10)
+                          ]
                         : null,
                   ),
                   child: Column(

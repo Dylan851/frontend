@@ -124,19 +124,15 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           right: pad,
           child: Row(
             children: [
-              _currencyGroup(
-                s: s,
+              OvalGoldChip(
                 icon: '\u{1FA99}',
                 value: '${_gs.coins}',
-                isGem: false,
                 onPlusTap: () => _showCurrencyShopDialog(isGems: false),
               ),
               SizedBox(width: 8 * s),
-              _currencyGroup(
-                s: s,
+              OvalGoldChip(
                 icon: '\u{1F48E}',
                 value: '${_gs.gems}',
-                isGem: true,
                 onPlusTap: () => _showCurrencyShopDialog(isGems: true),
               ),
               SizedBox(width: 8 * s),
@@ -308,65 +304,6 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           ),
         ),
       );
-
-  Widget _currencyGroup({
-    required double s,
-    required String icon,
-    required String value,
-    required bool isGem,
-    required VoidCallback onPlusTap,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        OvalGoldChip(icon: icon, value: value),
-        SizedBox(width: 5 * s),
-        GestureDetector(
-          onTap: onPlusTap,
-          child: Container(
-            width: 30 * s,
-            height: 30 * s,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isGem
-                    ? const [Color(0xFF334A63), Color(0xFF202020)]
-                    : const [Color(0xFF6A5120), Color(0xFF2B1C0E)],
-              ),
-              border: Border.all(color: GameTone.goldTrim, width: 1.8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.45),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                '+',
-                style: TextStyle(
-                  color: GameTone.textGold,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 19 * s,
-                  height: 1,
-                  shadows: const [
-                    Shadow(
-                      color: Color(0xFF1A0E04),
-                      offset: Offset(0, 1),
-                      blurRadius: 0,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Future<void> _showCurrencyShopDialog({required bool isGems}) async {
     final title = isGems ? 'Comprar diamantes' : 'Comprar monedas';

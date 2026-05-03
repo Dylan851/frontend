@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -100,7 +100,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return AuthScaffold(
       child: AuthPanel(
         title: 'ANIMAL GO',
-        subtitle: 'Descubre el mundo animal',
         child: Form(
           key: _formKey,
           child: Column(
@@ -115,11 +114,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontSize: 36,
                 ),
               ),
-              const Text(
-                'Accede para continuar tu aventura',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: GameTone.textGold, fontSize: 14),
-              ),
               const SizedBox(height: 14),
               AuthTextField(
                 label: 'Correo electrónico',
@@ -130,7 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) {
                   final value = (v ?? '').trim();
                   if (value.isEmpty) return 'El correo es obligatorio.';
-                  final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
+                  final ok =
+                      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
                   if (!ok) return 'Introduce un correo válido.';
                   return null;
                 },
@@ -177,7 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: _loading ? null : _submitGoogle,
-                icon: const Text('G', style: TextStyle(fontWeight: FontWeight.w900)),
+                icon: const Text('G',
+                    style: TextStyle(fontWeight: FontWeight.w900)),
                 label: const Text('Continuar con Google'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
@@ -185,25 +181,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   side: const BorderSide(color: GameTone.goldTrim),
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Inicia sesión con tu cuenta de Google',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: GameTone.textGold, fontSize: 11),
-              ),
               const SizedBox(height: 8),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 16,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, AppRouter.register),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppRouter.register),
                     child: const Text('Crear cuenta'),
                   ),
                   TextButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Recuperación de contraseña pendiente.')),
+                        const SnackBar(
+                            content:
+                                Text('Recuperación de contraseña pendiente.')),
                       );
                     },
                     child: const Text('¿Olvidaste tu contraseña?'),

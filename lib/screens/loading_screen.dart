@@ -27,16 +27,6 @@ class _LoadingScreenState extends State<LoadingScreen>
       _particleCtrl,
       _bobCtrl;
   late final Animation<double> _logoScale, _logoFade, _progress, _bob;
-  int _tipIndex = 0;
-
-  static const _tips = [
-    ' Los zorros pueden escuchar un ratón bajo la nieve',
-    ' Los búhos pueden girar la cabeza 270 grados',
-    ' Las mariposas prueban la comida con los pies',
-    ' Las ranas respiran por la piel',
-    ' El olfato del oso es 7 veces más potente que el de un perro',
-    ' Las astas del ciervo crecen 3 cm por día',
-  ];
 
   @override
   void initState() {
@@ -61,11 +51,6 @@ class _LoadingScreenState extends State<LoadingScreen>
         CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut));
     _bob = Tween<double>(begin: 0.0, end: -10.0)
         .animate(CurvedAnimation(parent: _bobCtrl, curve: Curves.easeInOut));
-
-    _progressCtrl.addListener(() {
-      final idx = (_progressCtrl.value * (_tips.length - 1)).round();
-      if (idx != _tipIndex && mounted) setState(() => _tipIndex = idx);
-    });
 
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -142,15 +127,6 @@ class _LoadingScreenState extends State<LoadingScreen>
               builder: (_, __) => Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Tip
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: WoodChip(
-                      key: ValueKey(_tipIndex),
-                      label: _tips[_tipIndex],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   // Progress bar (pixel art) - borde madera + interior dorado
                   Container(
                     height: 24,
@@ -238,7 +214,6 @@ class _LogoBlock extends StatelessWidget {
     return Column(mainAxisSize: MainAxisSize.min, children: const [
       GameLogo(
         title: 'AnimalGO!',
-        subtitle: '  Descubre el mundo animal  ',
         fontSize: 64,
       ),
     ]);

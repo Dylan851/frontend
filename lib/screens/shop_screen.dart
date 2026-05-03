@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../data/item_data.dart';
 import '../data/game_state.dart';
+import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -17,11 +18,11 @@ class _ShopScreenState extends State<ShopScreen>
   String? _lastBought;
 
   static const _tabs = [
-    (icon: '🍎', label: 'Comida',   cat: ItemCategory.food),
-    (icon: '🛡️', label: 'Equipo',   cat: ItemCategory.gear),
+    (icon: '🍎', label: 'Comida', cat: ItemCategory.food),
+    (icon: '🛡️', label: 'Equipo', cat: ItemCategory.gear),
     (icon: '✨', label: 'Power-Ups', cat: ItemCategory.powerup),
-    (icon: '🎨', label: 'Skins',    cat: ItemCategory.skin),
-    (icon: '💱', label: 'Canjear',  cat: null),
+    (icon: '🎨', label: 'Skins', cat: ItemCategory.skin),
+    (icon: '💱', label: 'Canjear', cat: null),
   ];
 
   @override
@@ -44,7 +45,10 @@ class _ShopScreenState extends State<ShopScreen>
   }
 
   @override
-  void dispose() { _tabCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _tabCtrl.dispose();
+    super.dispose();
+  }
 
   void _buy(ShopItem item) {
     final ok = _gs.buyItem(item);
@@ -52,7 +56,8 @@ class _ShopScreenState extends State<ShopScreen>
       setState(() => _lastBought = item.name);
       _showToast('¡Comprado! +1 ${item.emoji}', success: true);
     } else {
-      final need = item.currency == ItemCurrency.coins ? '🪙 monedas' : '💎 gemas';
+      final need =
+          item.currency == ItemCurrency.coins ? '🪙 monedas' : '💎 gemas';
       _showToast('Sin $need suficientes', success: false);
     }
   }
@@ -64,12 +69,10 @@ class _ShopScreenState extends State<ShopScreen>
         content: Text(msg,
             style: const TextStyle(
                 fontWeight: FontWeight.w800, color: Colors.white)),
-        backgroundColor:
-            success ? AppColors.greenDeep : AppColors.badgeRed,
+        backgroundColor: success ? AppColors.greenDeep : AppColors.badgeRed,
         duration: const Duration(milliseconds: 1400),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(12),
       ),
     );
@@ -81,12 +84,23 @@ class _ShopScreenState extends State<ShopScreen>
       backgroundColor: const Color(0xFF0A1A10),
       body: MenuBackdrop(
         dim: 0.55,
-        child: SafeArea(child: Column(children: [
+        child: SafeArea(
+            child: Column(children: [
           GameHeader(
             title: 'Tienda',
             trailing: [
-              OvalGoldChip(icon: '🪙', value: '${_gs.coins}'),
-              OvalGoldChip(icon: '💎', value: '${_gs.gems}'),
+              OvalGoldChip(
+                icon: '\u{1FA99}',
+                value: '${_gs.coins}',
+                onPlusTap: () =>
+                    Navigator.pushNamed(context, AppRouter.payments),
+              ),
+              OvalGoldChip(
+                icon: '\u{1F48E}',
+                value: '${_gs.gems}',
+                onPlusTap: () =>
+                    Navigator.pushNamed(context, AppRouter.payments),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -108,7 +122,8 @@ class _ShopScreenState extends State<ShopScreen>
                 ]),
                 borderRadius: BorderRadius.circular(11),
                 boxShadow: [
-                  BoxShadow(color: AppColors.amber.withOpacity(0.4), blurRadius: 10),
+                  BoxShadow(
+                      color: AppColors.amber.withOpacity(0.4), blurRadius: 10),
                 ],
               ),
               indicatorSize: TabBarIndicatorSize.tab,
@@ -123,8 +138,7 @@ class _ShopScreenState extends State<ShopScreen>
               labelColor: const Color(0xFF221208),
               unselectedLabelColor: AppColors.parchment.withOpacity(0.65),
               tabs: _tabs
-                  .map((t) =>
-                      Tab(text: '${t.icon} ${t.label}', height: 34))
+                  .map((t) => Tab(text: '${t.icon} ${t.label}', height: 34))
                   .toList(),
             ),
           ),
@@ -207,15 +221,19 @@ class _ShopItemCardState extends State<_ShopItemCard>
   @override
   void initState() {
     super.initState();
-    _floatCtrl = AnimationController(vsync: this,
+    _floatCtrl = AnimationController(
+        vsync: this,
         duration: Duration(milliseconds: 2000 + widget.item.id.hashCode % 800))
       ..repeat(reverse: true);
-    _float = Tween<double>(begin: 0, end: -5).animate(
-        CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
+    _float = Tween<double>(begin: 0, end: -5)
+        .animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() { _floatCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _floatCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +260,8 @@ class _ShopItemCardState extends State<_ShopItemCard>
           ),
           boxShadow: [
             if (item.isFeatured)
-              BoxShadow(color: AppColors.amber.withOpacity(0.3), blurRadius: 14),
+              BoxShadow(
+                  color: AppColors.amber.withOpacity(0.3), blurRadius: 14),
             BoxShadow(
               color: AppColors.leafShadow.withOpacity(0.45),
               blurRadius: 8,
@@ -262,8 +281,8 @@ class _ShopItemCardState extends State<_ShopItemCard>
                   animation: _float,
                   builder: (_, __) => Transform.translate(
                     offset: Offset(0, _float.value),
-                    child: Text(item.emoji,
-                        style: const TextStyle(fontSize: 28)),
+                    child:
+                        Text(item.emoji, style: const TextStyle(fontSize: 28)),
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -287,8 +306,8 @@ class _ShopItemCardState extends State<_ShopItemCard>
                 const SizedBox(height: 6),
                 // Price button
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 9, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isGems
@@ -298,8 +317,9 @@ class _ShopItemCardState extends State<_ShopItemCard>
                     borderRadius: BorderRadius.circular(9),
                     boxShadow: [
                       BoxShadow(
-                        color: (isGems ? Colors.lightBlueAccent : AppColors.amber)
-                            .withOpacity(0.4),
+                        color:
+                            (isGems ? Colors.lightBlueAccent : AppColors.amber)
+                                .withOpacity(0.4),
                         blurRadius: 8,
                       ),
                     ],
@@ -321,10 +341,10 @@ class _ShopItemCardState extends State<_ShopItemCard>
           // Badge label
           if (item.badgeLabel != null)
             Positioned(
-              top: -1, right: -1,
+              top: -1,
+              right: -1,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 5, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.badgeRed,
                   borderRadius: const BorderRadius.only(
@@ -342,10 +362,10 @@ class _ShopItemCardState extends State<_ShopItemCard>
           // Owned qty badge
           if (widget.qty > 0)
             Positioned(
-              bottom: 4, left: 4,
+              bottom: 4,
+              left: 4,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
                   color: AppColors.greenAccent.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(6),
@@ -450,31 +470,39 @@ class _SellTile extends StatelessWidget {
         child: Row(children: [
           // Emoji + qty badge
           Container(
-            width: 54, height: 54,
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
               ),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: GameTone.goldTrim, width: 1.4),
             ),
             child: Stack(children: [
-              Center(child: Text(item.emoji, style: const TextStyle(fontSize: 28))),
+              Center(
+                  child:
+                      Text(item.emoji, style: const TextStyle(fontSize: 28))),
               Positioned(
-                bottom: 1, right: 3,
+                bottom: 1,
+                right: 3,
                 child: Text('×$qty',
                     style: const TextStyle(
                       color: GameTone.textGold,
                       fontWeight: FontWeight.w900,
                       fontSize: 10,
-                      shadows: [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 1))],
+                      shadows: [
+                        Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 1))
+                      ],
                     )),
               ),
             ]),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Column(
+          Expanded(
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -483,7 +511,9 @@ class _SellTile extends StatelessWidget {
                       color: GameTone.textCream,
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
-                      shadows: [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2))])),
+                      shadows: [
+                        Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2))
+                      ])),
               const SizedBox(height: 2),
               Text(item.description,
                   maxLines: 2,
@@ -538,18 +568,18 @@ class _SellButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 78, height: 30,
+        width: 78,
+        height: 30,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: colors,
           ),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: const Color(0xFF1A0E04), width: 1.4),
           boxShadow: [
-            BoxShadow(
-                color: colors.first.withOpacity(0.45),
-                blurRadius: 8),
+            BoxShadow(color: colors.first.withOpacity(0.45), blurRadius: 8),
           ],
         ),
         child: Center(

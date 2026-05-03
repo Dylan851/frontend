@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -106,7 +106,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AuthScaffold(
       child: AuthPanel(
         title: 'ANIMAL GO',
-        subtitle: 'Descubre el mundo animal',
         child: Form(
           key: _formKey,
           child: Column(
@@ -121,11 +120,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   fontSize: 36,
                 ),
               ),
-              const Text(
-                'Únete para comenzar tu aventura',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: GameTone.textGold, fontSize: 14),
-              ),
               const SizedBox(height: 14),
               AuthTextField(
                 label: 'Nombre de usuario',
@@ -133,7 +127,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.person_outline,
                 controller: _nameCtrl,
                 validator: (v) {
-                  if ((v ?? '').trim().isEmpty) return 'El nombre es obligatorio.';
+                  if ((v ?? '').trim().isEmpty)
+                    return 'El nombre es obligatorio.';
                   return null;
                 },
               ),
@@ -147,7 +142,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: (v) {
                   final value = (v ?? '').trim();
                   if (value.isEmpty) return 'El correo es obligatorio.';
-                  final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
+                  final ok =
+                      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
                   if (!ok) return 'Introduce un correo válido.';
                   return null;
                 },
@@ -159,7 +155,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.lock_outline,
                 controller: _passwordCtrl,
                 obscureText: _obscurePassword,
-                onToggleVisibility: () => setState(() => _obscurePassword = !_obscurePassword),
+                onToggleVisibility: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
                 validator: (v) {
                   if ((v ?? '').isEmpty) return 'La contraseña es obligatoria.';
                   return null;
@@ -172,10 +169,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.lock_outline,
                 controller: _confirmCtrl,
                 obscureText: _obscureConfirm,
-                onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                onToggleVisibility: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (v) {
                   if ((v ?? '').isEmpty) return 'Confirma tu contraseña.';
-                  if (v != _passwordCtrl.text) return 'Las contraseñas no coinciden.';
+                  if (v != _passwordCtrl.text)
+                    return 'Las contraseñas no coinciden.';
                   return null;
                 },
               ),
@@ -208,19 +207,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: _loading ? null : _submitGoogle,
-                icon: const Text('G', style: TextStyle(fontWeight: FontWeight.w900)),
+                icon: const Text('G',
+                    style: TextStyle(fontWeight: FontWeight.w900)),
                 label: const Text('Registrarse con Google'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   foregroundColor: GameTone.textCream,
                   side: const BorderSide(color: GameTone.goldTrim),
                 ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Inicia sesión con tu cuenta de Google',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: GameTone.textGold, fontSize: 11),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -234,7 +228,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Términos y privacidad pendientes.')),
+                        const SnackBar(
+                            content: Text('Términos y privacidad pendientes.')),
                       );
                     },
                     child: const Text('Términos y privacidad'),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../data/game_state.dart';
 import '../data/mission_data.dart';
+import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class MissionsScreen extends StatefulWidget {
@@ -19,11 +20,15 @@ class _MissionsScreenState extends State<MissionsScreen>
   void initState() {
     super.initState();
     _fadeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 400))..forward();
+        vsync: this, duration: const Duration(milliseconds: 400))
+      ..forward();
   }
 
   @override
-  void dispose() { _fadeCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
 
   void _claim(Mission m) {
     final ok = _gs.claimMission(m.id,
@@ -38,12 +43,12 @@ class _MissionsScreenState extends State<MissionsScreen>
         duration: const Duration(milliseconds: 1800),
         content: Text(
           '🎉 Recompensa: '
-          '${m.rewardCoins > 0 ? "+${m.rewardCoins}🪙 " : ""}'
-          '${m.rewardGems > 0 ? "+${m.rewardGems}💎 " : ""}'
-          '${m.rewardXp > 0 ? "+${m.rewardXp}XP" : ""}'.trim(),
+                  '${m.rewardCoins > 0 ? "+${m.rewardCoins}🪙 " : ""}'
+                  '${m.rewardGems > 0 ? "+${m.rewardGems}💎 " : ""}'
+                  '${m.rewardXp > 0 ? "+${m.rewardXp}XP" : ""}'
+              .trim(),
           style: const TextStyle(
-              color: GameTone.textCream,
-              fontWeight: FontWeight.w800),
+              color: GameTone.textCream, fontWeight: FontWeight.w800),
         ),
       ));
       setState(() {});
@@ -68,8 +73,18 @@ class _MissionsScreenState extends State<MissionsScreen>
               GameHeader(
                 title: 'Misiones',
                 trailing: [
-                  OvalGoldChip(icon: '🪙', value: '${_gs.coins}'),
-                  OvalGoldChip(icon: '💎', value: '${_gs.gems}'),
+                  OvalGoldChip(
+                    icon: '\u{1FA99}',
+                    value: '${_gs.coins}',
+                    onPlusTap: () =>
+                        Navigator.pushNamed(context, AppRouter.payments),
+                  ),
+                  OvalGoldChip(
+                    icon: '\u{1F48E}',
+                    value: '${_gs.gems}',
+                    onPlusTap: () =>
+                        Navigator.pushNamed(context, AppRouter.payments),
+                  ),
                 ],
               ),
               // Summary chip
@@ -79,7 +94,8 @@ class _MissionsScreenState extends State<MissionsScreen>
                   width: double.infinity,
                   child: PixelFrame(
                     radius: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     child: Row(children: [
                       _summary('✅', '${claimed.length}', 'Reclamadas'),
                       _vDivider(),
@@ -125,42 +141,44 @@ class _MissionsScreenState extends State<MissionsScreen>
   }
 
   Widget _summary(String icon, String val, String label) => Expanded(
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Text(icon, style: const TextStyle(fontSize: 16)),
-      const SizedBox(height: 2),
-      Text(val,
-          style: const TextStyle(
-            color: GameTone.textCream,
-            fontWeight: FontWeight.w900,
-            fontSize: 16,
-          )),
-      Text(label,
-          style: TextStyle(
-            color: GameTone.textGold.withOpacity(0.85),
-            fontWeight: FontWeight.w700,
-            fontSize: 9,
-            letterSpacing: 0.6,
-          )),
-    ]),
-  );
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(icon, style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 2),
+          Text(val,
+              style: const TextStyle(
+                color: GameTone.textCream,
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              )),
+          Text(label,
+              style: TextStyle(
+                color: GameTone.textGold.withOpacity(0.85),
+                fontWeight: FontWeight.w700,
+                fontSize: 9,
+                letterSpacing: 0.6,
+              )),
+        ]),
+      );
 
   Widget _vDivider() => Container(
-    width: 1, height: 36,
-    color: GameTone.goldTrim.withOpacity(0.3),
-  );
+        width: 1,
+        height: 36,
+        color: GameTone.goldTrim.withOpacity(0.3),
+      );
 
   Widget _section(String title) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
-    child: Text(title,
-        style: const TextStyle(
-          color: GameTone.textGold,
-          fontWeight: FontWeight.w900,
-          fontSize: 11,
-          letterSpacing: 1.6,
-        )),
-  );
+        padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
+        child: Text(title,
+            style: const TextStyle(
+              color: GameTone.textGold,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 1.6,
+            )),
+      );
 
-  Widget _missionTile(Mission m, {bool highlight = false, bool completed = false}) {
+  Widget _missionTile(Mission m,
+      {bool highlight = false, bool completed = false}) {
     final pct = m.pct(_gs);
     final progress = m.progress(_gs);
     return Container(
@@ -174,21 +192,25 @@ class _MissionsScreenState extends State<MissionsScreen>
         child: Row(children: [
           // Icon badge
           Container(
-            width: 50, height: 50,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(colors: completed
-                  ? [const Color(0xFF6E885A), const Color(0xFF34532A)]
-                  : highlight
-                      ? [const Color(0xFFFFE48A), const Color(0xFFB07A2A)]
-                      : [const Color(0xFF6BBA5B), const Color(0xFF1F4E2A)]),
+              gradient: RadialGradient(
+                  colors: completed
+                      ? [const Color(0xFF6E885A), const Color(0xFF34532A)]
+                      : highlight
+                          ? [const Color(0xFFFFE48A), const Color(0xFFB07A2A)]
+                          : [const Color(0xFF6BBA5B), const Color(0xFF1F4E2A)]),
               border: Border.all(color: GameTone.goldTrim, width: 1.4),
             ),
-            child: Center(child: Text(m.emoji, style: const TextStyle(fontSize: 26))),
+            child: Center(
+                child: Text(m.emoji, style: const TextStyle(fontSize: 26))),
           ),
           const SizedBox(width: 10),
           // Texts + bar
-          Expanded(child: Column(
+          Expanded(
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -210,21 +232,30 @@ class _MissionsScreenState extends State<MissionsScreen>
                   )),
               const SizedBox(height: 5),
               Row(children: [
-                Expanded(child: Container(
+                Expanded(
+                    child: Container(
                   height: 8,
                   decoration: BoxDecoration(
                     color: GameTone.woodOuter,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: GameTone.goldTrim.withOpacity(0.7), width: 0.8),
+                    border: Border.all(
+                        color: GameTone.goldTrim.withOpacity(0.7), width: 0.8),
                   ),
                   child: FractionallySizedBox(
                     widthFactor: pct,
                     alignment: Alignment.centerLeft,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: completed
-                            ? [const Color(0xFF7DA86A), const Color(0xFF456E3D)]
-                            : [const Color(0xFFF6C76B), const Color(0xFFD4A04A)]),
+                        gradient: LinearGradient(
+                            colors: completed
+                                ? [
+                                    const Color(0xFF7DA86A),
+                                    const Color(0xFF456E3D)
+                                  ]
+                                : [
+                                    const Color(0xFFF6C76B),
+                                    const Color(0xFFD4A04A)
+                                  ]),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -241,8 +272,8 @@ class _MissionsScreenState extends State<MissionsScreen>
               const SizedBox(height: 5),
               Row(children: [
                 if (m.rewardCoins > 0) _rewardChip('🪙', '${m.rewardCoins}'),
-                if (m.rewardGems > 0)  _rewardChip('💎', '${m.rewardGems}'),
-                if (m.rewardXp > 0)    _rewardChip('⭐', '${m.rewardXp}'),
+                if (m.rewardGems > 0) _rewardChip('💎', '${m.rewardGems}'),
+                if (m.rewardXp > 0) _rewardChip('⭐', '${m.rewardXp}'),
               ]),
             ],
           )),
@@ -255,20 +286,25 @@ class _MissionsScreenState extends State<MissionsScreen>
             GestureDetector(
               onTap: () => _claim(m),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                     colors: [Color(0xFF6BBA5B), Color(0xFF1F4E2A)],
                   ),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: GameTone.goldTrim, width: 1.4),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF6BE095).withOpacity(0.4), blurRadius: 12),
+                    BoxShadow(
+                        color: const Color(0xFF6BE095).withOpacity(0.4),
+                        blurRadius: 12),
                   ],
                 ),
                 child: const Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 20),
+                  Icon(Icons.card_giftcard_rounded,
+                      color: Colors.white, size: 20),
                   SizedBox(height: 2),
                   Text('COBRAR',
                       style: TextStyle(
@@ -301,22 +337,23 @@ class _MissionsScreenState extends State<MissionsScreen>
   }
 
   Widget _rewardChip(String icon, String val) => Container(
-    margin: const EdgeInsets.only(right: 5),
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-    decoration: BoxDecoration(
-      color: GameTone.woodOuter,
-      borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: GameTone.goldTrim.withOpacity(0.6), width: 0.8),
-    ),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Text(icon, style: const TextStyle(fontSize: 10)),
-      const SizedBox(width: 3),
-      Text(val,
-          style: const TextStyle(
-            color: GameTone.textGold,
-            fontWeight: FontWeight.w900,
-            fontSize: 10,
-          )),
-    ]),
-  );
+        margin: const EdgeInsets.only(right: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: GameTone.woodOuter,
+          borderRadius: BorderRadius.circular(6),
+          border:
+              Border.all(color: GameTone.goldTrim.withOpacity(0.6), width: 0.8),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(icon, style: const TextStyle(fontSize: 10)),
+          const SizedBox(width: 3),
+          Text(val,
+              style: const TextStyle(
+                color: GameTone.textGold,
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+              )),
+        ]),
+      );
 }
