@@ -5,6 +5,8 @@ import '../data/game_state.dart';
 import '../data/item_data.dart';
 import '../game/overlays/tutorial_overlay.dart';
 import '../router/app_router.dart';
+import '../services/auth_service.dart';
+import '../services/stripe_payment_service.dart';
 import '../theme/app_theme.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -122,14 +124,20 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           right: pad,
           child: Row(
             children: [
-              GestureDetector(
-                onTap: () => _showCurrencyShopDialog(isGems: false),
-                child: OvalGoldChip(icon: '\u{1FA99}', value: '${_gs.coins}'),
+              _currencyGroup(
+                s: s,
+                icon: '\u{1FA99}',
+                value: '${_gs.coins}',
+                isGem: false,
+                onPlusTap: () => _showCurrencyShopDialog(isGems: false),
               ),
               SizedBox(width: 8 * s),
-              GestureDetector(
-                onTap: () => _showCurrencyShopDialog(isGems: true),
-                child: OvalGoldChip(icon: '\u{1F48E}', value: '${_gs.gems}'),
+              _currencyGroup(
+                s: s,
+                icon: '\u{1F48E}',
+                value: '${_gs.gems}',
+                isGem: true,
+                onPlusTap: () => _showCurrencyShopDialog(isGems: true),
               ),
               SizedBox(width: 8 * s),
               _settingsBtn(s),
@@ -301,39 +309,189 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         ),
       );
 
+  Widget _currencyGroup({
+    required double s,
+    required String icon,
+    required String value,
+    required bool isGem,
+    required VoidCallback onPlusTap,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OvalGoldChip(icon: icon, value: value),
+        SizedBox(width: 5 * s),
+        GestureDetector(
+          onTap: onPlusTap,
+          child: Container(
+            width: 30 * s,
+            height: 30 * s,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isGem
+                    ? const [Color(0xFF334A63), Color(0xFF202020)]
+                    : const [Color(0xFF6A5120), Color(0xFF2B1C0E)],
+              ),
+              border: Border.all(color: GameTone.goldTrim, width: 1.8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.45),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                '+',
+                style: TextStyle(
+                  color: GameTone.textGold,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 19 * s,
+                  height: 1,
+                  shadows: const [
+                    Shadow(
+                      color: Color(0xFF1A0E04),
+                      offset: Offset(0, 1),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _showCurrencyShopDialog({required bool isGems}) async {
     final title = isGems ? 'Comprar diamantes' : 'Comprar monedas';
-    final subtitle = isGems
-        ? 'Pronto podrás comprar diamantes con la API de pagos.'
-        : 'Pronto podrás comprar monedas con la API de pagos.';
+    final type = isGems ? 'diamonds' : 'coins';
+    final packs = StripePaymentService.packs
+        .where((p) => p.currencyType == type)
+        .toList();
     if (!mounted) return;
 
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A0E04),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: GameTone.goldTrim, width: 1.2),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: GameTone.textCream,
-            fontWeight: FontWeight.w900,
+      barrierColor: const Color(0xAA000000),
+      builder: (context) {
+        String? buyingPackId;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: StatefulBuilder(
+              builder: (context, setLocalState) {
+                Future<void> onBuy(CurrencyPack pack) async {
+                  setLocalState(() => buyingPackId = pack.id);
+                  try {
+                    final msg = await StripePaymentService.buyPack(pack.id);
+                    final session = await AuthService.restoreSession();
+                    if (session != null) {
+                      AuthService.applySessionToGameState(session);
+                    }
+                    if (!mounted || !context.mounted) return;
+                    setState(() {});
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(msg)));
+                  } catch (e) {
+                    if (!mounted || !context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.toString().replaceFirst('Exception: ', ''),
+                        ),
+                        backgroundColor: AppColors.badgeRed,
+                      ),
+                    );
+                  } finally {
+                    if (context.mounted) {
+                      setLocalState(() => buyingPackId = null);
+                    }
+                  }
+                }
+
+                return PixelFrame(
+                  radius: 14,
+                  innerFill: const Color(0xFF1F1308),
+                  padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: GameTone.textGold,
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.w900,
+                                  shadows: [
+                                    Shadow(
+                                      color: Color(0xFF1A0E04),
+                                      offset: Offset(0, 2),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF5A3A16),
+                                      Color(0xFF2D1B0A)
+                                    ],
+                                  ),
+                                  border: Border.all(
+                                    color: GameTone.goldTrim,
+                                    width: 1.4,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: GameTone.textCream,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        for (final pack in packs) ...[
+                          _CurrencyPackCard(
+                            pack: pack,
+                            isGems: isGems,
+                            loading: buyingPackId == pack.id,
+                            onBuy: () => onBuy(pack),
+                          ),
+                          if (pack != packs.last) const SizedBox(height: 12),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        content: Text(
-          subtitle,
-          style: const TextStyle(color: GameTone.textGold),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Entendido'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -349,13 +507,6 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           label: 'Tienda',
           width: btnW,
           onTap: () => _push(AppRouter.shop),
-        ),
-        SizedBox(height: gap),
-        MenuPill(
-          icon: '\u{1F4B3}',
-          label: 'Pagos',
-          width: btnW,
-          onTap: () => _push(AppRouter.payments),
         ),
         SizedBox(height: gap),
         MenuPill(
@@ -474,6 +625,109 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         width: btnW,
         height: 86 * s,
         child: const _PlayBtnInline(),
+      ),
+    );
+  }
+}
+
+class _CurrencyPackCard extends StatelessWidget {
+  final CurrencyPack pack;
+  final bool isGems;
+  final bool loading;
+  final VoidCallback onBuy;
+
+  const _CurrencyPackCard({
+    required this.pack,
+    required this.isGems,
+    required this.loading,
+    required this.onBuy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (pack.id) {
+      'coins_100' => '\u{1FA99}',
+      'coins_500' => '\u{1FA99}\u{1FA99}',
+      'coins_1000' => '\u{1F4B0}',
+      'diamonds_10' => '\u{1F48E}',
+      'diamonds_30' => '\u{1F48E}\u{1F48E}',
+      'diamonds_75' => '\u{1F48D}',
+      _ => isGems ? '\u{1F48E}' : '\u{1FA99}',
+    };
+
+    return PixelFrame(
+      radius: 12,
+      innerFill: const Color(0xFF2A180B),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: GameTone.goldTrim.withOpacity(0.7)),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isGems
+                    ? const [Color(0xFF12314A), Color(0xFF1A0E04)]
+                    : const [Color(0xFF5A3A10), Color(0xFF1A0E04)],
+              ),
+            ),
+            child:
+                Center(child: Text(icon, style: const TextStyle(fontSize: 30))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              pack.title,
+              style: const TextStyle(
+                color: GameTone.textCream,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                pack.priceLabel,
+                style: TextStyle(
+                  color: isGems ? const Color(0xFF7DC7FF) : GameTone.textGold,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                height: 42,
+                child: ElevatedButton(
+                  onPressed: loading ? null : onBuy,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2FA54D),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                          color: Color(0xFF145D2A), width: 1.4),
+                    ),
+                  ),
+                  child: Text(
+                    loading ? '...' : 'Comprar',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
