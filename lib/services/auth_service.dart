@@ -1,8 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/game_state.dart';
 import 'api_service.dart';
@@ -25,26 +25,6 @@ class AuthSession {
     this.gems,
     this.level,
   });
-
-  AuthSession copyWith({
-    String? token,
-    String? playerName,
-    String? playerId,
-    String? email,
-    int? coins,
-    int? gems,
-    int? level,
-  }) {
-    return AuthSession(
-      token: token ?? this.token,
-      playerName: playerName ?? this.playerName,
-      playerId: playerId ?? this.playerId,
-      email: email ?? this.email,
-      coins: coins ?? this.coins,
-      gems: gems ?? this.gems,
-      level: level ?? this.level,
-    );
-  }
 }
 
 class AuthService {
@@ -55,48 +35,28 @@ class AuthService {
   static const _coinsKey = 'auth_player_coins';
   static const _gemsKey = 'auth_player_gems';
   static const _levelKey = 'auth_player_level';
-  static const _googleWebClientId = String.fromEnvironment(
-    'GOOGLE_WEB_CLIENT_ID',
-    defaultValue: '',
-  );
-
-  static GoogleSignIn? _googleSignIn;
-  static Future<void>? _prepareFuture;
   static Timer? _syncDebounce;
   static bool _syncInFlight = false;
 
-  static String get googleWebClientId => _googleWebClientId.trim();
-
-  static bool get isGoogleWebConfigured =>
-      !kIsWeb || googleWebClientId.isNotEmpty;
-
-  static GoogleSignIn get _googleClient {
-    return _googleSignIn ??= GoogleSignIn(
-      scopes: const ['email', 'profile', 'openid'],
-      clientId:
-          kIsWeb && googleWebClientId.isNotEmpty ? googleWebClientId : null,
-    );
-  }
-
-  static Stream<GoogleSignInAccount?> get onGoogleUserChanged =>
-      _googleClient.onCurrentUserChanged;
-
-  static Future<void> prepareGoogleSignIn() {
-    return _prepareFuture ??= _prepareGoogleSignInInternal();
-  }
-
-  static Future<void> _prepareGoogleSignInInternal() async {
-    if (kIsWeb && !isGoogleWebConfigured) {
-      throw Exception(
-        'Google no está configurado correctamente. Falta GOOGLE_WEB_CLIENT_ID.',
-      );
-    }
-
+  static SupabaseClient? get _supabaseOrNull {
     try {
-      await _googleClient.signInSilently(suppressErrors: true);
+      return Supabase.instance.client;
     } catch (_) {
-      // En web puede no existir sesión previa.
+      return null;
     }
+  }
+
+  static bool get _isSupabaseConfigured => _supabaseOrNull != null;
+
+  static String get oauthRedirectUrl {
+    if (kIsWeb) {
+      final origin = Uri.base.origin;
+      if (origin.contains('localhost') || origin.contains('127.0.0.1')) {
+        return 'http://localhost:8080';
+      }
+      return 'https://frontend-4iam.onrender.com';
+    }
+    return 'wildquest://login-callback/';
   }
 
   static Future<AuthSession?> restoreSession() async {
@@ -123,9 +83,9 @@ class AuthService {
     await prefs.remove(_coinsKey);
     await prefs.remove(_gemsKey);
     await prefs.remove(_levelKey);
-    if (!kIsWeb) {
+    if (_isSupabaseConfigured) {
       try {
-        await _googleClient.signOut();
+        await _supabaseOrNull!.auth.signOut();
       } catch (_) {
         // no-op
       }
@@ -149,37 +109,29 @@ class AuthService {
     return _parseAndStoreSession(response, emailHint: email);
   }
 
-  static Future<AuthSession> loginWithGoogle() async {
-    if (kIsWeb) {
-      throw Exception('En Web usa el botón oficial de Google para continuar.');
+  static Future<void> startGoogleOAuth() async {
+    if (!_isSupabaseConfigured) {
+      throw Exception('Supabase no está configurado en la app.');
     }
 
-    final account = await _googleClient.signIn();
-    if (account == null) {
-      throw Exception('Inicio con Google cancelado.');
+    final ok = await _supabaseOrNull!.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: oauthRedirectUrl,
+    );
+    if (!ok) {
+      throw Exception('No se pudo iniciar Google OAuth en Supabase.');
     }
-    return loginWithGoogleAccount(account);
   }
 
-  static Future<AuthSession> loginWithGoogleAccount(
-    GoogleSignInAccount account,
-  ) async {
-    if (kIsWeb && !isGoogleWebConfigured) {
-      throw Exception(
-        'Google no está configurado correctamente. Revisa GOOGLE_WEB_CLIENT_ID.',
-      );
-    }
+  static Future<AuthSession?> completeGoogleOAuthIfPossible() async {
+    if (!_isSupabaseConfigured) return null;
+    final supabaseSession = _supabaseOrNull!.auth.currentSession;
+    final accessToken = supabaseSession?.accessToken;
+    if (accessToken == null || accessToken.isEmpty) return null;
 
-    final auth = await account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null || idToken.isEmpty) {
-      throw Exception(
-        'Google no devolvió id_token. Verifica OAuth Web y origen autorizado http://localhost:8080.',
-      );
-    }
-
-    final response = await ApiService.loginWithGoogle(idToken);
-    return _parseAndStoreSession(response, emailHint: account.email);
+    final response = await ApiService.loginWithSupabase(accessToken);
+    final emailHint = supabaseSession?.user.email ?? '';
+    return _parseAndStoreSession(response, emailHint: emailHint);
   }
 
   static void applySessionToGameState(AuthSession session) {
@@ -197,10 +149,8 @@ class AuthService {
     gs.autosave();
   }
 
-  static Future<AuthSession> refreshSessionFromServer(
-      AuthSession session) async {
-    final response =
-        await ApiService.getCurrentPlayerProfile(token: session.token);
+  static Future<AuthSession> refreshSessionFromServer(AuthSession session) async {
+    final response = await ApiService.getCurrentPlayerProfile(token: session.token);
     if (response['success'] != true) {
       return session;
     }
@@ -227,13 +177,11 @@ class AuthService {
 
         final response = await ApiService.updateCurrentPlayerProfile(
           token: session.token,
-          nickname:
-              state.playerName.trim().isEmpty ? null : state.playerName.trim(),
+          nickname: state.playerName.trim().isEmpty ? null : state.playerName.trim(),
         );
 
         if (response['success'] == true) {
-          final player =
-              (response['data'] as Map?)?.cast<String, dynamic>() ?? {};
+          final player = (response['data'] as Map?)?.cast<String, dynamic>() ?? {};
           final updated = _sessionFromPlayerData(
             token: session.token,
             emailHint: session.email,
@@ -279,8 +227,7 @@ class AuthService {
     required String? emailHint,
     required Map<String, dynamic> player,
   }) {
-    final rawName =
-        (player['nickname'] ?? player['name'] ?? '').toString().trim();
+    final rawName = (player['nickname'] ?? player['name'] ?? '').toString().trim();
     final finalName = _normalizedName(
       preferredName: rawName,
       emailHint: emailHint,
@@ -358,16 +305,7 @@ class AuthService {
         text.contains('connection refused')) {
       return 'No se pudo conectar con el servidor.';
     }
-    if (text.contains('people api') ||
-        text.contains('service_disabled') ||
-        text.contains('google oauth is not configured')) {
-      return 'Google no está configurado correctamente.';
-    }
-    if (text.contains('invalid google token') ||
-        text.contains('token missing email') ||
-        text.contains('issuer') ||
-        text.contains('google') ||
-        text.contains('id_token')) {
+    if (text.contains('supabase') || text.contains('oauth') || text.contains('google')) {
       return 'No se pudo iniciar sesión con Google.';
     }
     if (raw.contains('{') || raw.length > 220) {

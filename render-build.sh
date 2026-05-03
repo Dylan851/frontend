@@ -21,6 +21,8 @@ if [ ! -x "$FLUTTER_BIN" ]; then
 fi
 
 : "${API_BASE_URL:?API_BASE_URL env var is required (e.g. https://your-backend.onrender.com)}"
+: "${SUPABASE_URL:?SUPABASE_URL env var is required}"
+: "${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY env var is required}"
 
 "$FLUTTER_BIN" --version
 "$FLUTTER_BIN" config --enable-web
@@ -28,7 +30,12 @@ fi
 if [ -n "${GOOGLE_WEB_CLIENT_ID:-}" ]; then
   "$FLUTTER_BIN" build web --release \
     --dart-define=API_BASE_URL="${API_BASE_URL%/}" \
+    --dart-define=SUPABASE_URL="${SUPABASE_URL%/}" \
+    --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}" \
     --dart-define=GOOGLE_WEB_CLIENT_ID="${GOOGLE_WEB_CLIENT_ID}"
 else
-  "$FLUTTER_BIN" build web --release --dart-define=API_BASE_URL="${API_BASE_URL%/}"
+  "$FLUTTER_BIN" build web --release \
+    --dart-define=API_BASE_URL="${API_BASE_URL%/}" \
+    --dart-define=SUPABASE_URL="${SUPABASE_URL%/}" \
+    --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}"
 fi

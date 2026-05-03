@@ -1,14 +1,11 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../router/app_router.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'widgets/auth_ui.dart';
-import 'widgets/google_sign_in_web_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -27,26 +24,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  bool _handlingGoogleAccount = false;
   String? _error;
-  StreamSubscription<GoogleSignInAccount?>? _googleSub;
 
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      _googleSub =
-          AuthService.onGoogleUserChanged.listen(_onGoogleAccountChanged);
-      AuthService.prepareGoogleSignIn().catchError((Object e) {
-        if (!mounted) return;
-        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-      });
-    }
+    unawaited(_tryCompleteGoogleOAuth());
   }
 
   @override
   void dispose() {
-    _googleSub?.cancel();
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
@@ -89,14 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final session = await AuthService.loginWithGoogle();
-      AuthService.applySessionToGameState(session);
-      await AuthService.refreshSessionFromServer(session);
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRouter.mainMenu,
-        (route) => false,
-      );
+      await AuthService.startGoogleOAuth();
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -105,19 +85,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _onGoogleAccountChanged(GoogleSignInAccount? account) async {
-    if (!kIsWeb || account == null || _handlingGoogleAccount || !mounted) {
-      return;
-    }
-
-    _handlingGoogleAccount = true;
-    setState(() {
-      _error = null;
-      _loading = true;
-    });
-
+  Future<void> _tryCompleteGoogleOAuth() async {
     try {
-      final session = await AuthService.loginWithGoogleAccount(account);
+      final session = await AuthService.completeGoogleOAuthIfPossible();
+      if (session == null || !mounted) return;
       AuthService.applySessionToGameState(session);
       await AuthService.refreshSessionFromServer(session);
       if (!mounted) return;
@@ -125,12 +96,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AppRouter.mainMenu,
         (route) => false,
       );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      _handlingGoogleAccount = false;
-      if (mounted) setState(() => _loading = false);
+    } catch (_) {
+      // no-op
     }
   }
 
@@ -166,8 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.person_outline,
                 controller: _nameCtrl,
                 validator: (v) {
-                  if ((v ?? '').trim().isEmpty)
-                    return 'El nombre es obligatorio.';
+                  if ((v ?? '').trim().isEmpty) return 'El nombre es obligatorio.';
                   return null;
                 },
               ),
@@ -181,8 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: (v) {
                   final value = (v ?? '').trim();
                   if (value.isEmpty) return 'El correo es obligatorio.';
-                  final ok =
-                      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
+                  final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
                   if (!ok) return 'Introduce un correo válido.';
                   return null;
                 },
@@ -194,8 +159,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.lock_outline,
                 controller: _passwordCtrl,
                 obscureText: _obscurePassword,
-                onToggleVisibility: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
+                onToggleVisibility: () => setState(() => _obscurePassword = !_obscurePassword),
                 validator: (v) {
                   if ((v ?? '').isEmpty) return 'La contraseña es obligatoria.';
                   return null;
@@ -208,12 +172,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.lock_outline,
                 controller: _confirmCtrl,
                 obscureText: _obscureConfirm,
-                onToggleVisibility: () =>
-                    setState(() => _obscureConfirm = !_obscureConfirm),
+                onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (v) {
                   if ((v ?? '').isEmpty) return 'Confirma tu contraseña.';
-                  if (v != _passwordCtrl.text)
-                    return 'Las contraseñas no coinciden.';
+                  if (v != _passwordCtrl.text) return 'Las contraseñas no coinciden.';
                   return null;
                 },
               ),
@@ -244,26 +206,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     : const Text('Crear cuenta'),
               ),
               const SizedBox(height: 8),
-              if (kIsWeb)
-                SizedBox(
-                  height: 48,
-                  child: IgnorePointer(
-                    ignoring: _loading,
-                    child: buildGoogleWebSignInButton(),
-                  ),
-                )
-              else
-                OutlinedButton.icon(
-                  onPressed: _loading ? null : _submitGoogle,
-                  icon: const Text('G',
-                      style: TextStyle(fontWeight: FontWeight.w900)),
-                  label: const Text('Registrarse con Google'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    foregroundColor: GameTone.textCream,
-                    side: const BorderSide(color: GameTone.goldTrim),
-                  ),
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _submitGoogle,
+                icon: const Text('G', style: TextStyle(fontWeight: FontWeight.w900)),
+                label: const Text('Registrarse con Google'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: GameTone.textCream,
+                  side: const BorderSide(color: GameTone.goldTrim),
                 ),
+              ),
               const SizedBox(height: 4),
               const Text(
                 'Inicia sesión con tu cuenta de Google',
@@ -282,8 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Términos y privacidad pendientes.')),
+                        const SnackBar(content: Text('Términos y privacidad pendientes.')),
                       );
                     },
                     child: const Text('Términos y privacidad'),

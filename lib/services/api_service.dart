@@ -79,13 +79,13 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+  static Future<Map<String, dynamic>> loginWithSupabase(String accessToken) async {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl$authEndpoint/google'),
+            Uri.parse('$baseUrl$authEndpoint/supabase'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'id_token': idToken}),
+            body: jsonEncode({'access_token': accessToken}),
           )
           .timeout(const Duration(seconds: 15));
       return _decodeResponse(response);

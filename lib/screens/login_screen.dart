@@ -1,14 +1,11 @@
 ﻿import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../router/app_router.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'widgets/auth_ui.dart';
-import 'widgets/google_sign_in_web_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,26 +21,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _loading = false;
   bool _obscure = true;
-  bool _handlingGoogleAccount = false;
   String? _error;
-  StreamSubscription<GoogleSignInAccount?>? _googleSub;
 
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      _googleSub =
-          AuthService.onGoogleUserChanged.listen(_onGoogleAccountChanged);
-      AuthService.prepareGoogleSignIn().catchError((Object e) {
-        if (!mounted) return;
-        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-      });
-    }
+    unawaited(_tryCompleteGoogleOAuth());
   }
 
   @override
   void dispose() {
-    _googleSub?.cancel();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
@@ -83,14 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final session = await AuthService.loginWithGoogle();
-      AuthService.applySessionToGameState(session);
-      await AuthService.refreshSessionFromServer(session);
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRouter.mainMenu,
-        (route) => false,
-      );
+      await AuthService.startGoogleOAuth();
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -99,19 +79,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _onGoogleAccountChanged(GoogleSignInAccount? account) async {
-    if (!kIsWeb || account == null || _handlingGoogleAccount || !mounted) {
-      return;
-    }
-
-    _handlingGoogleAccount = true;
-    setState(() {
-      _error = null;
-      _loading = true;
-    });
-
+  Future<void> _tryCompleteGoogleOAuth() async {
     try {
-      final session = await AuthService.loginWithGoogleAccount(account);
+      final session = await AuthService.completeGoogleOAuthIfPossible();
+      if (session == null || !mounted) return;
       AuthService.applySessionToGameState(session);
       await AuthService.refreshSessionFromServer(session);
       if (!mounted) return;
@@ -119,12 +90,8 @@ class _LoginScreenState extends State<LoginScreen> {
         AppRouter.mainMenu,
         (route) => false,
       );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      _handlingGoogleAccount = false;
-      if (mounted) setState(() => _loading = false);
+    } catch (_) {
+      // no-op
     }
   }
 
@@ -163,8 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) {
                   final value = (v ?? '').trim();
                   if (value.isEmpty) return 'El correo es obligatorio.';
-                  final ok =
-                      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
+                  final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
                   if (!ok) return 'Introduce un correo válido.';
                   return null;
                 },
@@ -209,26 +175,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     : const Text('Entrar'),
               ),
               const SizedBox(height: 8),
-              if (kIsWeb)
-                SizedBox(
-                  height: 48,
-                  child: IgnorePointer(
-                    ignoring: _loading,
-                    child: buildGoogleWebSignInButton(),
-                  ),
-                )
-              else
-                OutlinedButton.icon(
-                  onPressed: _loading ? null : _submitGoogle,
-                  icon: const Text('G',
-                      style: TextStyle(fontWeight: FontWeight.w900)),
-                  label: const Text('Continuar con Google'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    foregroundColor: GameTone.textCream,
-                    side: const BorderSide(color: GameTone.goldTrim),
-                  ),
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _submitGoogle,
+                icon: const Text('G', style: TextStyle(fontWeight: FontWeight.w900)),
+                label: const Text('Continuar con Google'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: GameTone.textCream,
+                  side: const BorderSide(color: GameTone.goldTrim),
                 ),
+              ),
               const SizedBox(height: 4),
               const Text(
                 'Inicia sesión con tu cuenta de Google',
@@ -241,16 +197,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 spacing: 16,
                 children: [
                   TextButton(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, AppRouter.register),
+                    onPressed: () => Navigator.pushNamed(context, AppRouter.register),
                     child: const Text('Crear cuenta'),
                   ),
                   TextButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('Recuperación de contraseña pendiente.')),
+                        const SnackBar(content: Text('Recuperación de contraseña pendiente.')),
                       );
                     },
                     child: const Text('¿Olvidaste tu contraseña?'),
