@@ -50,6 +50,14 @@ class _MapSelectScreenState extends State<MapSelectScreen>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final compact = size.width < 920;
+    final columns = AppResponsive.adaptiveColumns(
+      size.width - 24,
+      minColumns: 1,
+      maxColumns: 3,
+      itemWidth: compact ? 260 : 360,
+    );
     return Scaffold(
       backgroundColor: AppColors.forestNight,
       body: FadeTransition(
@@ -87,7 +95,7 @@ class _MapSelectScreenState extends State<MapSelectScreen>
 
           // Title block
           Positioned(
-            top: 70,
+            top: compact ? 62 : 70,
             left: 0,
             right: 0,
             child: const OrnateTitle(
@@ -98,16 +106,16 @@ class _MapSelectScreenState extends State<MapSelectScreen>
 
           // Grid of maps
           Positioned(
-            top: 130,
+            top: compact ? 120 : 130,
             left: 12,
             right: 12,
-            bottom: 110,
+            bottom: compact ? 126 : 110,
             child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                childAspectRatio: compact ? 1.1 : 0.95,
               ),
               itemCount: MapCatalog.all.length,
               itemBuilder: (_, i) {

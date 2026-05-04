@@ -17,17 +17,17 @@ class _InventoryScreenState extends State<InventoryScreen>
   ShopItem? _focusedItem;
 
   static const _cats = [
-    ('all',     'Todo'),
-    ('food',    '🍎 Comida'),
-    ('gear',    '🛡️ Equipo'),
+    ('all', 'Todo'),
+    ('food', '🍎 Comida'),
+    ('gear', '🛡️ Equipo'),
     ('powerup', '✨ Power-Ups'),
   ];
 
   static const _equipSlots = [
-    ('head',  '🎩', 'Cabeza'),
+    ('head', '🎩', 'Cabeza'),
     ('hands', '🧤', 'Manos'),
-    ('body',  '👕', 'Cuerpo'),
-    ('feet',  '👢', 'Pies'),
+    ('body', '👕', 'Cuerpo'),
+    ('feet', '👢', 'Pies'),
   ];
 
   List<MapEntry<String, int>> get _filteredItems {
@@ -37,10 +37,14 @@ class _InventoryScreenState extends State<InventoryScreen>
       final item = ShopCatalog.findById(e.key);
       if (item == null) return false;
       switch (_selectedCat) {
-        case 'food':    return item.category == ItemCategory.food;
-        case 'gear':    return item.category == ItemCategory.gear;
-        case 'powerup': return item.category == ItemCategory.powerup;
-        default:        return true;
+        case 'food':
+          return item.category == ItemCategory.food;
+        case 'gear':
+          return item.category == ItemCategory.gear;
+        case 'powerup':
+          return item.category == ItemCategory.powerup;
+        default:
+          return true;
       }
     }).toList();
   }
@@ -97,7 +101,8 @@ class _InventoryScreenState extends State<InventoryScreen>
   }
 
   int get _totalSlots => 24;
-  int get _usedSlots => _gs.inventory.values.fold(0, (a, b) => a + (b > 0 ? 1 : 0));
+  int get _usedSlots =>
+      _gs.inventory.values.fold(0, (a, b) => a + (b > 0 ? 1 : 0));
 
   @override
   Widget build(BuildContext context) {
@@ -107,26 +112,51 @@ class _InventoryScreenState extends State<InventoryScreen>
         dim: 0.55,
         child: Stack(children: [
           SafeArea(
-            child: Column(children: [
-              _topBar(),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                    SizedBox(width: 160, child: _leftPanel()),
-                    const SizedBox(width: 10),
-                    Expanded(child: Column(children: [
-                      _catFilter(),
-                      const SizedBox(height: 6),
-                      Expanded(child: _itemGrid()),
-                      const SizedBox(height: 8),
-                      _statsBar(),
-                    ])),
-                  ]),
-                ),
-              ),
-            ]),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final compact = width < 1020;
+                final s =
+                    AppResponsive.scaleForWidth(width, min: 0.68, max: 1.0);
+                return Column(children: [
+                  _topBar(),
+                  Expanded(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.fromLTRB(10 * s, 4 * s, 10 * s, 10 * s),
+                      child: compact
+                          ? Column(
+                              children: [
+                                SizedBox(height: 170 * s, child: _leftPanel()),
+                                SizedBox(height: 8 * s),
+                                _catFilter(),
+                                SizedBox(height: 6 * s),
+                                Expanded(child: _itemGrid()),
+                                SizedBox(height: 8 * s),
+                                _statsBar(),
+                              ],
+                            )
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                SizedBox(width: 160 * s, child: _leftPanel()),
+                                SizedBox(width: 10 * s),
+                                Expanded(
+                                  child: Column(children: [
+                                    _catFilter(),
+                                    SizedBox(height: 6 * s),
+                                    Expanded(child: _itemGrid()),
+                                    SizedBox(height: 8 * s),
+                                    _statsBar(),
+                                  ]),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ]);
+              },
+            ),
           ),
           // Item detail popup
           if (_focusedItem != null) _itemDetailPopup(),
@@ -150,7 +180,8 @@ class _InventoryScreenState extends State<InventoryScreen>
           // Character portrait
           Expanded(
             child: Center(
-              child: Text(_gs.selectedSkin, style: const TextStyle(fontSize: 70)),
+              child:
+                  Text(_gs.selectedSkin, style: const TextStyle(fontSize: 70)),
             ),
           ),
           // Level badge
@@ -159,7 +190,8 @@ class _InventoryScreenState extends State<InventoryScreen>
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [Color(0xFF6BBA5B), Color(0xFF1F4E2A)],
               ),
               borderRadius: BorderRadius.circular(8),
@@ -171,7 +203,12 @@ class _InventoryScreenState extends State<InventoryScreen>
                   fontWeight: FontWeight.w900,
                   fontSize: 14,
                   letterSpacing: 0.6,
-                  shadows: [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2), blurRadius: 0)],
+                  shadows: [
+                    Shadow(
+                        color: Color(0xFF1A0E04),
+                        offset: Offset(0, 2),
+                        blurRadius: 0)
+                  ],
                 )),
           ),
           // Equip slots 2×2
@@ -184,17 +221,18 @@ class _InventoryScreenState extends State<InventoryScreen>
             physics: const NeverScrollableScrollPhysics(),
             children: _equipSlots.map((slot) {
               final equippedId = _gs.equipped[slot.$1];
-              final item = equippedId != null
-                  ? ShopCatalog.findById(equippedId)
-                  : null;
+              final item =
+                  equippedId != null ? ShopCatalog.findById(equippedId) : null;
               return Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                     colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
                   ),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: GameTone.goldTrim.withOpacity(0.7), width: 1.2),
+                  border: Border.all(
+                      color: GameTone.goldTrim.withOpacity(0.7), width: 1.2),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -244,24 +282,32 @@ class _InventoryScreenState extends State<InventoryScreen>
   // ── Item grid ───────────────────────────────────────────────────────────
   Widget _itemGrid() {
     final items = _filteredItems;
-    // Fill to multiple of 5
-    final padded = List<MapEntry<String, int>?>.from(items);
-    while (padded.length % 5 != 0) padded.add(null);
-
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5,
-        crossAxisSpacing: 6,
-        mainAxisSpacing: 6,
-      ),
-      itemCount: padded.length,
-      itemBuilder: (_, i) {
-        final e = padded[i];
-        if (e == null) return _emptySlot();
-        final item = ShopCatalog.findById(e.key);
-        return _invSlot(item, e.value);
-      },
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final cols = AppResponsive.adaptiveColumns(
+        constraints.maxWidth,
+        minColumns: 3,
+        maxColumns: 8,
+        itemWidth: constraints.maxWidth < 820 ? 72 : 84,
+      );
+      final padded = List<MapEntry<String, int>?>.from(items);
+      while (padded.length % cols != 0) {
+        padded.add(null);
+      }
+      return GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: cols,
+          crossAxisSpacing: 6,
+          mainAxisSpacing: 6,
+        ),
+        itemCount: padded.length,
+        itemBuilder: (_, i) {
+          final e = padded[i];
+          if (e == null) return _emptySlot();
+          final item = ShopCatalog.findById(e.key);
+          return _invSlot(item, e.value);
+        },
+      );
+    });
   }
 
   Widget _invSlot(ShopItem? item, int qty) {
@@ -275,13 +321,15 @@ class _InventoryScreenState extends State<InventoryScreen>
         child: Stack(children: [
           Center(child: Text(item.emoji, style: const TextStyle(fontSize: 28))),
           Positioned(
-            bottom: 0, right: 2,
+            bottom: 0,
+            right: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: GameTone.woodOuter,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: GameTone.goldTrim.withOpacity(0.7), width: 0.8),
+                border: Border.all(
+                    color: GameTone.goldTrim.withOpacity(0.7), width: 0.8),
               ),
               child: Text('×$qty',
                   style: const TextStyle(
@@ -313,17 +361,21 @@ class _InventoryScreenState extends State<InventoryScreen>
 
   // ── Stats bar ───────────────────────────────────────────────────────────
   Widget _statsBar() => Row(children: [
-        Expanded(child: _statBar('❤️', 'Salud', 0.75,
-            const [Color(0xFFE85B5B), Color(0xFF8C2A2A)])),
+        Expanded(
+            child: _statBar('❤️', 'Salud', 0.75,
+                const [Color(0xFFE85B5B), Color(0xFF8C2A2A)])),
         const SizedBox(width: 8),
-        Expanded(child: _statBar('⚡', 'Energía', 0.55,
-            const [Color(0xFFF6C76B), Color(0xFFB07A2A)])),
+        Expanded(
+            child: _statBar('⚡', 'Energía', 0.55,
+                const [Color(0xFFF6C76B), Color(0xFFB07A2A)])),
         const SizedBox(width: 8),
-        Expanded(child: _statBar('⭐', 'XP', _gs.xpPercent,
-            const [Color(0xFF6BBA5B), Color(0xFF1F4E2A)])),
+        Expanded(
+            child: _statBar('⭐', 'XP', _gs.xpPercent,
+                const [Color(0xFF6BBA5B), Color(0xFF1F4E2A)])),
       ]);
 
-  Widget _statBar(String icon, String label, double fraction, List<Color> colors) =>
+  Widget _statBar(
+          String icon, String label, double fraction, List<Color> colors) =>
       PixelFrame(
         radius: 10,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -378,21 +430,25 @@ class _InventoryScreenState extends State<InventoryScreen>
           child: GestureDetector(
             onTap: () {}, // prevent dismiss
             child: SizedBox(
-              width: 290,
+              width: MediaQuery.sizeOf(context).width < 420 ? 300 : 340,
               child: WoodPanel(
                 padding: const EdgeInsets.all(22),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Container(
-                    width: 88, height: 88,
+                    width: 88,
+                    height: 88,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(colors: [
                         AppColors.amber.withOpacity(0.35),
                         Colors.transparent,
                       ]),
-                      border: Border.all(color: AppColors.amber.withOpacity(0.55), width: 2),
+                      border: Border.all(
+                          color: AppColors.amber.withOpacity(0.55), width: 2),
                     ),
-                    child: Center(child: Text(item.emoji, style: const TextStyle(fontSize: 50))),
+                    child: Center(
+                        child: Text(item.emoji,
+                            style: const TextStyle(fontSize: 50))),
                   ),
                   const SizedBox(height: 10),
                   Text(item.name.toUpperCase(),
@@ -403,8 +459,7 @@ class _InventoryScreenState extends State<InventoryScreen>
                           letterSpacing: 1.6)),
                   const SizedBox(height: 6),
                   Text(item.description,
-                      style: AppText.bodyLight,
-                      textAlign: TextAlign.center),
+                      style: AppText.bodyLight, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                   CurrencyChip(icon: '🎒', value: '×$qty EN MOCHILA'),
                   const SizedBox(height: 16),
@@ -412,11 +467,13 @@ class _InventoryScreenState extends State<InventoryScreen>
                     GestureDetector(
                       onTap: () => setState(() => _focusedItem = null),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 12),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: AppColors.parchment.withOpacity(0.35), width: 1.5),
+                              color: AppColors.parchment.withOpacity(0.35),
+                              width: 1.5),
                         ),
                         child: const Text('CERRAR',
                             style: TextStyle(

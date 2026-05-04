@@ -75,6 +75,47 @@ abstract class AppTheme {
       );
 }
 
+abstract class AppResponsive {
+  static const double compactWidth = 900;
+  static const double tabletWidth = 1200;
+
+  static bool isCompact(double width) => width < compactWidth;
+
+  static double scale(
+    BuildContext context, {
+    double designWidth = 1366,
+    double min = 0.72,
+    double max = 1.2,
+  }) {
+    return scaleForWidth(
+      MediaQuery.sizeOf(context).width,
+      designWidth: designWidth,
+      min: min,
+      max: max,
+    );
+  }
+
+  static double scaleForWidth(
+    double width, {
+    double designWidth = 1366,
+    double min = 0.72,
+    double max = 1.2,
+  }) {
+    if (width <= 0) return 1;
+    return (width / designWidth).clamp(min, max).toDouble();
+  }
+
+  static int adaptiveColumns(
+    double width, {
+    int minColumns = 1,
+    int maxColumns = 6,
+    double itemWidth = 210,
+  }) {
+    if (width <= 0) return minColumns;
+    return (width / itemWidth).floor().clamp(minColumns, maxColumns);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────
 //  TEXT STYLES
 // ─────────────────────────────────────────────────────────────────────
@@ -543,11 +584,13 @@ class GameHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppResponsive.scale(context, min: 0.76, max: 1.05);
+    final compact = AppResponsive.isCompact(MediaQuery.sizeOf(context).width);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      padding: EdgeInsets.fromLTRB(12 * s, 10 * s, 12 * s, 6 * s),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        _woodBack(context),
-        const SizedBox(width: 12),
+        _woodBack(context, s),
+        SizedBox(width: 10 * s),
         Flexible(
           child: ShaderMask(
             shaderCallback: (b) => const LinearGradient(
@@ -562,7 +605,6 @@ class GameHeader extends StatelessWidget {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w900,
-                fontSize: 30,
                 letterSpacing: 1.6,
                 height: 1.0,
                 shadows: [
@@ -587,30 +629,32 @@ class GameHeader extends StatelessWidget {
                       offset: Offset(0, 6),
                       blurRadius: 8),
                 ],
+              ).copyWith(
+                fontSize: compact ? 24 * s : 30 * s,
               ),
             ),
           ),
         ),
         const Spacer(),
         ...trailing.map(
-            (w) => Padding(padding: const EdgeInsets.only(left: 6), child: w)),
+            (w) => Padding(padding: EdgeInsets.only(left: 6 * s), child: w)),
       ]),
     );
   }
 
-  Widget _woodBack(BuildContext context) => GestureDetector(
+  Widget _woodBack(BuildContext context, double s) => GestureDetector(
         onTap: onBack ?? () => Navigator.of(context).pop(),
         child: Container(
-          width: 46,
-          height: 42,
+          width: 46 * s,
+          height: 42 * s,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
             ),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: GameTone.goldTrim, width: 1.5),
+            borderRadius: BorderRadius.circular(10 * s),
+            border: Border.all(color: GameTone.goldTrim, width: 1.5 * s),
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withOpacity(0.5),
@@ -618,8 +662,8 @@ class GameHeader extends StatelessWidget {
                   offset: const Offset(0, 3)),
             ],
           ),
-          child: const Icon(Icons.arrow_back_rounded,
-              color: GameTone.textCream, size: 22),
+          child: Icon(Icons.arrow_back_rounded,
+              color: GameTone.textCream, size: 22 * s),
         ),
       );
 }
@@ -859,6 +903,7 @@ class GameLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppResponsive.scale(context, min: 0.72, max: 1.15);
     final outline = <Shadow>[
       const Shadow(
           color: Color(0xFF1A0E04), offset: Offset(-2, 0), blurRadius: 0),
@@ -891,7 +936,7 @@ class GameLogo extends StatelessWidget {
             title.toUpperCase(),
             style: GoogleFonts.berkshireSwash(
               color: Colors.white,
-              fontSize: fontSize,
+              fontSize: fontSize * s,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
               height: 1.0,
@@ -901,18 +946,18 @@ class GameLogo extends StatelessWidget {
         ),
       ),
       if (subtitle != null) ...[
-        const SizedBox(height: 4),
+        SizedBox(height: 4 * s),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 4 * s),
           decoration: BoxDecoration(
             color: GameTone.woodOuter,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: GameTone.goldTrim, width: 1.2),
+            borderRadius: BorderRadius.circular(6 * s),
+            border: Border.all(color: GameTone.goldTrim, width: 1.2 * s),
           ),
           child: Text(subtitle!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: GameTone.textCream,
-                fontSize: 11,
+                fontSize: 11 * s,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.6,
               )),
@@ -940,35 +985,37 @@ class MenuPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppResponsive.scale(context, min: 0.72, max: 1.12);
+    final compact = AppResponsive.isCompact(MediaQuery.sizeOf(context).width);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: width,
-        height: 78,
+        width: width * s,
+        height: 78 * s,
         child: PixelFrame(
-          radius: 14,
+          radius: 14 * s,
           innerFill: accent,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12 * s),
           child: Row(children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 52 * s,
+              height: 52 * s,
               decoration: BoxDecoration(
                 color: GameTone.woodOuter,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10 * s),
                 border: Border.all(
-                    color: GameTone.goldTrim.withOpacity(0.7), width: 1.4),
+                    color: GameTone.goldTrim.withOpacity(0.7), width: 1.4 * s),
               ),
-              child: Center(
-                  child: Text(icon, style: const TextStyle(fontSize: 28))),
+              child:
+                  Center(child: Text(icon, style: TextStyle(fontSize: 28 * s))),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 10 * s),
             Expanded(
               child: Text(label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: GameTone.textCream,
                     fontWeight: FontWeight.w900,
-                    fontSize: 22,
+                    fontSize: (compact ? 18 : 22) * s,
                     letterSpacing: 0.3,
                     shadows: [
                       Shadow(
@@ -999,12 +1046,13 @@ class OvalGoldChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppResponsive.scale(context, min: 0.78, max: 1.05);
     return Container(
-      padding: const EdgeInsets.fromLTRB(6, 4, 14, 4),
+      padding: EdgeInsets.fromLTRB(6 * s, 4 * s, 14 * s, 4 * s),
       decoration: BoxDecoration(
         color: GameTone.woodOuter,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: GameTone.goldTrim, width: 1.6),
+        borderRadius: BorderRadius.circular(28 * s),
+        border: Border.all(color: GameTone.goldTrim, width: 1.6 * s),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withOpacity(0.45),
@@ -1014,25 +1062,24 @@ class OvalGoldChip extends StatelessWidget {
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 28 * s,
+          height: 28 * s,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(colors: [
               icon == '🪙' ? const Color(0xFFFFE48A) : const Color(0xFF7DD3FC),
               icon == '🪙' ? const Color(0xFFB07A2A) : const Color(0xFF1F5E8C),
             ]),
-            border: Border.all(color: GameTone.goldTrim, width: 1),
+            border: Border.all(color: GameTone.goldTrim, width: 1 * s),
           ),
-          child:
-              Center(child: Text(icon, style: const TextStyle(fontSize: 14))),
+          child: Center(child: Text(icon, style: TextStyle(fontSize: 14 * s))),
         ),
-        const SizedBox(width: 7),
+        SizedBox(width: 7 * s),
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 16,
+              fontSize: 16 * s,
               letterSpacing: 0.4,
               shadows: [
                 Shadow(
@@ -1042,23 +1089,23 @@ class OvalGoldChip extends StatelessWidget {
               ],
             )),
         if (onPlusTap != null) ...[
-          const SizedBox(width: 8),
+          SizedBox(width: 8 * s),
           GestureDetector(
             onTap: onPlusTap,
             child: Container(
-              width: 28,
-              height: 28,
+              width: 28 * s,
+              height: 28 * s,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF4F3414),
-                border: Border.all(color: GameTone.goldTrim, width: 1.3),
+                border: Border.all(color: GameTone.goldTrim, width: 1.3 * s),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   '+',
                   style: TextStyle(
                     color: GameTone.textGold,
-                    fontSize: 18,
+                    fontSize: 18 * s,
                     fontWeight: FontWeight.w900,
                     height: 1,
                   ),
@@ -1099,15 +1146,16 @@ class _JugarButtonState extends State<JugarButton>
 
   @override
   Widget build(BuildContext context) {
+    final s = AppResponsive.scale(context, min: 0.72, max: 1.1);
     return GestureDetector(
       onTap: widget.onTap,
       child: AnimatedBuilder(
         animation: _c,
         builder: (_, __) => Container(
-          width: 200,
-          height: 80,
+          width: 200 * s,
+          height: 80 * s,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14 * s),
             boxShadow: [
               BoxShadow(
                 color:
@@ -1123,14 +1171,14 @@ class _JugarButtonState extends State<JugarButton>
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text('🌿', style: TextStyle(fontSize: 18)),
-                    SizedBox(width: 6),
+                  children: [
+                    Text('🌿', style: TextStyle(fontSize: 18 * s)),
+                    SizedBox(width: 6 * s),
                     Text('¡JUGAR!',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 26,
+                          fontSize: 26 * s,
                           letterSpacing: 1.6,
                           shadows: [
                             Shadow(
@@ -1151,8 +1199,8 @@ class _JugarButtonState extends State<JugarButton>
                                 blurRadius: 0),
                           ],
                         )),
-                    SizedBox(width: 6),
-                    Text('🌿', style: TextStyle(fontSize: 18)),
+                    SizedBox(width: 6 * s),
+                    Text('🌿', style: TextStyle(fontSize: 18 * s)),
                   ]),
             ),
           ),

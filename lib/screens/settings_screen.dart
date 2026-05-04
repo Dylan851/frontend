@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/game_state.dart';
@@ -39,151 +39,170 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Scaffold(
       body: FadeTransition(
         opacity: _fade,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/backgrounds/map_select_bg.png',
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.none,
-              ),
-            ),
-            Positioned.fill(
-              child: Container(color: const Color(0x55000000)),
-            ),
-            SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 980),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                    child: Column(
-                      children: [
-                        _header(),
-                        const SizedBox(height: 8),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                _sectionFrame(
-                                  title: 'Audio',
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final compact = width < 960;
+            final s = AppResponsive.scaleForWidth(width, min: 0.68, max: 1.05);
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/backgrounds/map_select_bg.png',
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.none,
+                  ),
+                ),
+                Positioned.fill(
+                  child: Container(color: const Color(0x55000000)),
+                ),
+                SafeArea(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 980 * s + 160),
+                      child: Padding(
+                        padding:
+                            EdgeInsets.fromLTRB(12 * s, 8 * s, 12 * s, 10 * s),
+                        child: Column(
+                          children: [
+                            _header(s),
+                            SizedBox(height: 8 * s),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Column(
                                   children: [
-                                    _toggleRow(
-                                      icon: Icons.music_note_rounded,
-                                      iconColor: const Color(0xFFF1C94D),
-                                      label: 'Música',
-                                      value: _gs.musicOn,
-                                      onChanged: (v) =>
-                                          setState(() => _gs.musicOn = v),
+                                    _sectionFrame(
+                                      s: s,
+                                      title: 'Audio',
+                                      children: [
+                                        _toggleRow(
+                                          s: s,
+                                          icon: Icons.music_note_rounded,
+                                          iconColor: const Color(0xFFF1C94D),
+                                          label: 'Música',
+                                          value: _gs.musicOn,
+                                          onChanged: (v) =>
+                                              setState(() => _gs.musicOn = v),
+                                        ),
+                                        SizedBox(height: 8 * s),
+                                        _toggleRow(
+                                          s: s,
+                                          icon: Icons.volume_up_rounded,
+                                          iconColor: const Color(0xFF66D4FF),
+                                          label: 'Efectos de sonido',
+                                          value: _gs.sfxOn,
+                                          onChanged: (v) =>
+                                              setState(() => _gs.sfxOn = v),
+                                        ),
+                                        SizedBox(height: 8 * s),
+                                        _sliderRow(
+                                          s: s,
+                                          compact: compact,
+                                          icon: Icons.tune_rounded,
+                                          iconColor: const Color(0xFFE9DFC8),
+                                          label: 'Volumen música',
+                                          value: _gs.musicVol,
+                                          onChanged: (v) =>
+                                              setState(() => _gs.musicVol = v),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 8),
-                                    _toggleRow(
-                                      icon: Icons.volume_up_rounded,
-                                      iconColor: const Color(0xFF66D4FF),
-                                      label: 'Efectos de sonido',
-                                      value: _gs.sfxOn,
-                                      onChanged: (v) =>
-                                          setState(() => _gs.sfxOn = v),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _sliderRow(
-                                      icon: Icons.tune_rounded,
-                                      iconColor: const Color(0xFFE9DFC8),
-                                      label: 'Volumen música',
-                                      value: _gs.musicVol,
-                                      onChanged: (v) =>
-                                          setState(() => _gs.musicVol = v),
+                                    SizedBox(height: 12 * s),
+                                    _sectionFrame(
+                                      s: s,
+                                      title: 'Controles',
+                                      children: [
+                                        _toggleRow(
+                                          s: s,
+                                          icon: Icons.sports_esports_rounded,
+                                          iconColor: const Color(0xFFF1C94D),
+                                          label: 'Joystick virtual',
+                                          value: _gs.joystickOn,
+                                          onChanged: (v) => setState(
+                                              () => _gs.joystickOn = v),
+                                        ),
+                                        SizedBox(height: 8 * s),
+                                        _toggleRow(
+                                          s: s,
+                                          icon: Icons.vibration_rounded,
+                                          iconColor: const Color(0xFF66D4FF),
+                                          label: 'Vibración',
+                                          value: _gs.vibrationOn,
+                                          onChanged: (v) {
+                                            setState(() => _gs.vibrationOn = v);
+                                            if (v)
+                                              HapticFeedback.mediumImpact();
+                                          },
+                                        ),
+                                        SizedBox(height: 8 * s),
+                                        _sliderRow(
+                                          s: s,
+                                          compact: compact,
+                                          icon: Icons.touch_app_rounded,
+                                          iconColor: const Color(0xFFE9DFC8),
+                                          label: 'Sensibilidad',
+                                          value: _gs.sensitivity,
+                                          onChanged: (v) => setState(
+                                              () => _gs.sensitivity = v),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
-                                _sectionFrame(
-                                  title: 'Controles',
-                                  children: [
-                                    _toggleRow(
-                                      icon: Icons.sports_esports_rounded,
-                                      iconColor: const Color(0xFFF1C94D),
-                                      label: 'Joystick virtual',
-                                      value: _gs.joystickOn,
-                                      onChanged: (v) =>
-                                          setState(() => _gs.joystickOn = v),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _toggleRow(
-                                      icon: Icons.vibration_rounded,
-                                      iconColor: const Color(0xFF66D4FF),
-                                      label: 'Vibración',
-                                      value: _gs.vibrationOn,
-                                      onChanged: (v) {
-                                        setState(() => _gs.vibrationOn = v);
-                                        if (v) HapticFeedback.mediumImpact();
-                                      },
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _sliderRow(
-                                      icon: Icons.touch_app_rounded,
-                                      iconColor: const Color(0xFFE9DFC8),
-                                      label: 'Sensibilidad',
-                                      value: _gs.sensitivity,
-                                      onChanged: (v) =>
-                                          setState(() => _gs.sensitivity = v),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
+                            SizedBox(height: 10 * s),
+                            _logoutButton(s, compact),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        _logoutButton(),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _header() {
+  Widget _header(double s) {
     return Row(
       children: [
         GestureDetector(
           onTap: () => Navigator.of(context).pop(),
           child: Container(
-            width: 52,
-            height: 52,
+            width: 52 * s,
+            height: 52 * s,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(10 * s),
               gradient: const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [Color(0xFF5A3A16), Color(0xFF2D1B0A)],
               ),
-              border: Border.all(color: GameTone.goldTrim, width: 1.6),
+              border: Border.all(color: GameTone.goldTrim, width: 1.6 * s),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back,
               color: GameTone.textGold,
-              size: 30,
+              size: 30 * s,
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10 * s),
         Expanded(
           child: PixelFrame(
-            radius: 10,
+            radius: 10 * s,
             innerFill: const Color(0xFF2C1A0E),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-            child: const Text(
+            padding: EdgeInsets.symmetric(horizontal: 18 * s, vertical: 8 * s),
+            child: Text(
               'Ajustes',
               style: TextStyle(
                 color: GameTone.textCream,
                 fontWeight: FontWeight.w900,
-                fontSize: 26,
+                fontSize: 26 * s,
                 shadows: [
                   Shadow(
                     color: Color(0xFF1A0E04),
@@ -199,35 +218,40 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _sectionFrame({required String title, required List<Widget> children}) {
+  Widget _sectionFrame({
+    required double s,
+    required String title,
+    required List<Widget> children,
+  }) {
     return PixelFrame(
-      radius: 12,
+      radius: 12 * s,
       innerFill: const Color(0xCC0C2A1E),
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+      padding: EdgeInsets.fromLTRB(18 * s, 12 * s, 18 * s, 12 * s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+              padding:
+                  EdgeInsets.symmetric(horizontal: 24 * s, vertical: 5 * s),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF5A3A16), Color(0xFF2D1B0A)],
                 ),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: GameTone.goldTrim, width: 1.4),
+                borderRadius: BorderRadius.circular(10 * s),
+                border: Border.all(color: GameTone.goldTrim, width: 1.4 * s),
               ),
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 20,
+                  fontSize: 20 * s,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12 * s),
           ...children,
         ],
       ),
@@ -235,6 +259,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _toggleRow({
+    required double s,
     required IconData icon,
     required Color iconColor,
     required String label,
@@ -244,26 +269,28 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Row(
       children: [
         SizedBox(
-          width: 38,
-          child: Icon(icon, size: 30, color: iconColor),
+          width: 38 * s,
+          child: Icon(icon, size: 30 * s, color: iconColor),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10 * s),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 24,
+              fontSize: 24 * s,
             ),
           ),
         ),
-        _PixelToggle(value: value, onChanged: onChanged),
+        _PixelToggle(scale: s, value: value, onChanged: onChanged),
       ],
     );
   }
 
   Widget _sliderRow({
+    required double s,
+    required bool compact,
     required IconData icon,
     required Color iconColor,
     required String label,
@@ -273,27 +300,27 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Row(
       children: [
         SizedBox(
-          width: 38,
-          child: Icon(icon, size: 30, color: iconColor),
+          width: 38 * s,
+          child: Icon(icon, size: 30 * s, color: iconColor),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10 * s),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 24,
+              fontSize: 24 * s,
             ),
           ),
         ),
         SizedBox(
-          width: 280,
+          width: compact ? 180 * s : 280 * s,
           child: SliderTheme(
             data: SliderThemeData(
-              trackHeight: 12,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 11),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              trackHeight: 12 * s,
+              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 11 * s),
+              overlayShape: RoundSliderOverlayShape(overlayRadius: 16 * s),
               activeTrackColor: const Color(0xFF58A53C),
               inactiveTrackColor: const Color(0xFF3B2A17),
               thumbColor: const Color(0xFFD8A33B),
@@ -306,9 +333,9 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _logoutButton() {
+  Widget _logoutButton(double s, bool compact) {
     return SizedBox(
-      width: 380,
+      width: compact ? double.infinity : 380 * s,
       child: GestureDetector(
         onTap: () async {
           await AuthService.logout();
@@ -316,26 +343,26 @@ class _SettingsScreenState extends State<SettingsScreen>
           Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
         },
         child: PixelFrame(
-          radius: 12,
+          radius: 12 * s,
           innerFill: const Color(0xFF2C1A0E),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: const Column(
+          padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 12 * s),
+          child: Column(
             children: [
               Text(
                 'Cerrar sesión',
                 style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 28,
+                  fontSize: 28 * s,
                 ),
               ),
-              SizedBox(height: 2),
+              SizedBox(height: 2 * s),
               Text(
                 'Volver a inicio',
                 style: TextStyle(
                   color: GameTone.textGold,
                   fontWeight: FontWeight.w700,
-                  fontSize: 20,
+                  fontSize: 20 * s,
                 ),
               ),
             ],
@@ -347,10 +374,15 @@ class _SettingsScreenState extends State<SettingsScreen>
 }
 
 class _PixelToggle extends StatelessWidget {
+  final double scale;
   final bool value;
   final ValueChanged<bool> onChanged;
 
-  const _PixelToggle({required this.value, required this.onChanged});
+  const _PixelToggle({
+    required this.scale,
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -358,26 +390,29 @@ class _PixelToggle extends StatelessWidget {
       onTap: () => onChanged(!value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 90,
-        height: 44,
+        width: 90 * scale,
+        height: 44 * scale,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(10 * scale),
           gradient: value
-              ? const LinearGradient(colors: [Color(0xFF7AB44D), Color(0xFF4E852E)])
-              : const LinearGradient(colors: [Color(0xFF4A4438), Color(0xFF2E2A22)]),
-          border: Border.all(color: GameTone.goldTrim, width: 1.5),
+              ? const LinearGradient(
+                  colors: [Color(0xFF7AB44D), Color(0xFF4E852E)])
+              : const LinearGradient(
+                  colors: [Color(0xFF4A4438), Color(0xFF2E2A22)]),
+          border: Border.all(color: GameTone.goldTrim, width: 1.5 * scale),
         ),
         child: AnimatedAlign(
           duration: const Duration(milliseconds: 160),
           alignment: value ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
-            width: 34,
-            height: 34,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: 34 * scale,
+            height: 34 * scale,
+            margin: EdgeInsets.symmetric(horizontal: 4 * scale),
             decoration: BoxDecoration(
               color: const Color(0xFFE9E5D5),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xAA000000), width: 0.8),
+              borderRadius: BorderRadius.circular(8 * scale),
+              border: Border.all(
+                  color: const Color(0xAA000000), width: 0.8 * scale),
             ),
           ),
         ),

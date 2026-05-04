@@ -101,6 +101,8 @@ class _ShopScreenState extends State<ShopScreen>
             ),
             child: TabBar(
               controller: _tabCtrl,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicator: BoxDecoration(
                 gradient: LinearGradient(colors: [
                   AppColors.amber,
@@ -165,21 +167,30 @@ class _ShopGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.78,
-      ),
-      itemCount: items.length,
-      itemBuilder: (_, i) => _ShopItemCard(
-        item: items[i],
-        qty: gs.getQty(items[i].id),
-        onBuy: () => onBuy(items[i]),
-      ),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final cols = AppResponsive.adaptiveColumns(
+        constraints.maxWidth - 24,
+        minColumns: 2,
+        maxColumns: 5,
+        itemWidth: constraints.maxWidth < 900 ? 170 : 220,
+      );
+      final aspect = constraints.maxWidth < 900 ? 0.86 : 0.78;
+      return GridView.builder(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: cols,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: aspect,
+        ),
+        itemCount: items.length,
+        itemBuilder: (_, i) => _ShopItemCard(
+          item: items[i],
+          qty: gs.getQty(items[i].id),
+          onBuy: () => onBuy(items[i]),
+        ),
+      );
+    });
   }
 }
 

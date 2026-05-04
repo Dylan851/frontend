@@ -1,4 +1,4 @@
-﻿// lib/screens/profile_screen.dart
+// lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import '../data/game_state.dart';
 import '../data/animal_data.dart';
@@ -34,9 +34,24 @@ class _ProfileScreenState extends State<ProfileScreen>
   static const _achievements = [
     ('first_animal', '\u{1F43E}', 'Primer Animal', 'Descubre tu primer animal'),
     ('first_items', '\u{1F4E6}', 'Recolector', 'Recoge 5 ítems'),
-    ('first_minigame', '\u{1F3AE}', 'Primer Minijuego', 'Completa un minijuego'),
-    ('all_animals', '\u{1F31F}', 'Maestro Animal', 'Descubre todos los animales'),
-    ('complete_map', '\u{1F5FA}\u{FE0F}', 'Mapa Completo', 'Completa un mapa entero'),
+    (
+      'first_minigame',
+      '\u{1F3AE}',
+      'Primer Minijuego',
+      'Completa un minijuego'
+    ),
+    (
+      'all_animals',
+      '\u{1F31F}',
+      'Maestro Animal',
+      'Descubre todos los animales'
+    ),
+    (
+      'complete_map',
+      '\u{1F5FA}\u{FE0F}',
+      'Mapa Completo',
+      'Completa un mapa entero'
+    ),
     ('level20', '\u{1F3C6}', 'Veterano', 'Llega al nivel 20'),
     ('coins100', '\u{1F48E}', 'Coleccionista', 'Acumula 100 gemas'),
     ('master', '\u{1F451}', 'Maestro', 'Logra todos los logros'),
@@ -202,33 +217,40 @@ class _ProfileScreenState extends State<ProfileScreen>
         opacity: _fade,
         child: MenuBackdrop(
           dim: 0.55,
-          child: Stack(children: [
-            Column(children: [
-              _topBar(),
-              Expanded(
-                  child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                child: Column(children: [
-                  _heroCard(),
-                  const SizedBox(height: 10),
-                  _statsGrid(),
-                  const SizedBox(height: 10),
-                  _achievementsSection(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final s =
+                  AppResponsive.scaleForWidth(width, min: 0.68, max: 1.02);
+              return Stack(children: [
+                Column(children: [
+                  _topBar(s),
+                  Expanded(
+                      child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(12 * s, 4 * s, 12 * s, 12 * s),
+                    child: Column(children: [
+                      _heroCard(width, s),
+                      SizedBox(height: 10 * s),
+                      _statsGrid(width, s),
+                      SizedBox(height: 10 * s),
+                      _achievementsSection(width, s),
+                    ]),
+                  )),
                 ]),
-              )),
-            ]),
-          ]),
+              ]);
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _topBar() => SafeArea(
+  Widget _topBar(double s) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          padding: EdgeInsets.fromLTRB(12 * s, 10 * s, 12 * s, 4 * s),
           child: Column(children: [
             const Row(children: [BackBtn(), Spacer()]),
-            const SizedBox(height: 8),
+            SizedBox(height: 8 * s),
             const OrnateTitle(
               eyebrow: 'TU TRAVESIA',
               text: 'PERFIL',
@@ -237,124 +259,142 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       );
 
-  Widget _heroCard() => WoodPanel(
-        padding: const EdgeInsets.all(16),
-        child: Row(children: [
-          // Avatar
-          GestureDetector(
-            onTap: _pickSkin,
-            child: Stack(children: [
-              Container(
-                width: 78,
-                height: 78,
+  Widget _heroCard(double width, double s) {
+    final compact = width < 900;
+    final avatarSize = compact ? 64 * s : 78 * s;
+    final rankFont = compact ? 24 * s : 30 * s;
+    final info = Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Flexible(
+              child: Text(_gs.playerName.toUpperCase(),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: AppColors.parchment,
+                      fontWeight: FontWeight.w900,
+                      fontSize: (compact ? 14 : 17) * s,
+                      letterSpacing: 1.6)),
+            ),
+            SizedBox(width: 6 * s),
+            GestureDetector(
+              onTap: _editName,
+              child: Container(
+                padding: EdgeInsets.all(4 * s),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const RadialGradient(
-                      colors: [AppColors.amber, AppColors.amberDeep]),
-                  border: Border.all(color: AppColors.parchment, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                        color: AppColors.amber.withOpacity(0.4),
-                        blurRadius: 14),
-                  ],
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6 * s),
                 ),
-                child: Center(
-                  child: Text(_gs.selectedSkin,
-                      style: const TextStyle(fontSize: 38)),
+                child: Text('\u270F\uFE0F', style: TextStyle(fontSize: 11 * s)),
+              ),
+            ),
+          ]),
+          SizedBox(height: 3 * s),
+          Text('Miembro desde Enero 2025 · ${_mapName()}',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.55), fontSize: 11 * s)),
+          SizedBox(height: 7 * s),
+          Row(children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6 * s),
+                child: LinearProgressIndicator(
+                  value: _gs.xpPercent,
+                  minHeight: 8 * s,
+                  backgroundColor: Colors.white.withOpacity(0.12),
+                  valueColor:
+                      const AlwaysStoppedAnimation(AppColors.greenAccent),
                 ),
               ),
-              Positioned(
-                bottom: -2,
-                right: -2,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                        colors: [AppColors.emeraldGlow, AppColors.emerald]),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.parchment, width: 2),
-                  ),
-                  child: Text('LV ${_gs.level}',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 9,
-                          letterSpacing: 1.0)),
-                ),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 14),
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            SizedBox(width: 8 * s),
+            Text('${_gs.currentXp}/${_gs.maxXp} XP',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.5), fontSize: 10 * s)),
+          ]),
+        ],
+      ),
+    );
+    final rank = Column(children: [
+      Text(_rankEmoji, style: TextStyle(fontSize: rankFont)),
+      SizedBox(height: 3 * s),
+      Text(_rankName.toUpperCase(),
+          style: TextStyle(
+              color: AppColors.amber,
+              fontWeight: FontWeight.w900,
+              fontSize: 10 * s,
+              letterSpacing: 1.2)),
+    ]);
+
+    return WoodPanel(
+      padding: EdgeInsets.all(16 * s),
+      child: compact
+          ? Column(
               children: [
                 Row(children: [
-                  Flexible(
-                    child: Text(_gs.playerName.toUpperCase(),
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: AppColors.parchment,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 17,
-                            letterSpacing: 1.6)),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: _editName,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text('\u270F\uFE0F', style: TextStyle(fontSize: 11)),
-                    ),
-                  ),
+                  _avatar(avatarSize, s),
+                  SizedBox(width: 12 * s),
+                  info,
                 ]),
-                const SizedBox(height: 3),
-                Text('Miembro desde Enero 2025 · ${_mapName()}',
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.55), fontSize: 11)),
-                const SizedBox(height: 7),
-                // XP bar
-                Row(children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: _gs.xpPercent,
-                        minHeight: 8,
-                        backgroundColor: Colors.white.withOpacity(0.12),
-                        valueColor:
-                            const AlwaysStoppedAnimation(AppColors.greenAccent),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('${_gs.currentXp}/${_gs.maxXp} XP',
-                      style: TextStyle(
-                          color: Colors.white.withOpacity(0.5), fontSize: 10)),
-                ]),
+                SizedBox(height: 10 * s),
+                rank,
               ],
-            ),
+            )
+          : Row(children: [
+              // Avatar
+              _avatar(avatarSize, s),
+              SizedBox(width: 14 * s),
+              info,
+              SizedBox(width: 12 * s),
+              rank,
+            ]),
+    );
+  }
+
+  Widget _avatar(double size, double s) {
+    return GestureDetector(
+      onTap: _pickSkin,
+      child: Stack(children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const RadialGradient(
+                colors: [AppColors.amber, AppColors.amberDeep]),
+            border: Border.all(color: AppColors.parchment, width: 3 * s),
+            boxShadow: [
+              BoxShadow(
+                  color: AppColors.amber.withOpacity(0.4), blurRadius: 14 * s),
+            ],
           ),
-          const SizedBox(width: 12),
-          // Rank
-          Column(children: [
-            Text(_rankEmoji, style: const TextStyle(fontSize: 30)),
-            const SizedBox(height: 3),
-            Text(_rankName.toUpperCase(),
-                style: const TextStyle(
-                    color: AppColors.amber,
+          child: Center(
+            child: Text(_gs.selectedSkin, style: TextStyle(fontSize: 38 * s)),
+          ),
+        ),
+        Positioned(
+          bottom: -2 * s,
+          right: -2 * s,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 6 * s, vertical: 2 * s),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [AppColors.emeraldGlow, AppColors.emerald]),
+              borderRadius: BorderRadius.circular(8 * s),
+              border: Border.all(color: AppColors.parchment, width: 2 * s),
+            ),
+            child: Text('LV ${_gs.level}',
+                style: TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w900,
-                    fontSize: 10,
-                    letterSpacing: 1.2)),
-          ]),
-        ]),
-      );
+                    fontSize: 9 * s,
+                    letterSpacing: 1.0)),
+          ),
+        ),
+      ]),
+    );
+  }
 
   String _mapName() {
     try {
@@ -370,11 +410,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  Widget _statsGrid() => GridView.count(
-        crossAxisCount: 4,
+  Widget _statsGrid(double width, double s) => GridView.count(
+        crossAxisCount: AppResponsive.adaptiveColumns(
+          width,
+          minColumns: 1,
+          maxColumns: 4,
+          itemWidth: width < 850 ? 280 : 220,
+        ),
         shrinkWrap: true,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        crossAxisSpacing: 8 * s,
+        mainAxisSpacing: 8 * s,
         childAspectRatio: 1.3,
         physics: const NeverScrollableScrollPhysics(),
         children: [
@@ -425,19 +470,24 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       );
 
-  Widget _achievementsSection() => Column(
+  Widget _achievementsSection(double width, double s) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const OrnateTitle(
             eyebrow: 'TU TRAVESIA',
             text: 'LOGROS',
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10 * s),
           GridView.count(
-            crossAxisCount: 4,
+            crossAxisCount: AppResponsive.adaptiveColumns(
+              width,
+              minColumns: 1,
+              maxColumns: 4,
+              itemWidth: width < 850 ? 220 : 160,
+            ),
             shrinkWrap: true,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            crossAxisSpacing: 8 * s,
+            mainAxisSpacing: 8 * s,
             childAspectRatio: 1.0,
             physics: const NeverScrollableScrollPhysics(),
             children: _achievements.map((a) {
@@ -511,4 +561,3 @@ class _ProfileScreenState extends State<ProfileScreen>
         ],
       );
 }
-
