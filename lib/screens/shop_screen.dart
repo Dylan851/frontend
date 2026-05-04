@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../data/item_data.dart';
 import '../data/game_state.dart';
-import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -88,20 +87,7 @@ class _ShopScreenState extends State<ShopScreen>
             child: Column(children: [
           GameHeader(
             title: 'Tienda',
-            trailing: [
-              OvalGoldChip(
-                icon: '\u{1FA99}',
-                value: '${_gs.coins}',
-                onPlusTap: () =>
-                    Navigator.pushNamed(context, AppRouter.payments),
-              ),
-              OvalGoldChip(
-                icon: '\u{1F48E}',
-                value: '${_gs.gems}',
-                onPlusTap: () =>
-                    Navigator.pushNamed(context, AppRouter.payments),
-              ),
-            ],
+            trailing: const [],
           ),
           const SizedBox(height: 4),
           // Tab bar

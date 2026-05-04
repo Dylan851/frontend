@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../data/item_data.dart';
 import '../data/game_state.dart';
-import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class MapSelectScreen extends StatefulWidget {
@@ -141,21 +140,6 @@ class _MapSelectScreenState extends State<MapSelectScreen>
             child: Row(children: [
               const BackBtn(),
               const Spacer(),
-              CurrencyChip(icon: '?', value: 'NV.'),
-              const SizedBox(width: 8),
-              OvalGoldChip(
-                icon: '\u{1FA99}',
-                value: '',
-                onPlusTap: () =>
-                    Navigator.pushNamed(context, AppRouter.payments),
-              ),
-              const SizedBox(width: 8),
-              OvalGoldChip(
-                icon: '\u{1F48E}',
-                value: '',
-                onPlusTap: () =>
-                    Navigator.pushNamed(context, AppRouter.payments),
-              ),
             ]),
           ),
         ),

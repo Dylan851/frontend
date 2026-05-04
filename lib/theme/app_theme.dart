@@ -9,6 +9,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 abstract class AppColors {
   // ── Legacy palette (mantenida para compatibilidad) ───────────────────
@@ -848,7 +849,7 @@ class _PixelFramePainter extends CustomPainter {
   bool shouldRepaint(_) => false;
 }
 
-/// "ANIMALGO"-style chunky gold logo with black outline and drop shadow.
+/// "ANIMAL GO!"-style chunky gold logo with black outline and drop shadow.
 class GameLogo extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -888,11 +889,11 @@ class GameLogo extends StatelessWidget {
           ).createShader(b),
           child: Text(
             title.toUpperCase(),
-            style: TextStyle(
+            style: GoogleFonts.berkshireSwash(
               color: Colors.white,
-              fontWeight: FontWeight.w900,
               fontSize: fontSize,
-              letterSpacing: 1.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
               height: 1.0,
               shadows: outline,
             ),

@@ -213,7 +213,7 @@ class _LogoBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.min, children: const [
       GameLogo(
-        title: 'AnimalGO!',
+        title: 'Animal GO!',
         fontSize: 64,
       ),
     ]);

@@ -147,7 +147,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           child: IgnorePointer(
             child: Center(
               child: GameLogo(
-                title: 'AnimalGO!',
+                title: 'Animal GO!',
                 subtitle: '\u{1F33F}  Descubre el mundo animal  \u{1F33F}',
                 fontSize: (w < 520 ? 38 : 56) * s,
               ),

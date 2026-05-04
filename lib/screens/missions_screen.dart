@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../data/game_state.dart';
 import '../data/mission_data.dart';
-import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class MissionsScreen extends StatefulWidget {
@@ -72,20 +71,7 @@ class _MissionsScreenState extends State<MissionsScreen>
             child: Column(children: [
               GameHeader(
                 title: 'Misiones',
-                trailing: [
-                  OvalGoldChip(
-                    icon: '\u{1FA99}',
-                    value: '${_gs.coins}',
-                    onPlusTap: () =>
-                        Navigator.pushNamed(context, AppRouter.payments),
-                  ),
-                  OvalGoldChip(
-                    icon: '\u{1F48E}',
-                    value: '${_gs.gems}',
-                    onPlusTap: () =>
-                        Navigator.pushNamed(context, AppRouter.payments),
-                  ),
-                ],
+                trailing: const [],
               ),
               // Summary chip
               Padding(

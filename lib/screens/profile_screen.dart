@@ -1,8 +1,7 @@
-// lib/screens/profile_screen.dart
+﻿// lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import '../data/game_state.dart';
 import '../data/animal_data.dart';
-import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,39 +19,39 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // Available skins the user can pick
   static const _skins = [
-    '🧑',
-    '👦',
-    '👧',
-    '🧒',
-    '👨‍🔬',
-    '🧙',
-    '👷',
-    '🥷',
-    '🧑‍🚀',
-    '🤠',
+    '\u{1F9D1}',
+    '\u{1F466}',
+    '\u{1F467}',
+    '\u{1F9D2}',
+    '\u{1F468}\u{200D}\u{1F52C}',
+    '\u{1F9D9}',
+    '\u{1F477}',
+    '\u{1F977}',
+    '\u{1F9D1}\u{200D}\u{1F680}',
+    '\u{1F916}',
   ];
 
   static const _achievements = [
-    ('first_animal', '🐾', 'Primer Animal', 'Descubre tu primer animal'),
-    ('first_items', '📦', 'Recolector', 'Recoge 5 ítems'),
-    ('first_minigame', '🎮', 'Primer Minijuego', 'Completa un minijuego'),
-    ('all_animals', '🌟', 'Maestro Animal', 'Descubre todos los animales'),
-    ('complete_map', '🗺️', 'Mapa Completo', 'Completa un mapa entero'),
-    ('level20', '🏆', 'Veterano', 'Llega al nivel 20'),
-    ('coins100', '💎', 'Coleccionista', 'Acumula 100 gemas'),
-    ('master', '👑', 'Maestro', 'Logra todos los logros'),
+    ('first_animal', '\u{1F43E}', 'Primer Animal', 'Descubre tu primer animal'),
+    ('first_items', '\u{1F4E6}', 'Recolector', 'Recoge 5 ítems'),
+    ('first_minigame', '\u{1F3AE}', 'Primer Minijuego', 'Completa un minijuego'),
+    ('all_animals', '\u{1F31F}', 'Maestro Animal', 'Descubre todos los animales'),
+    ('complete_map', '\u{1F5FA}\u{FE0F}', 'Mapa Completo', 'Completa un mapa entero'),
+    ('level20', '\u{1F3C6}', 'Veterano', 'Llega al nivel 20'),
+    ('coins100', '\u{1F48E}', 'Coleccionista', 'Acumula 100 gemas'),
+    ('master', '\u{1F451}', 'Maestro', 'Logra todos los logros'),
   ];
 
   static const _ranks = [
-    (1, '🌱', 'Novato'),
-    (5, '🌿', 'Rastreador'),
-    (10, '🌲', 'Explorador'),
-    (20, '🦅', 'Guardabosques'),
-    (35, '🏆', 'Maestro'),
+    (1, '\u{1F331}', 'Novato'),
+    (5, '\u{1F33F}', 'Rastreador'),
+    (10, '\u{1F332}', 'Explorador'),
+    (20, '\u{1F985}', 'Guardabosques'),
+    (35, '\u{1F3C6}', 'Maestro'),
   ];
 
   String get _rankEmoji {
-    String emoji = '🌱';
+    String emoji = '\u{1F331}';
     for (final r in _ranks) {
       if (_gs.level >= r.$1) emoji = r.$2;
     }
@@ -228,26 +227,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
           child: Column(children: [
-            Row(children: [
-              const BackBtn(),
-              const Spacer(),
-              OvalGoldChip(
-                icon: '\u{1FA99}',
-                value: '',
-                onPlusTap: () =>
-                    Navigator.pushNamed(context, AppRouter.payments),
-              ),
-              const SizedBox(width: 6),
-              OvalGoldChip(
-                icon: '\u{1F48E}',
-                value: '',
-                onPlusTap: () =>
-                    Navigator.pushNamed(context, AppRouter.payments),
-              ),
-            ]),
+            const Row(children: [BackBtn(), Spacer()]),
             const SizedBox(height: 8),
             const OrnateTitle(
-              eyebrow: '— TU TRAVESÍA —',
+              eyebrow: 'TU TRAVESIA',
               text: 'PERFIL',
             ),
           ]),
@@ -327,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('✏️', style: TextStyle(fontSize: 11)),
+                      child: const Text('\u270F\uFE0F', style: TextStyle(fontSize: 11)),
                     ),
                   ),
                 ]),
@@ -396,10 +379,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         physics: const NeverScrollableScrollPhysics(),
         children: [
           _statCard('${_gs.discoveredCount}/${AnimalCatalog.all.length}',
-              '🐾 Animales'),
-          _statCard('${_gs.completedMinigames.length}', '🎮 Minijuegos'),
-          _statCard('${_gs.coins}', '🪙 Monedas'),
-          _statCard('${_gs.score}', '⭐ Puntos'),
+              '\u{1F43E} Animales'),
+          _statCard('${_gs.completedMinigames.length}', '\u{1F3AE} Minijuegos'),
+          _statCard('${_gs.coins}', '\u{1FA99} Monedas'),
+          _statCard('${_gs.score}', '\u2B50 Puntos'),
         ],
       );
 
@@ -446,7 +429,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const OrnateTitle(
-            eyebrow: '— TUS HAZAÑAS —',
+            eyebrow: 'TU TRAVESIA',
             text: 'LOGROS',
           ),
           const SizedBox(height: 10),
@@ -528,3 +511,4 @@ class _ProfileScreenState extends State<ProfileScreen>
         ],
       );
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ï»¿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/game_state.dart';
@@ -69,15 +69,17 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   title: 'Audio',
                                   children: [
                                     _toggleRow(
-                                      icon: '??',
-                                      label: 'Música',
+                                      icon: Icons.music_note_rounded,
+                                      iconColor: const Color(0xFFF1C94D),
+                                      label: 'MÃºsica',
                                       value: _gs.musicOn,
                                       onChanged: (v) =>
                                           setState(() => _gs.musicOn = v),
                                     ),
                                     const SizedBox(height: 8),
                                     _toggleRow(
-                                      icon: '??',
+                                      icon: Icons.volume_up_rounded,
+                                      iconColor: const Color(0xFF66D4FF),
                                       label: 'Efectos de sonido',
                                       value: _gs.sfxOn,
                                       onChanged: (v) =>
@@ -85,8 +87,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     _sliderRow(
-                                      icon: '???',
-                                      label: 'Volumen música',
+                                      icon: Icons.tune_rounded,
+                                      iconColor: const Color(0xFFE9DFC8),
+                                      label: 'Volumen mÃºsica',
                                       value: _gs.musicVol,
                                       onChanged: (v) =>
                                           setState(() => _gs.musicVol = v),
@@ -98,7 +101,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   title: 'Controles',
                                   children: [
                                     _toggleRow(
-                                      icon: '???',
+                                      icon: Icons.sports_esports_rounded,
+                                      iconColor: const Color(0xFFF1C94D),
                                       label: 'Joystick virtual',
                                       value: _gs.joystickOn,
                                       onChanged: (v) =>
@@ -106,8 +110,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     _toggleRow(
-                                      icon: '??',
-                                      label: 'Vibración',
+                                      icon: Icons.vibration_rounded,
+                                      iconColor: const Color(0xFF66D4FF),
+                                      label: 'VibraciÃ³n',
                                       value: _gs.vibrationOn,
                                       onChanged: (v) {
                                         setState(() => _gs.vibrationOn = v);
@@ -116,7 +121,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     _sliderRow(
-                                      icon: '??',
+                                      icon: Icons.touch_app_rounded,
+                                      iconColor: const Color(0xFFE9DFC8),
                                       label: 'Sensibilidad',
                                       value: _gs.sensitivity,
                                       onChanged: (v) =>
@@ -229,14 +235,18 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _toggleRow({
-    required String icon,
+    required IconData icon,
+    required Color iconColor,
     required String label,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
     return Row(
       children: [
-        SizedBox(width: 38, child: Text(icon, style: const TextStyle(fontSize: 30))),
+        SizedBox(
+          width: 38,
+          child: Icon(icon, size: 30, color: iconColor),
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -244,7 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             style: const TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 42,
+              fontSize: 24,
             ),
           ),
         ),
@@ -254,14 +264,18 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _sliderRow({
-    required String icon,
+    required IconData icon,
+    required Color iconColor,
     required String label,
     required double value,
     required ValueChanged<double> onChanged,
   }) {
     return Row(
       children: [
-        SizedBox(width: 38, child: Text(icon, style: const TextStyle(fontSize: 30))),
+        SizedBox(
+          width: 38,
+          child: Icon(icon, size: 30, color: iconColor),
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -269,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             style: const TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 42,
+              fontSize: 24,
             ),
           ),
         ),
@@ -308,11 +322,11 @@ class _SettingsScreenState extends State<SettingsScreen>
           child: const Column(
             children: [
               Text(
-                '?  Cerrar sesión',
+                'Cerrar sesiÃ³n',
                 style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 40,
+                  fontSize: 28,
                 ),
               ),
               SizedBox(height: 2),
@@ -321,7 +335,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 style: TextStyle(
                   color: GameTone.textGold,
                   fontWeight: FontWeight.w700,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
               ),
             ],

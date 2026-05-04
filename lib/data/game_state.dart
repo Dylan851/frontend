@@ -48,7 +48,7 @@ class GameState {
 
   // â”€â”€ Perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   String playerName = 'Explorador';
-  String selectedSkin = 'ðŸ§‘';
+  String selectedSkin = '\u{1F9D1}';
   int level = 7;
   int currentXp = 680;
   int maxXp = 1000;
@@ -392,7 +392,7 @@ class GameState {
     coins = j['coins'] ?? coins;
     gems = j['gems'] ?? gems;
     playerName = j['playerName'] ?? playerName;
-    selectedSkin = j['selectedSkin'] ?? selectedSkin;
+    selectedSkin = _sanitizeSkin((j['selectedSkin'] ?? selectedSkin).toString());
     level = j['level'] ?? level;
     currentXp = j['currentXp'] ?? currentXp;
     maxXp = j['maxXp'] ?? maxXp;
@@ -456,6 +456,15 @@ class GameState {
         unawaited(hook(this));
       }
     });
+  }
+
+  String _sanitizeSkin(String value) {
+    final v = value.trim();
+    if (v.isEmpty) return '\u{1F9D1}';
+    if (v.contains('ðŸ') || v.contains('â') || v.contains('Ã')) {
+      return '\u{1F9D1}';
+    }
+    return v;
   }
 
   // â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
