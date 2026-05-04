@@ -97,6 +97,42 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> checkAuthMethods(String email) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$authEndpoint/methods'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 10));
+      return _decodeResponse(response);
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.'
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> recoverPassword(String email) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$authEndpoint/password/recover'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 10));
+      return _decodeResponse(response);
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.'
+      };
+    }
+  }
+
   static Map<String, dynamic> _decodeResponse(http.Response response) {
     final body = response.body.trim();
     if (body.isEmpty) {

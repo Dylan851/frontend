@@ -27,6 +27,18 @@ class AuthSession {
   });
 }
 
+class AuthMethods {
+  final bool exists;
+  final bool hasPassword;
+  final bool hasGoogle;
+
+  const AuthMethods({
+    required this.exists,
+    required this.hasPassword,
+    required this.hasGoogle,
+  });
+}
+
 class AuthService {
   static const _tokenKey = 'auth_token';
   static const _playerNameKey = 'auth_player_name';
@@ -37,6 +49,10 @@ class AuthService {
   static const _levelKey = 'auth_player_level';
   static Timer? _syncDebounce;
   static bool _syncInFlight = false;
+  static const String googleOnlyMessage =
+      'Esta cuenta inicia sesión con Google. Usa el botón de Google para acceder.';
+  static const String genericRecoveryMessage =
+      'Si existe una cuenta con este correo, recibirás instrucciones para restablecer tu contraseña.';
 
   static SupabaseClient? get _supabaseOrNull {
     try {
@@ -96,8 +112,9 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await ApiService.login(email, password);
-    return _parseAndStoreSession(response, emailHint: email);
+    final normalizedEmail = normalizeEmail(email);
+    final response = await ApiService.login(normalizedEmail, password);
+    return _parseAndStoreSession(response, emailHint: normalizedEmail);
   }
 
   static Future<AuthSession> register({
@@ -105,8 +122,67 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await ApiService.register(email, password, username);
-    return _parseAndStoreSession(response, emailHint: email);
+    final normalizedEmail = normalizeEmail(email);
+    final response = await ApiService.register(normalizedEmail, password, username);
+    return _parseAndStoreSession(response, emailHint: normalizedEmail);
+  }
+
+  static String normalizeEmail(String email) => email.trim().toLowerCase();
+
+  static Future<AuthMethods> checkAuthMethods(String email) async {
+    final normalizedEmail = normalizeEmail(email);
+    final response = await ApiService.checkAuthMethods(normalizedEmail);
+    if (response['success'] != true) {
+      throw Exception(_extractError(response));
+    }
+    final data = (response['data'] as Map?)?.cast<String, dynamic>() ?? {};
+    return AuthMethods(
+      exists: data['exists'] == true,
+      hasPassword: data['has_password'] == true,
+      hasGoogle: data['has_google'] == true,
+    );
+  }
+
+  static Future<AuthSession> loginWithPasswordFlow({
+    required String email,
+    required String password,
+  }) async {
+    final normalizedEmail = normalizeEmail(email);
+    final methods = await checkAuthMethods(normalizedEmail);
+    if (methods.exists && !methods.hasPassword && methods.hasGoogle) {
+      throw Exception(googleOnlyMessage);
+    }
+    return login(email: normalizedEmail, password: password);
+  }
+
+  static Future<AuthSession> registerWithPasswordFlow({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    final normalizedEmail = normalizeEmail(email);
+    final methods = await checkAuthMethods(normalizedEmail);
+    if (methods.exists) {
+      if (methods.hasGoogle && !methods.hasPassword) {
+        throw Exception(
+          'Este correo ya existe con Google. Inicia con Google para continuar o añadir contraseña.',
+        );
+      }
+      throw Exception('Este correo ya está registrado. Inicia sesión.');
+    }
+    return register(username: username, email: normalizedEmail, password: password);
+  }
+
+  static Future<String> requestPasswordRecovery(String email) async {
+    final normalizedEmail = normalizeEmail(email);
+    final response = await ApiService.recoverPassword(normalizedEmail);
+    if (response['success'] != true) {
+      throw Exception(_extractError(response));
+    }
+    final data = (response['data'] as Map?)?.cast<String, dynamic>() ?? {};
+    final message = (data['message'] ?? response['message'] ?? '').toString().trim();
+    if (message.isNotEmpty) return message;
+    return genericRecoveryMessage;
   }
 
   static Future<void> startGoogleOAuth() async {
@@ -296,8 +372,20 @@ class AuthService {
     ].whereType<String>().join(' | ');
     final text = raw.toLowerCase();
 
-    if (text.contains('invalid credentials')) {
+    if (text.contains('correo o contrasena incorrectos') ||
+        text.contains('correo o contraseña incorrectos') ||
+        text.contains('invalid credentials')) {
       return 'Correo o contraseña incorrectos.';
+    }
+    if (text.contains('inicia sesion con google') ||
+        text.contains('inicia sesión con google')) {
+      return googleOnlyMessage;
+    }
+    if (text.contains('ya existe con google')) {
+      return 'Este correo ya existe con Google. Inicia con Google para continuar o añadir contraseña.';
+    }
+    if (text.contains('ya esta registrado') || text.contains('ya está registrado')) {
+      return 'Este correo ya está registrado. Inicia sesión.';
     }
     if (text.contains('failed to fetch') ||
         text.contains('xmlhttprequest error') ||

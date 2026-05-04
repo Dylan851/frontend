@@ -37,62 +37,116 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    if (_loading) return;
     FocusScope.of(context).unfocus();
     setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
-    try {
-      final session = await AuthService.login(
-        email: _emailCtrl.text.trim(),
+    await _runAuthAction(() async {
+      final session = await AuthService.loginWithPasswordFlow(
+        email: _emailCtrl.text,
         password: _passwordCtrl.text,
       );
-      AuthService.applySessionToGameState(session);
-      await AuthService.refreshSessionFromServer(session);
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRouter.mainMenu,
-        (route) => false,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+      await _completeSession(session);
+    });
   }
 
   Future<void> _submitGoogle() async {
+    if (_loading) return;
     FocusScope.of(context).unfocus();
-    setState(() {
-      _error = null;
-      _loading = true;
-    });
+    setState(() => _error = null);
+    await _runAuthAction(AuthService.startGoogleOAuth);
+  }
 
-    try {
-      await AuthService.startGoogleOAuth();
-    } catch (e) {
+  Future<void> _recoverPassword() async {
+    if (_loading) return;
+    FocusScope.of(context).unfocus();
+    final email = await _askRecoveryEmail();
+    if (email == null || email.isEmpty) return;
+    await _runAuthAction(() async {
+      final message = await AuthService.requestPasswordRecovery(email);
       if (!mounted) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
   }
 
   Future<void> _tryCompleteGoogleOAuth() async {
     try {
       final session = await AuthService.completeGoogleOAuthIfPossible();
-      if (session == null || !mounted) return;
-      AuthService.applySessionToGameState(session);
-      await AuthService.refreshSessionFromServer(session);
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRouter.mainMenu,
-        (route) => false,
-      );
+      if (session == null) return;
+      await _completeSession(session);
     } catch (_) {
       // no-op
     }
+  }
+
+  Future<void> _runAuthAction(Future<void> Function() action) async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      await action();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString().replaceFirst('Exception: ', '').trim());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _completeSession(AuthSession session) async {
+    AuthService.applySessionToGameState(session);
+    await AuthService.refreshSessionFromServer(session);
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      AppRouter.mainMenu,
+      (route) => false,
+    );
+  }
+
+  Future<String?> _askRecoveryEmail() async {
+    final controller = TextEditingController(text: _emailCtrl.text.trim());
+    final formKey = GlobalKey<FormState>();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Recuperar contraseña'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'Correo electrónico'),
+              validator: (value) {
+                final email = AuthService.normalizeEmail(value ?? '');
+                if (email.isEmpty) return 'El correo es obligatorio.';
+                final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+                if (!ok) return 'Introduce un correo válido.';
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.of(context).pop(
+                  AuthService.normalizeEmail(controller.text),
+                );
+              },
+              child: const Text('Enviar'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    return result;
   }
 
   @override
@@ -123,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
-                  final value = (v ?? '').trim();
+                  final value = AuthService.normalizeEmail(v ?? '');
                   if (value.isEmpty) return 'El correo es obligatorio.';
                   final ok =
                       RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
@@ -188,18 +242,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 spacing: 16,
                 children: [
                   TextButton(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, AppRouter.register),
+                    onPressed: _loading
+                        ? null
+                        : () => Navigator.pushNamed(context, AppRouter.register),
                     child: const Text('Crear cuenta'),
                   ),
                   TextButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('Recuperación de contraseña pendiente.')),
-                      );
-                    },
+                    onPressed: _loading ? null : _recoverPassword,
                     child: const Text('¿Olvidaste tu contraseña?'),
                   ),
                 ],
