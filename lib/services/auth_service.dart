@@ -90,6 +90,34 @@ class AuthService {
     );
   }
 
+  static Future<bool> deleteAccount() async {
+    final session = await restoreSession();
+    bool serverOk = true;
+    if (session != null && session.token.isNotEmpty) {
+      try {
+        final res = await ApiService.deleteCurrentAccount(token: session.token);
+        serverOk = res['success'] == true;
+      } catch (_) {
+        serverOk = false;
+      }
+    }
+    // Limpia TODO el almacenamiento local — borra progreso (monedas, gemas,
+    // animales, inventario, ajustes) además de la sesión. Equivale a "borrar
+    // cuenta" desde el punto de vista del usuario aunque el backend falle.
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (_) {/* ignore */}
+    // Reset memoria
+    GameState().reset();
+    if (_isSupabaseConfigured) {
+      try {
+        await _supabaseOrNull!.auth.signOut();
+      } catch (_) {/* no-op */}
+    }
+    return serverOk;
+  }
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
@@ -205,6 +233,17 @@ class AuthService {
     final accessToken = supabaseSession?.accessToken;
     if (accessToken == null || accessToken.isEmpty) return null;
 
+    // Extract Google avatar URL from Supabase user metadata
+    try {
+      final meta = supabaseSession?.user.userMetadata;
+      if (meta != null) {
+        final url = (meta['avatar_url'] ?? meta['picture'])?.toString();
+        if (url != null && url.isNotEmpty) {
+          GameState().googlePhotoUrl = url;
+        }
+      }
+    } catch (_) {/* ignore */}
+
     final response = await ApiService.loginWithSupabase(accessToken);
     final emailHint = supabaseSession?.user.email ?? '';
     return _parseAndStoreSession(response, emailHint: emailHint);
@@ -219,9 +258,29 @@ class AuthService {
     if (parsedName != null && parsedName.isNotEmpty) {
       gs.playerName = parsedName;
     }
-    if (session.coins != null) gs.coins = session.coins!;
-    if (session.gems != null) gs.gems = session.gems!;
-    if (session.level != null) gs.level = session.level!;
+    // Solo aplicar si el servidor reporta valores MAYORES que el local.
+    // El backend no guarda monedas/gemas/nivel todavía, así que en login
+    // suele venir 0 y borraría el progreso local.
+    if (session.coins != null && session.coins! > gs.coins) {
+      gs.coins = session.coins!;
+    }
+    if (session.gems != null && session.gems! > gs.gems) {
+      gs.gems = session.gems!;
+    }
+    if (session.level != null && session.level! > gs.level) {
+      gs.level = session.level!;
+    }
+    // Try to refresh google avatar from active supabase session if present.
+    try {
+      final supaSession = _supabaseOrNull?.auth.currentSession;
+      final meta = supaSession?.user.userMetadata;
+      if (meta != null) {
+        final url = (meta['avatar_url'] ?? meta['picture'])?.toString();
+        if (url != null && url.isNotEmpty) {
+          gs.googlePhotoUrl = url;
+        }
+      }
+    } catch (_) {/* ignore */}
     gs.autosave();
   }
 

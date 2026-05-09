@@ -10,8 +10,10 @@
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:ui' as ui;
+import '../../data/food_atlas.dart';
 import '../../data/game_state.dart';
-import '../../data/item_data.dart';
 
 enum ItemType { chest, treasureChest, mushroom, gem, star, leaf, berry }
 
@@ -25,6 +27,42 @@ class CollectibleItem extends GameDecoration with Sensor {
 
   static const double _tileSize = 32.0;
   static BuildContext? uiContext;
+
+  // ── Sprite atlas de comidas (carga perezosa, una sola vez) ───────────
+  static ui.Image? _foodAtlas;
+  static Future<ui.Image>? _foodAtlasFuture;
+  static bool _foodAtlasMissing = false;
+
+  static Future<ui.Image?> _loadFoodAtlas() async {
+    if (_foodAtlasMissing) return null;
+    if (_foodAtlas != null) return _foodAtlas;
+    _foodAtlasFuture ??= (() async {
+      final data = await rootBundle.load(FoodAtlas.assetPath);
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    })();
+    try {
+      _foodAtlas = await _foodAtlasFuture!;
+      return _foodAtlas;
+    } catch (_) {
+      _foodAtlasMissing = true;
+      return null;
+    }
+  }
+
+  /// id del item para mapear a celda del atlas (preferimos itemId, luego tipo).
+  String get _atlasKey {
+    if (FoodAtlas.cellFor(itemId) != null) return itemId;
+    switch (itemType) {
+      case ItemType.mushroom:      return 'mushroom';
+      case ItemType.gem:           return 'gem';
+      case ItemType.star:          return 'star';
+      case ItemType.leaf:          return 'leaf';
+      case ItemType.berry:         return 'berry';
+      default:                     return itemId;
+    }
+  }
 
   CollectibleItem({
     required Vector2 position,
@@ -40,6 +78,11 @@ class CollectibleItem extends GameDecoration with Sensor {
       collisionType: CollisionType.passive,
       isSolid: true,
     ));
+    // Pre-carga del atlas de comidas (no bloquea — si falta el PNG, caemos al emoji).
+    if (!isChest) {
+      // ignore: discarded_futures
+      _loadFoodAtlas();
+    }
   }
 
   bool get isChest => itemType == ItemType.chest || itemType == ItemType.treasureChest;
@@ -101,6 +144,34 @@ class CollectibleItem extends GameDecoration with Sensor {
     }
 
     final opacity = _animating ? (1.0 - _collectAnim).clamp(0.0, 1.0) : 1.0;
+
+    // 1) Intento renderizar usando el atlas pixel-art de comidas si:
+    //    - no es un cofre,
+    //    - el atlas está cargado,
+    //    - existe una celda para este item.
+    final atlas = _foodAtlas;
+    final cell = isChest ? null : FoodAtlas.cellFor(_atlasKey);
+    if (atlas != null && cell != null) {
+      final cs = FoodAtlas.cellSize.toDouble();
+      final src = Rect.fromLTWH(cell.col * cs, cell.row * cs, cs, cs);
+      // Renderizamos al doble del tamaño del tile para mejor lectura visual.
+      const renderScale = 1.4;
+      final dstW = size.x * renderScale;
+      final dstH = size.y * renderScale;
+      final dst = Rect.fromLTWH(
+        (size.x - dstW) / 2,
+        floatOffset - (dstH - size.y) / 2,
+        dstW,
+        dstH,
+      );
+      final paint = Paint()
+        ..filterQuality = FilterQuality.none // pixel-perfect
+        ..color = Colors.white.withOpacity(opacity);
+      canvas.drawImageRect(atlas, src, dst, paint);
+      return;
+    }
+
+    // 2) Fallback al emoji si no hay atlas o no hay celda para este id.
     final tp = TextPainter(
       text: TextSpan(
         text: emoji,

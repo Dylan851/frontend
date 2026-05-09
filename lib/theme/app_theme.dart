@@ -934,6 +934,9 @@ class GameLogo extends StatelessWidget {
           ).createShader(b),
           child: Text(
             title.toUpperCase(),
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.visible,
             style: GoogleFonts.berkshireSwash(
               color: Colors.white,
               fontSize: fontSize * s,
@@ -945,7 +948,7 @@ class GameLogo extends StatelessWidget {
           ),
         ),
       ),
-      if (subtitle != null) ...[
+      if (subtitle != null && subtitle!.isNotEmpty) ...[
         SizedBox(height: 4 * s),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 4 * s),
@@ -985,21 +988,21 @@ class MenuPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppResponsive.scale(context, min: 0.72, max: 1.12);
+    final s = AppResponsive.scale(context, min: 0.72, max: 1.10);
     final compact = AppResponsive.isCompact(MediaQuery.sizeOf(context).width);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
         width: width * s,
-        height: 78 * s,
+        height: 80 * s,
         child: PixelFrame(
           radius: 14 * s,
           innerFill: accent,
           padding: EdgeInsets.symmetric(horizontal: 12 * s),
           child: Row(children: [
             Container(
-              width: 52 * s,
-              height: 52 * s,
+              width: 54 * s,
+              height: 54 * s,
               decoration: BoxDecoration(
                 color: GameTone.woodOuter,
                 borderRadius: BorderRadius.circular(10 * s),
@@ -1012,10 +1015,11 @@ class MenuPill extends StatelessWidget {
             SizedBox(width: 10 * s),
             Expanded(
               child: Text(label,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: GameTone.textCream,
                     fontWeight: FontWeight.w900,
-                    fontSize: (compact ? 18 : 22) * s,
+                    fontSize: (compact ? 17 : 20) * s,
                     letterSpacing: 0.3,
                     shadows: [
                       Shadow(
@@ -1046,9 +1050,9 @@ class OvalGoldChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppResponsive.scale(context, min: 0.78, max: 1.05);
+    final s = AppResponsive.scale(context, min: 0.66, max: 0.96);
     return Container(
-      padding: EdgeInsets.fromLTRB(6 * s, 4 * s, 14 * s, 4 * s),
+      padding: EdgeInsets.fromLTRB(4 * s, 3 * s, 10 * s, 3 * s),
       decoration: BoxDecoration(
         color: GameTone.woodOuter,
         borderRadius: BorderRadius.circular(28 * s),

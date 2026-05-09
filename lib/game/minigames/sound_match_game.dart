@@ -105,41 +105,46 @@ class _SoundMatchGameState extends State<SoundMatchGame> {
           _stat('✅', '${_pairs.where((p) => p.matched).length}/${_pairs.length}'),
         ])),
 
-      Expanded(child: Center(child: SizedBox(
-        width: 680,
-        child: Row(children: [
-          // Columna de animales
-          Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+      Expanded(child: LayoutBuilder(builder: (ctx, c) {
+        final maxW = c.maxWidth.clamp(0.0, 680.0);
+        return Center(child: SizedBox(
+          width: maxW,
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            // Columna de animales
+            Expanded(child: Column(children: [
               Text('ANIMALES', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, letterSpacing: 2)),
-              const SizedBox(height: 12),
-              ..._shuffledLeft.map((p) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _animalCard(p),
+              const SizedBox(height: 6),
+              Expanded(child: SingleChildScrollView(
+                child: Column(children: _shuffledLeft.map((p) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: _animalCard(p),
+                )).toList()),
               )),
             ])),
 
-          // Líneas de conexión (visual simple)
-          SizedBox(width: 60, child: Center(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pairs.length, (i) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Icon(Icons.arrow_forward_ios_rounded,
-                  color: Colors.white.withOpacity(0.15), size: 16)))),
-          )),
+            // Líneas de conexión
+            SizedBox(width: 36, child: Center(
+              child: Column(mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_pairs.length, (i) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Icon(Icons.arrow_forward_ios_rounded,
+                    color: Colors.white.withOpacity(0.15), size: 12)))),
+            )),
 
-          // Columna de sonidos
-          Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+            // Columna de sonidos
+            Expanded(child: Column(children: [
               Text('SONIDOS', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, letterSpacing: 2)),
-              const SizedBox(height: 12),
-              ..._shuffledRight.map((p) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _soundCard(p),
+              const SizedBox(height: 6),
+              Expanded(child: SingleChildScrollView(
+                child: Column(children: _shuffledRight.map((p) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: _soundCard(p),
+                )).toList()),
               )),
             ])),
-        ]),
-      ))),
+          ]),
+        ));
+      })),
     ]);
   }
 
@@ -149,7 +154,7 @@ class _SoundMatchGameState extends State<SoundMatchGame> {
       onTap: () => _selectAnimal(p.name),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 50,
+        height: 38,
         decoration: BoxDecoration(
           color: p.matched ? AppColors.greenAccent.withOpacity(0.2)
                : sel ? AppColors.gold.withOpacity(0.2) : Colors.white.withOpacity(0.07),
@@ -176,7 +181,7 @@ class _SoundMatchGameState extends State<SoundMatchGame> {
       onTap: () => _selectSound(p.name),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 50,
+        height: 38,
         decoration: BoxDecoration(
           color: p.matched ? AppColors.greenAccent.withOpacity(0.2)
                : sel ? AppColors.gold.withOpacity(0.2) : Colors.white.withOpacity(0.07),

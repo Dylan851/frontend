@@ -62,11 +62,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                       constraints: BoxConstraints(maxWidth: 980 * s + 160),
                       child: Padding(
                         padding:
-                            EdgeInsets.fromLTRB(12 * s, 8 * s, 12 * s, 10 * s),
+                            EdgeInsets.fromLTRB(10 * s, 6 * s, 10 * s, 8 * s),
                         child: Column(
                           children: [
                             _header(s),
-                            SizedBox(height: 8 * s),
+                            SizedBox(height: 6 * s),
                             Expanded(
                               child: SingleChildScrollView(
                                 child: Column(
@@ -84,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                           onChanged: (v) =>
                                               setState(() => _gs.musicOn = v),
                                         ),
-                                        SizedBox(height: 8 * s),
+                                        SizedBox(height: 6 * s),
                                         _toggleRow(
                                           s: s,
                                           icon: Icons.volume_up_rounded,
@@ -94,7 +94,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                           onChanged: (v) =>
                                               setState(() => _gs.sfxOn = v),
                                         ),
-                                        SizedBox(height: 8 * s),
+                                        SizedBox(height: 6 * s),
                                         _sliderRow(
                                           s: s,
                                           compact: compact,
@@ -107,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: 12 * s),
+                                    SizedBox(height: 9 * s),
                                     _sectionFrame(
                                       s: s,
                                       title: 'Controles',
@@ -121,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                           onChanged: (v) => setState(
                                               () => _gs.joystickOn = v),
                                         ),
-                                        SizedBox(height: 8 * s),
+                                        SizedBox(height: 6 * s),
                                         _toggleRow(
                                           s: s,
                                           icon: Icons.vibration_rounded,
@@ -134,7 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                               HapticFeedback.mediumImpact();
                                           },
                                         ),
-                                        SizedBox(height: 8 * s),
+                                        SizedBox(height: 6 * s),
                                         _sliderRow(
                                           s: s,
                                           compact: compact,
@@ -151,8 +151,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 ),
                               ),
                             ),
-                            SizedBox(height: 10 * s),
-                            _logoutButton(s, compact),
+                            SizedBox(height: 7 * s),
+                            Row(
+                              children: [
+                                Expanded(child: _logoutButton(s, compact)),
+                                SizedBox(width: 8 * s),
+                                Expanded(child: _deleteAccountButton(s, compact)),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -202,7 +208,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: TextStyle(
                 color: GameTone.textCream,
                 fontWeight: FontWeight.w900,
-                fontSize: 26 * s,
+                fontSize: 23 * s,
                 shadows: [
                   Shadow(
                     color: Color(0xFF1A0E04),
@@ -226,14 +232,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     return PixelFrame(
       radius: 12 * s,
       innerFill: const Color(0xCC0C2A1E),
-      padding: EdgeInsets.fromLTRB(18 * s, 12 * s, 18 * s, 12 * s),
+      padding: EdgeInsets.fromLTRB(15 * s, 10 * s, 15 * s, 10 * s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
             child: Container(
               padding:
-                  EdgeInsets.symmetric(horizontal: 24 * s, vertical: 5 * s),
+                  EdgeInsets.symmetric(horizontal: 20 * s, vertical: 4 * s),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF5A3A16), Color(0xFF2D1B0A)],
@@ -246,12 +252,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                 style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 20 * s,
+                  fontSize: 18 * s,
                 ),
               ),
             ),
           ),
-          SizedBox(height: 12 * s),
+          SizedBox(height: 9 * s),
           ...children,
         ],
       ),
@@ -276,10 +282,12 @@ class _SettingsScreenState extends State<SettingsScreen>
         Expanded(
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 24 * s,
+              fontSize: 18 * s,
             ),
           ),
         ),
@@ -307,15 +315,17 @@ class _SettingsScreenState extends State<SettingsScreen>
         Expanded(
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: GameTone.textCream,
               fontWeight: FontWeight.w900,
-              fontSize: 24 * s,
+              fontSize: 18 * s,
             ),
           ),
         ),
         SizedBox(
-          width: compact ? 180 * s : 280 * s,
+          width: compact ? 140 * s : 220 * s,
           child: SliderTheme(
             data: SliderThemeData(
               trackHeight: 12 * s,
@@ -333,9 +343,78 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  Future<void> _confirmAndDeleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2C1A0E),
+        title: const Text('Eliminar cuenta',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+        content: const Text(
+          'Esta acción borrará tu cuenta y todo el progreso. No se puede deshacer.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.white)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB23A30)),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await AuthService.deleteAccount();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Cuenta eliminada.'),
+    ));
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+  }
+
+  Widget _deleteAccountButton(double s, bool compact) {
+    return SizedBox(
+      width: double.infinity,
+      child: GestureDetector(
+        onTap: _confirmAndDeleteAccount,
+        child: PixelFrame(
+          radius: 12 * s,
+          innerFill: const Color(0xFF3A0E0E),
+          padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 11 * s),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Eliminar cuenta',
+                style: TextStyle(
+                  color: const Color(0xFFFFC5BD),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18 * s,
+                ),
+              ),
+              SizedBox(height: 2 * s),
+              Text(
+                'Acción permanente',
+                style: TextStyle(
+                  color: const Color(0xFFFFB4A9),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13 * s,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _logoutButton(double s, bool compact) {
     return SizedBox(
-      width: compact ? double.infinity : 380 * s,
+      width: double.infinity,
       child: GestureDetector(
         onTap: () async {
           await AuthService.logout();
@@ -345,15 +424,16 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: PixelFrame(
           radius: 12 * s,
           innerFill: const Color(0xFF2C1A0E),
-          padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 12 * s),
+          padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 11 * s),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Cerrar sesión',
                 style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 28 * s,
+                  fontSize: 20 * s,
                 ),
               ),
               SizedBox(height: 2 * s),
@@ -362,7 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 style: TextStyle(
                   color: GameTone.textGold,
                   fontWeight: FontWeight.w700,
-                  fontSize: 20 * s,
+                  fontSize: 14 * s,
                 ),
               ),
             ],

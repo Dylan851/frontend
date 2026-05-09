@@ -1,5 +1,6 @@
 // lib/screens/shop_screen.dart
 import 'package:flutter/material.dart';
+import '../data/animal_data.dart';
 import '../data/item_data.dart';
 import '../data/game_state.dart';
 import '../theme/app_theme.dart';
@@ -19,7 +20,6 @@ class _ShopScreenState extends State<ShopScreen>
   static const _tabs = [
     (icon: '🍎', label: 'Comida', cat: ItemCategory.food),
     (icon: '🛡️', label: 'Equipo', cat: ItemCategory.gear),
-    (icon: '✨', label: 'Power-Ups', cat: ItemCategory.powerup),
     (icon: '🎨', label: 'Skins', cat: ItemCategory.skin),
     (icon: '💱', label: 'Canjear', cat: null),
   ];
@@ -61,6 +61,56 @@ class _ShopScreenState extends State<ShopScreen>
     }
   }
 
+  /// Canjea un código secreto. Devuelve true si se aplicó algún efecto.
+  bool _redeemCode(String raw) {
+    final code = raw.trim();
+    if (code.isEmpty) return false;
+    // Código maestro: la nota del TFG. "10" desbloquea TODO el contenido.
+    if (code == '10') {
+      // Animales descubiertos
+      for (final a in AnimalCatalog.all) {
+        _gs.discoveredAnimals.add(a.id);
+        _gs.completedMinigames.add(a.id);
+      }
+      // Inventario: 100 de cada item del catálogo
+      for (final list in [
+        ShopCatalog.food,
+        ShopCatalog.gear,
+        ShopCatalog.powerups,
+        ShopCatalog.skins,
+      ]) {
+        for (final it in list) {
+          _gs.inventory[it.id] = 100;
+        }
+      }
+      // Monedas y gemas
+      _gs.coins = 10000;
+      _gs.gems = 10000;
+      _gs.coinsEarnedTotal += 10000;
+      // Nivel 100
+      _gs.level = 100;
+      _gs.currentXp = 0;
+      // Personaje premium desbloqueado
+      _gs.ownedCharacters.add('link');
+      _gs.autosave();
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _onRedeem(TextEditingController ctrl) async {
+    final code = ctrl.text.trim();
+    if (code.isEmpty) return;
+    final ok = _redeemCode(code);
+    if (ok) {
+      ctrl.clear();
+      setState(() {});
+      _showToast('🎓 ¡Código canjeado! Todo desbloqueado.', success: true);
+    } else {
+      _showToast('Código inválido', success: false);
+    }
+  }
+
   void _showToast(String msg, {required bool success}) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -89,6 +139,9 @@ class _ShopScreenState extends State<ShopScreen>
             title: 'Tienda',
             trailing: const [],
           ),
+          const SizedBox(height: 4),
+          // Panel para canjear código (oculto si no se quiere usar)
+          _RedeemCodePanel(onRedeem: _onRedeem),
           const SizedBox(height: 4),
           // Tab bar
           Container(
@@ -139,8 +192,14 @@ class _ShopScreenState extends State<ShopScreen>
                 if (t.cat == null) {
                   return _SellGrid(gs: _gs, onSell: _sell);
                 }
+                var items = ShopCatalog.byCategory(t.cat!);
+                if (t.cat == ItemCategory.skin) {
+                  items = items
+                      .where((it) => it.id.toLowerCase().contains('link'))
+                      .toList();
+                }
                 return _ShopGrid(
-                  items: ShopCatalog.byCategory(t.cat!),
+                  items: items,
                   gs: _gs,
                   onBuy: _buy,
                 );
@@ -592,6 +651,127 @@ class _SellButton extends StatelessWidget {
                 )),
           ]),
         ),
+      ),
+    );
+  }
+}
+
+class _RedeemCodePanel extends StatefulWidget {
+  final Future<void> Function(TextEditingController ctrl) onRedeem;
+  const _RedeemCodePanel({required this.onRedeem});
+  @override
+  State<_RedeemCodePanel> createState() => _RedeemCodePanelState();
+}
+
+class _RedeemCodePanelState extends State<_RedeemCodePanel> {
+  final _ctrl = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.onRedeem(_ctrl);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = (MediaQuery.sizeOf(context).shortestSide / 600).clamp(0.43, 0.74);
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 2 * s),
+      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 5 * s),
+      constraints: const BoxConstraints(maxWidth: 320),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3A2210), Color(0xFF1A0E04)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.amber.withOpacity(0.55), width: 1.4),
+        boxShadow: [
+          BoxShadow(color: AppColors.amber.withOpacity(0.18), blurRadius: 10),
+        ],
+      ),
+      child: Row(
+        children: [
+          Text('🎓', style: TextStyle(fontSize: 20 * s)),
+          SizedBox(width: 8 * s),
+          Expanded(
+            child: TextField(
+              controller: _ctrl,
+              enabled: !_busy,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: AppColors.parchment,
+                fontWeight: FontWeight.w800,
+                fontSize: 14 * s,
+              ),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'pon la nota del TFG',
+                hintStyle: TextStyle(
+                  color: AppColors.parchment.withOpacity(0.55),
+                  fontStyle: FontStyle.italic,
+                  fontSize: 13 * s,
+                ),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 10 * s, vertical: 10 * s),
+                filled: true,
+                fillColor: const Color(0xAA0A0500),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      BorderSide(color: AppColors.amber.withOpacity(0.4), width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      BorderSide(color: AppColors.amber, width: 1.4),
+                ),
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+          ),
+          SizedBox(width: 8 * s),
+          GestureDetector(
+            onTap: _busy ? null : _submit,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                  horizontal: 14 * s, vertical: 10 * s),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFE48A), Color(0xFFE8B452), Color(0xFFB07A2A)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF1A0E04), width: 1.4),
+              ),
+              child: _busy
+                  ? SizedBox(
+                      width: 14 * s,
+                      height: 14 * s,
+                      child: const CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFF1A0E04)),
+                    )
+                  : Text('Canjear',
+                      style: TextStyle(
+                        color: const Color(0xFF1A0E04),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13 * s,
+                        letterSpacing: 0.4,
+                      )),
+            ),
+          ),
+        ],
       ),
     );
   }

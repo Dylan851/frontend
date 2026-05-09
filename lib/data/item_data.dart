@@ -128,6 +128,7 @@ abstract class ShopCatalog {
 
   // ── Skins ────────────────────────────────
   static const skins = <ShopItem>[
+    ShopItem(id: 'skin_link',      name: 'Link',        emoji: '🗡️',  description: 'Héroe de Hyrule — skin premium', category: ItemCategory.skin, price: 80, currency: ItemCurrency.gems, isFeatured: true, badgeLabel: 'HOT'),
     ShopItem(id: 'skin_scientist', name: 'Científico',  emoji: '👨‍🔬', description: 'Skin exclusivo',  category: ItemCategory.skin, price: 40, currency: ItemCurrency.gems, isFeatured: true, badgeLabel: 'HOT'),
     ShopItem(id: 'skin_wizard',    name: 'Mago',        emoji: '🧙',  description: 'Skin legendario', category: ItemCategory.skin, price: 60, currency: ItemCurrency.gems),
     ShopItem(id: 'skin_builder',   name: 'Constructor', emoji: '👷',  description: 'Skin común',      category: ItemCategory.skin, price: 300),
@@ -211,12 +212,12 @@ abstract class MapCatalog {
       animalsCount: 6, itemsCount: 10, requiredLevel: 5,
       primaryColor: Color(0xFF5C7A2E), secondaryColor: Color(0xFF8BB53A),
     ),
-    MapWorld(
-      id: 'ocean', name: 'Ruta Costera', emoji: '🌊',
-      description: 'Ruta 11 de Kanto — sendero junto al mar.',
-      animalsCount: 6, itemsCount: 10, requiredLevel: 7,
-      primaryColor: Color(0xFF0D4A7A), secondaryColor: Color(0xFF1A7FC4),
-    ),
+    // MapWorld(
+    //   id: 'ocean', name: 'Ruta Costera', emoji: '🌊',
+    //   description: 'Ruta 11 de Kanto — sendero junto al mar.',
+    //   animalsCount: 6, itemsCount: 10, requiredLevel: 7,
+    //   primaryColor: Color(0xFF0D4A7A), secondaryColor: Color(0xFF1A7FC4),
+    // ),
     MapWorld(
       id: 'arctic', name: 'Bosque Helado', emoji: '❄️',
       description: 'Variante helada de la Ruta 1 — animales en pleno invierno.',

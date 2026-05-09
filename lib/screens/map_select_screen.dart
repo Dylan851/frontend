@@ -38,7 +38,10 @@ class _MapSelectScreenState extends State<MapSelectScreen>
     super.dispose();
   }
 
-  bool _canUnlock(MapWorld m) => _gs.level >= m.requiredLevel;
+  bool _canUnlock(MapWorld m) {
+    if (m == MapCatalog.all.first) return _gs.level >= m.requiredLevel;
+    return false;
+  }
 
   void _selectMap(MapWorld m) {
     if (!_canUnlock(m)) return;
@@ -54,9 +57,9 @@ class _MapSelectScreenState extends State<MapSelectScreen>
     final compact = size.width < 920;
     final columns = AppResponsive.adaptiveColumns(
       size.width - 24,
-      minColumns: 1,
-      maxColumns: 3,
-      itemWidth: compact ? 260 : 360,
+      minColumns: 2,
+      maxColumns: 4,
+      itemWidth: compact ? 120 : 170,
     );
     return Scaffold(
       backgroundColor: AppColors.forestNight,
@@ -95,7 +98,7 @@ class _MapSelectScreenState extends State<MapSelectScreen>
 
           // Title block
           Positioned(
-            top: compact ? 62 : 70,
+            top: compact ? 36 : 44,
             left: 0,
             right: 0,
             child: const OrnateTitle(
@@ -106,16 +109,16 @@ class _MapSelectScreenState extends State<MapSelectScreen>
 
           // Grid of maps
           Positioned(
-            top: compact ? 120 : 130,
+            top: compact ? 84 : 96,
             left: 12,
             right: 12,
-            bottom: compact ? 126 : 110,
+            bottom: compact ? 96 : 100,
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: compact ? 1.1 : 0.95,
+                childAspectRatio: compact ? 1.15 : 1.1,
               ),
               itemCount: MapCatalog.all.length,
               itemBuilder: (_, i) {
@@ -325,12 +328,12 @@ class _MapCard extends StatelessWidget {
             ),
             // Hero emoji
             Positioned(
-              top: 24,
-              left: 22,
+              top: 8,
+              left: 8,
               child: Text(
                 map.emoji,
                 style: TextStyle(
-                  fontSize: 56,
+                  fontSize: 22,
                   color:
                       isUnlocked ? Colors.white : Colors.white.withOpacity(0.3),
                   shadows: [
@@ -345,7 +348,7 @@ class _MapCard extends StatelessWidget {
             // Lock overlay
             if (!isUnlocked) Container(color: Colors.black.withOpacity(0.4)),
             if (!isUnlocked)
-              const Center(child: Text('🔒', style: TextStyle(fontSize: 38))),
+              const Center(child: Text('🔒', style: TextStyle(fontSize: 24))),
             // "ACTUAL" ribbon
             if (isCurrent && isUnlocked)
               const Positioned(
@@ -369,7 +372,7 @@ class _MapCard extends StatelessWidget {
                           ? AppColors.parchment
                           : Colors.white.withOpacity(0.45),
                       fontWeight: FontWeight.w900,
-                      fontSize: 13,
+                      fontSize: 11,
                       letterSpacing: 1.6,
                       shadows: const [
                         Shadow(
@@ -384,7 +387,7 @@ class _MapCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: isUnlocked
                           ? AppColors.amber.withOpacity(0.85)
@@ -394,7 +397,7 @@ class _MapCard extends StatelessWidget {
                     child: Text(
                       isUnlocked
                           ? '${map.animalsCount} ANIMALES'
-                          : '🔒 NV. ${map.requiredLevel}',
+                          : '🔒 PRÓXIMAMENTE',
                       style: const TextStyle(
                         color: Color(0xFF221208),
                         fontWeight: FontWeight.w900,

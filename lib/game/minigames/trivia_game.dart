@@ -283,7 +283,10 @@ class _TriviaGameState extends State<TriviaGame> {
 
       // Pregunta
       Expanded(child: Center(child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 60),
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width < 640 ? 16 : 40,
+        ),
+        child: SingleChildScrollView(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           // Caja de pregunta
           AnimatedSwitcher(
@@ -291,7 +294,7 @@ class _TriviaGameState extends State<TriviaGame> {
             child: Container(
               key: ValueKey(_current),
               width: double.infinity,
-              padding: const EdgeInsets.all(28),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.07),
                 borderRadius: BorderRadius.circular(20),
@@ -332,12 +335,17 @@ class _TriviaGameState extends State<TriviaGame> {
 
           // Botones
           if (_answered == null)
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _answerBtn('✅  VERDADERO', true, AppColors.greenAccent),
-              const SizedBox(width: 20),
-              _answerBtn('❌  FALSO', false, AppColors.badgeRed),
-            ]),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 14,
+              runSpacing: 10,
+              children: [
+                _answerBtn('✅  VERDADERO', true, AppColors.greenAccent),
+                _answerBtn('❌  FALSO', false, AppColors.badgeRed),
+              ],
+            ),
         ]),
+        ),
       ))),
     ]);
   }
@@ -345,7 +353,7 @@ class _TriviaGameState extends State<TriviaGame> {
   Widget _answerBtn(String label, bool val, Color color) => GestureDetector(
     onTap: () => _answer(val),
     child: Container(
-      width: 180, height: 54,
+      width: 160, height: 48,
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),

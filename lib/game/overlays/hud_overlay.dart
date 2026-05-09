@@ -1,4 +1,5 @@
 // lib/game/overlays/hud_overlay.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../data/game_state.dart';
 import '../../data/animal_data.dart';
@@ -22,6 +23,22 @@ class HudOverlay extends StatefulWidget {
 
 class _HudOverlayState extends State<HudOverlay> {
   final _gs = GameState();
+  bool _showHint = true;
+  Timer? _hintTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _hintTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _showHint = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,25 +73,30 @@ class _HudOverlayState extends State<HudOverlay> {
         ),
 
         // ── Hint bar (bottom center) ─────────────────────────────────────
-        Positioned(
-          bottom: 82, left: 0, right: 0,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppColors.greenAccent.withOpacity(0.35), width: 1),
-              ),
-              child: Text(
-                '¡Explora y busca animales! 🦊 🦌 🦉 🦋 🐻 🐸',
-                style: TextStyle(
-                    color: Colors.white.withOpacity(0.75), fontSize: 10),
+        if (_showHint)
+          Positioned(
+            bottom: 82, left: 0, right: 0,
+            child: Center(
+              child: AnimatedOpacity(
+                opacity: _showHint ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.greenAccent.withOpacity(0.35), width: 1),
+                  ),
+                  child: Text(
+                    '¡Explora y busca animales! 🦊 🦌 🦉 🦋 🐻 🐸',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.75), fontSize: 10),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
       ]),
     );
   }

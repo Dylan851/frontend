@@ -20,7 +20,6 @@ class _InventoryScreenState extends State<InventoryScreen>
     ('all', 'Todo'),
     ('food', '🍎 Comida'),
     ('gear', '🛡️ Equipo'),
-    ('powerup', '✨ Power-Ups'),
   ];
 
   static const _equipSlots = [
@@ -31,7 +30,10 @@ class _InventoryScreenState extends State<InventoryScreen>
   ];
 
   List<MapEntry<String, int>> get _filteredItems {
-    final all = _gs.inventory.entries.toList();
+    final all = _gs.inventory.entries.where((e) {
+      final item = ShopCatalog.findById(e.key);
+      return item != null && item.category != ItemCategory.powerup;
+    }).toList();
     if (_selectedCat == 'all') return all;
     return all.where((e) {
       final item = ShopCatalog.findById(e.key);
@@ -41,8 +43,6 @@ class _InventoryScreenState extends State<InventoryScreen>
           return item.category == ItemCategory.food;
         case 'gear':
           return item.category == ItemCategory.gear;
-        case 'powerup':
-          return item.category == ItemCategory.powerup;
         default:
           return true;
       }
@@ -118,38 +118,34 @@ class _InventoryScreenState extends State<InventoryScreen>
                 final compact = width < 1020;
                 final s =
                     AppResponsive.scaleForWidth(width, min: 0.68, max: 1.0);
-                return Column(children: [
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
                   _topBar(),
                   Expanded(
                     child: Padding(
                       padding:
-                          EdgeInsets.fromLTRB(10 * s, 4 * s, 10 * s, 10 * s),
+                          EdgeInsets.fromLTRB(10 * s, 2 * s, 10 * s, 5 * s),
                       child: compact
                           ? Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                SizedBox(height: 170 * s, child: _leftPanel()),
-                                SizedBox(height: 8 * s),
                                 _catFilter(),
-                                SizedBox(height: 6 * s),
+                                SizedBox(height: 3 * s),
                                 Expanded(child: _itemGrid()),
-                                SizedBox(height: 8 * s),
+                                SizedBox(height: 4 * s),
                                 _statsBar(),
                               ],
                             )
-                          : Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                SizedBox(width: 160 * s, child: _leftPanel()),
-                                SizedBox(width: 10 * s),
-                                Expanded(
-                                  child: Column(children: [
-                                    _catFilter(),
-                                    SizedBox(height: 6 * s),
-                                    Expanded(child: _itemGrid()),
-                                    SizedBox(height: 8 * s),
-                                    _statsBar(),
-                                  ]),
-                                ),
+                                _catFilter(),
+                                SizedBox(height: 3 * s),
+                                Expanded(child: _itemGrid()),
+                                SizedBox(height: 4 * s),
+                                _statsBar(),
                               ],
                             ),
                     ),
@@ -175,18 +171,12 @@ class _InventoryScreenState extends State<InventoryScreen>
   // ── Left panel ─────────────────────────────────────────────────────────
   Widget _leftPanel() => PixelFrame(
         radius: 14,
-        padding: const EdgeInsets.all(8),
-        child: Column(children: [
-          // Character portrait
-          Expanded(
-            child: Center(
-              child:
-                  Text(_gs.selectedSkin, style: const TextStyle(fontSize: 70)),
-            ),
-          ),
-          // Level badge
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+          // Level badge solo
           Container(
-            margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -210,49 +200,6 @@ class _InventoryScreenState extends State<InventoryScreen>
                         blurRadius: 0)
                   ],
                 )),
-          ),
-          // Equip slots 2×2
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            crossAxisSpacing: 6,
-            mainAxisSpacing: 6,
-            childAspectRatio: 1.0,
-            physics: const NeverScrollableScrollPhysics(),
-            children: _equipSlots.map((slot) {
-              final equippedId = _gs.equipped[slot.$1];
-              final item =
-                  equippedId != null ? ShopCatalog.findById(equippedId) : null;
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: GameTone.goldTrim.withOpacity(0.7), width: 1.2),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(item?.emoji ?? slot.$2,
-                        style: TextStyle(
-                            fontSize: 22,
-                            color: item != null
-                                ? null
-                                : GameTone.textCream.withOpacity(0.55))),
-                    const SizedBox(height: 2),
-                    Text(slot.$3,
-                        style: const TextStyle(
-                            fontSize: 9,
-                            color: GameTone.textCream,
-                            fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              );
-            }).toList(),
           ),
         ]),
       );

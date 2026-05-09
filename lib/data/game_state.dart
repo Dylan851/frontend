@@ -49,6 +49,7 @@ class GameState {
   // â”€â”€ Perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   String playerName = 'Explorador';
   String selectedSkin = '\u{1F9D1}';
+  String? googlePhotoUrl;
   int level = 7;
   int currentXp = 680;
   int maxXp = 1000;
@@ -89,6 +90,9 @@ class GameState {
   // â”€â”€ Personaje seleccionado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   String selectedCharacter = 'hero';
 
+  /// IDs de personajes premium ya comprados (persistente).
+  final Set<String> ownedCharacters = <String>{};
+
   // â”€â”€ Ajustes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool musicOn = true;
   bool sfxOn = true;
@@ -104,7 +108,11 @@ class GameState {
   // â”€â”€ Getters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool get allAnimalsDiscovered =>
       discoveredAnimals.length >= AnimalCatalog.all.length;
-  int get discoveredCount => discoveredAnimals.length;
+  int get discoveredCount {
+    final valid = AnimalCatalog.all.map((a) => a.id).toSet();
+    final c = discoveredAnimals.intersection(valid).length;
+    return c > valid.length ? valid.length : c;
+  }
   double get xpPercent => currentXp / maxXp;
 
   // â”€â”€ Animales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -112,8 +120,8 @@ class GameState {
     if (!discoveredAnimals.contains(id)) {
       discoveredAnimals.add(id);
       score += 100;
-      coins += 20;
-      coinsEarnedTotal += 20;
+      coins += 5;
+      coinsEarnedTotal += 5;
       _checkAchievements();
       autosave();
     }
@@ -140,7 +148,7 @@ class GameState {
       completedMinigames.add(animalId);
     }
     score += finalStars * 50;
-    final cReward = finalStars * 10 * coinMult;
+    final cReward = finalStars * 3 * coinMult;
     coins += cReward;
     coinsEarnedTotal += cReward;
     currentXp += finalStars * 30 * xpMult;
@@ -263,8 +271,8 @@ class GameState {
     collectedMapItems.add(itemId);
     inventory[itemId] = (inventory[itemId] ?? 0) + 1;
     score += 25;
-    coins += 5;
-    coinsEarnedTotal += 5;
+    coins += 1;
+    coinsEarnedTotal += 1;
     autosave();
   }
 
@@ -280,8 +288,8 @@ class GameState {
     }
     openedChests.add(chestId);
     final rng = math.Random();
-    final gold = 50 + rng.nextInt(151); // 50..200
-    final gemBonus = rng.nextDouble() < 0.10 ? 1 + rng.nextInt(3) : 0;
+    final gold = 10 + rng.nextInt(21); // 10..30
+    final gemBonus = rng.nextDouble() < 0.03 ? 1 : 0; // 3 % de probabilidad de 1 diamante
     ShopItem? bonus;
     if (rng.nextDouble() < 0.60) {
       final pool = ShopCatalog.lootPool;
@@ -347,6 +355,7 @@ class GameState {
         'gems': gems,
         'playerName': playerName,
         'selectedSkin': selectedSkin,
+        'googlePhotoUrl': googlePhotoUrl,
         'level': level,
         'currentXp': currentXp,
         'maxXp': maxXp,
@@ -357,6 +366,7 @@ class GameState {
         'savedY': savedY,
         'savedMapId': savedMapId,
         'selectedCharacter': selectedCharacter,
+        'ownedCharacters': ownedCharacters.toList(),
         'musicOn': musicOn,
         'sfxOn': sfxOn,
         'musicVol': musicVol,
@@ -393,6 +403,8 @@ class GameState {
     gems = j['gems'] ?? gems;
     playerName = j['playerName'] ?? playerName;
     selectedSkin = _sanitizeSkin((j['selectedSkin'] ?? selectedSkin).toString());
+    final gp = j['googlePhotoUrl'];
+    googlePhotoUrl = gp is String && gp.isNotEmpty ? gp : null;
     level = j['level'] ?? level;
     currentXp = j['currentXp'] ?? currentXp;
     maxXp = j['maxXp'] ?? maxXp;
@@ -413,6 +425,7 @@ class GameState {
     savedY = (j['savedY'] as num?)?.toDouble() ?? savedY;
     savedMapId = j['savedMapId'] as String?;
     selectedCharacter = j['selectedCharacter'] ?? selectedCharacter;
+    setS(ownedCharacters, 'ownedCharacters');
     musicOn = j['musicOn'] ?? musicOn;
     sfxOn = j['sfxOn'] ?? sfxOn;
     musicVol = (j['musicVol'] as num?)?.toDouble() ?? musicVol;

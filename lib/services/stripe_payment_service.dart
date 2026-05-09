@@ -4,6 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
 import 'external_url_opener.dart';
+import '../data/game_state.dart';
 
 class CurrencyPack {
   final String id;
@@ -30,6 +31,33 @@ class StripePaymentService {
     CurrencyPack(id: 'diamonds_30', title: '30 Diamantes', currencyType: 'diamonds', quantity: 30, priceLabel: '4.99 EUR'),
     CurrencyPack(id: 'diamonds_75', title: '75 Diamantes', currencyType: 'diamonds', quantity: 75, priceLabel: '9.99 EUR'),
   ];
+
+  /// Sincroniza con el backend la lista de personajes premium ya comprados
+  /// y los persiste localmente en `GameState.ownedCharacters`.
+  static Future<void> syncOwnedCharacters() async {
+    final session = await AuthService.restoreSession();
+    if (session == null || session.token.isEmpty) return;
+    final ids = await ApiService.fetchOwnedCharacters(token: session.token);
+    if (ids.isEmpty) return;
+    GameState().ownedCharacters.addAll(ids);
+    GameState().autosave();
+  }
+
+  /// Compra un personaje premium (pack character_*). Devuelve true si la
+  /// compra se completó (pago presentado y confirmado por el usuario).
+  /// Marca el personaje como propio en `GameState` y refresca el saldo.
+  static Future<bool> buyCharacter({
+    required String packId,
+    required String characterId,
+  }) async {
+    await buyPack(packId);
+    // En móvil, presentPaymentSheet sólo retorna OK si el usuario confirmó.
+    GameState().ownedCharacters.add(characterId);
+    GameState().autosave();
+    // Re-sync por si el webhook ya hizo efecto.
+    await syncOwnedCharacters();
+    return true;
+  }
 
   static Future<String> buyPack(String packId) async {
     final session = await AuthService.restoreSession();

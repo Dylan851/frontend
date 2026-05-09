@@ -85,27 +85,30 @@ class _SilhouetteGameState extends State<SilhouetteGame>
             ),
           ),
         ),
-        const SizedBox(width: 40),
+        const SizedBox(width: 24),
         // Opciones
         SizedBox(
           width: 260,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('¿Qué animal es?', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('¿Qué animal es?', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('Intentos: $_attempts', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11)),
               const SizedBox(height: 8),
-              Text('Intentos: $_attempts', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
-              const SizedBox(height: 20),
-              ..._options.map((opt) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _OptionBtn(
-                  animal: opt,
-                  isSelected: _selected == opt.id,
-                  isCorrect: _selected == opt.id && opt.id == widget.animal.id,
-                  isWrong: _selected == opt.id && opt.id != widget.animal.id,
-                  onTap: () => _guess(opt),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(children: _options.map((opt) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: _OptionBtn(
+                      animal: opt,
+                      isSelected: _selected == opt.id,
+                      isCorrect: _selected == opt.id && opt.id == widget.animal.id,
+                      isWrong: _selected == opt.id && opt.id != widget.animal.id,
+                      onTap: () => _guess(opt),
+                    ),
+                  )).toList()),
                 ),
-              )),
+              ),
             ],
           ),
         ),

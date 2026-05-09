@@ -9,18 +9,11 @@ class AuthScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A1A10),
+      // resizeToAvoidBottomInset deja que el teclado empuje los campos.
+      resizeToAvoidBottomInset: true,
       body: MenuBackdrop(
         dim: 0.5,
-        child: SafeArea(
-          child: OrientationBuilder(
-            builder: (context, orientation) {
-              final size = MediaQuery.of(context).size;
-              final isPortrait = size.height > size.width;
-              if (isPortrait) return const _RotateDeviceHint();
-              return child;
-            },
-          ),
-        ),
+        child: SafeArea(child: child),
       ),
     );
   }
@@ -39,39 +32,56 @@ class AuthPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+    // Escala adaptativa: en horizontal compactamos más para no salir de pantalla.
+    final shortest = size.shortestSide;
+    final base = isLandscape ? 700 : 600;
+    final s = (shortest / base).clamp(0.62, 1.05);
+    // Ancho máximo: en horizontal limitamos a ~70 % del alto para que quepa
+    // siempre sin scroll en pantalla pequeña; en vertical, ancho casi total.
+    final maxW = isLandscape
+        ? (size.height * 1.25).clamp(360.0, 520.0)
+        : (size.width - 16).clamp(280.0, 460.0);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 12 * s),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
+          constraints: BoxConstraints(maxWidth: maxW.toDouble()),
           child: PixelFrame(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+            padding: EdgeInsets.fromLTRB(22 * s, 18 * s, 22 * s, 18 * s),
             radius: 16,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: GameTone.textCream,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 44,
-                    shadows: [
-                      Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2)),
-                    ],
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: GameTone.textCream,
+                      fontWeight: FontWeight.w900,
+                      fontSize: (isLandscape ? 22 : 26) * s,
+                      shadows: const [
+                        Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2)),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: GameTone.textGold,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                if (subtitle.isNotEmpty) ...[
+                  SizedBox(height: 2 * s),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: GameTone.textGold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11 * s,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
+                ],
+                SizedBox(height: 6 * s),
                 child,
               ],
             ),
@@ -105,28 +115,31 @@ class AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = (MediaQuery.of(context).size.shortestSide / 600).clamp(0.78, 1.10);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: GameTone.textCream,
             fontWeight: FontWeight.w800,
-            fontSize: 16,
+            fontSize: 13 * s,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 4 * s),
         TextFormField(
           controller: controller,
           validator: validator,
           obscureText: obscureText,
           keyboardType: keyboardType,
-          style: const TextStyle(color: GameTone.textCream),
+          style: TextStyle(color: GameTone.textCream, fontSize: 14 * s),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: GameTone.textCream.withOpacity(0.55)),
-            prefixIcon: Icon(icon, color: GameTone.goldTrim),
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 12 * s),
+            hintStyle: TextStyle(color: GameTone.textCream.withOpacity(0.55), fontSize: 13 * s),
+            prefixIcon: Icon(icon, color: GameTone.goldTrim, size: 18 * s),
             suffixIcon: onToggleVisibility == null
                 ? null
                 : IconButton(

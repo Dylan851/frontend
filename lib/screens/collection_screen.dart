@@ -255,20 +255,23 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
   @override
   Widget build(BuildContext context) {
     final a = widget.animal;
+    final mq = MediaQuery.sizeOf(context);
     return Dialog(
       backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Container(
-        width: MediaQuery.sizeOf(context).width.clamp(300.0, 460.0),
+        width: (mq.width * 0.78).clamp(280.0, 460.0).toDouble(),
+        constraints: BoxConstraints(maxHeight: mq.height * 0.92),
         decoration: BoxDecoration(
             gradient: const LinearGradient(
                 colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)]),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
                 color: AppColors.greenAccent.withOpacity(0.3), width: 1.5)),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+        child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
           // Header
           Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                   gradient: LinearGradient(colors: [
                     AppColors.greenAccent.withOpacity(0.15),
@@ -277,8 +280,8 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(22))),
               child: Row(children: [
-                Text(a.emoji, style: const TextStyle(fontSize: 52)),
-                const SizedBox(width: 16),
+                Text(a.emoji, style: const TextStyle(fontSize: 30)),
+                const SizedBox(width: 12),
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,8 +290,8 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                           style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 22)),
-                      const SizedBox(height: 4),
+                              fontSize: 17)),
+                      const SizedBox(height: 2),
                       Wrap(spacing: 6, children: [
                         _tag('🌍 ${a.habitat}'),
                         _tag('🍽️ ${a.diet}'),
@@ -313,17 +316,17 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
               child: Text(a.description,
                   style: TextStyle(
                       color: Colors.white.withOpacity(0.75),
-                      fontSize: 13,
-                      height: 1.5))),
+                      fontSize: 11,
+                      height: 1.35))),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
 
           // Dato Wikipedia
           if (a.wikiFact.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(10),
@@ -333,20 +336,20 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                 child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('📚', style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 10),
+                      const Text('📚', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(a.wikiFact,
                             style: TextStyle(
                                 color: Colors.white.withOpacity(0.82),
-                                fontSize: 11,
-                                height: 1.45)),
+                                fontSize: 10,
+                                height: 1.3)),
                       ),
                     ]),
               ),
             ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 6),
 
           // Datos curiosos (paginados)
           GestureDetector(
@@ -354,7 +357,7 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                 setState(() => _factIdx = (_factIdx + 1) % a.funFacts.length),
             child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(12),
@@ -376,7 +379,7 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                 ])),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 6),
 
           // Indicador de puntos
           Row(
@@ -395,9 +398,9 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
 
           // Botón "Ver en 3D" (solo si hay modelo disponible)
           if (animalHas3DModel(a.id)) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               child: GestureDetector(
                 onTap: () {
                   Navigator.of(context).pop();
@@ -407,7 +410,7 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                 },
                 child: Container(
                   width: double.infinity,
-                  height: 50,
+                  height: 38,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     gradient: const LinearGradient(
@@ -434,13 +437,13 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.threesixty_rounded,
-                            color: Colors.white, size: 22),
-                        SizedBox(width: 10),
+                            color: Colors.white, size: 18),
+                        SizedBox(width: 8),
                         Text('VER EN 3D',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
-                              fontSize: 16,
+                              fontSize: 13,
                               letterSpacing: 1.6,
                               shadows: [
                                 Shadow(
@@ -456,7 +459,7 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
           ],
 
           const SizedBox(height: 16),
-        ]),
+        ])),
       ),
     );
   }

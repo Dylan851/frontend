@@ -75,7 +75,7 @@ abstract class MissionCatalog {
       description: 'Descubre tu primer animal en el bosque.',
       goal: MissionGoal.discoverAnimals,
       target: 1,
-      rewardCoins: 30,
+      rewardCoins: 8,
       rewardXp: 50,
     ),
     const Mission(
@@ -85,7 +85,7 @@ abstract class MissionCatalog {
       description: 'Descubre 3 animales diferentes.',
       goal: MissionGoal.discoverAnimals,
       target: 3,
-      rewardCoins: 80,
+      rewardCoins: 20,
       rewardXp: 120,
     ),
     Mission(
@@ -95,7 +95,7 @@ abstract class MissionCatalog {
       description: 'Descubre la mitad de los animales del catálogo.',
       goal: MissionGoal.discoverAnimals,
       target: (AnimalCatalog.all.length / 2).ceil().clamp(1, 999),
-      rewardCoins: 200,
+      rewardCoins: 50,
       rewardGems: 1,
       rewardXp: 300,
     ),
@@ -106,7 +106,7 @@ abstract class MissionCatalog {
       description: 'Completa tu primer minijuego con un animal.',
       goal: MissionGoal.completeMinigames,
       target: 1,
-      rewardCoins: 50,
+      rewardCoins: 12,
       rewardXp: 80,
     ),
     const Mission(
@@ -116,8 +116,8 @@ abstract class MissionCatalog {
       description: 'Completa 5 minijuegos.',
       goal: MissionGoal.completeMinigames,
       target: 5,
-      rewardCoins: 150,
-      rewardGems: 2,
+      rewardCoins: 40,
+      rewardGems: 1,
       rewardXp: 250,
     ),
     const Mission(
@@ -127,7 +127,7 @@ abstract class MissionCatalog {
       description: 'Recoge 5 ítems del mapa.',
       goal: MissionGoal.collectItems,
       target: 5,
-      rewardCoins: 60,
+      rewardCoins: 15,
       rewardXp: 80,
     ),
     const Mission(
@@ -137,8 +137,7 @@ abstract class MissionCatalog {
       description: 'Abre 3 cofres escondidos en el bosque.',
       goal: MissionGoal.openChests,
       target: 3,
-      rewardCoins: 100,
-      rewardGems: 1,
+      rewardCoins: 25,
       rewardXp: 120,
     ),
     const Mission(
@@ -148,7 +147,7 @@ abstract class MissionCatalog {
       description: 'Alcanza el nivel 5.',
       goal: MissionGoal.reachLevel,
       target: 5,
-      rewardCoins: 120,
+      rewardCoins: 30,
       rewardXp: 150,
     ),
     const Mission(
@@ -158,8 +157,8 @@ abstract class MissionCatalog {
       description: 'Alcanza el nivel 10.',
       goal: MissionGoal.reachLevel,
       target: 10,
-      rewardCoins: 250,
-      rewardGems: 3,
+      rewardCoins: 70,
+      rewardGems: 1,
       rewardXp: 400,
     ),
     const Mission(
@@ -169,7 +168,7 @@ abstract class MissionCatalog {
       description: 'Acumula 500 monedas en total.',
       goal: MissionGoal.earnCoins,
       target: 500,
-      rewardCoins: 100,
+      rewardCoins: 25,
       rewardXp: 100,
     ),
     const Mission(
@@ -179,7 +178,7 @@ abstract class MissionCatalog {
       description: 'Compra 3 ítems en la tienda.',
       goal: MissionGoal.buyItems,
       target: 3,
-      rewardCoins: 80,
+      rewardCoins: 20,
       rewardXp: 80,
     ),
     const Mission(
@@ -189,7 +188,7 @@ abstract class MissionCatalog {
       description: 'Visita 3 mundos diferentes.',
       goal: MissionGoal.visitMaps,
       target: 3,
-      rewardCoins: 150,
+      rewardCoins: 40,
       rewardGems: 1,
       rewardXp: 200,
     ),

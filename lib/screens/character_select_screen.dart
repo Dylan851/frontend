@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 import '../game/actors/player_character.dart';
 import '../data/game_state.dart';
+import '../services/stripe_payment_service.dart';
 import '../theme/app_theme.dart';
 
 class CharacterSelectScreen extends StatefulWidget {
@@ -29,21 +30,40 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
   final _gs = GameState();
 
   // Roles cortos por personaje (paralelo al catálogo).
-  static const _roles = ['Explorador del bosque', 'Aventurera del río', 'Sabio ancestral'];
+  static const _roles = [
+    'Explorador del bosque',
+    'Héroe de Hyrule',
+  ];
 
   // Stats por personaje (paralelo al catálogo): velocidad, sigilo, exploración.
   static const _stats = [
     [0.75, 0.55, 0.90],
-    [0.85, 0.70, 0.65],
-    [0.50, 0.95, 0.80],
+    [0.92, 0.80, 0.95],
   ];
+
+  bool _purchasing = false;
+
+  /// True si el personaje aparece bloqueado para el jugador actual.
+  bool _isEffectivelyLocked(CharacterInfo info) {
+    if (!info.locked) return false;
+    if (info.premium) {
+      return !_gs.ownedCharacters.contains(info.id);
+    }
+    return true;
+  }
 
   @override
   void initState() {
     super.initState();
     final prevIdx = CharacterCatalog.all
-        .indexWhere((c) => c.id == _gs.selectedCharacter && !c.locked);
+        .indexWhere((c) => c.id == _gs.selectedCharacter && !_isEffectivelyLocked(c));
     _selected = prevIdx >= 0 ? prevIdx : 0;
+    // Sincronización en background: trae los personajes premium ya comprados
+    // desde el backend (Stripe) y refresca la UI.
+    StripePaymentService.syncOwnedCharacters().then((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
 
     _pageCtrl = PageController(
       initialPage:  _selected,
@@ -78,16 +98,46 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
 
   void _confirm() {
     final info = CharacterCatalog.all[_selected];
-    if (info.locked) return;
+    if (_isEffectivelyLocked(info)) return;
     _gs.selectedCharacter = info.id;
     _gs.selectedSkin      = info.emoji;
+    _gs.autosave();
     Navigator.of(context).pushReplacementNamed('/game');
   }
 
   void _selectPage(int idx) {
-    if (CharacterCatalog.all[idx].locked) return;
+    // Permitimos seleccionar premium bloqueados para mostrar el botón "Comprar".
     setState(() => _selected = idx);
     _cardCtrl.forward(from: 0.6);
+  }
+
+  Future<void> _purchaseCurrent() async {
+    final info = CharacterCatalog.all[_selected];
+    if (!info.premium || info.packId == null) return;
+    setState(() => _purchasing = true);
+    try {
+      await StripePaymentService.buyCharacter(
+        packId: info.packId!,
+        characterId: info.id,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF1F4E2A),
+          content: Text('¡${info.name} desbloqueado!'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF7A1A1A),
+          content: Text('No se pudo completar la compra: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _purchasing = false);
+    }
   }
 
   @override
@@ -212,6 +262,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
     final accent   = Color(info.colorValue);
     final role     = i < _roles.length ? _roles[i] : 'Explorador';
     final stats    = i < _stats.length ? _stats[i] : const [0.7, 0.7, 0.7];
+    final locked   = _isEffectivelyLocked(info);
 
     return AnimatedBuilder(
       animation: Listenable.merge([_cardScale, _float, _glow]),
@@ -261,12 +312,12 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
                           child: ShaderMask(
                             shaderCallback: (b) => LinearGradient(
                               begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                              colors: info.locked
+                              colors: locked
                                   ? const [Color(0xFFAAAAAA), Color(0xFF666666)]
                                   : const [Color(0xFFFFE48A), Color(0xFFE8B452), Color(0xFFB07A2A)],
                             ).createShader(b),
                             child: Text(
-                              info.locked ? '???' : info.name.toUpperCase(),
+                              (locked && !info.premium) ? '???' : info.name.toUpperCase(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 22 * s,
@@ -285,13 +336,15 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
                         SizedBox(height: 8 * s),
 
                         // ── Chip de rol (placa de madera) ─────────────
-                        Center(child: _roleChip(role, info.locked, s)),
+                        Center(child: _roleChip(role, locked, s)),
 
                         SizedBox(height: 16 * s),
 
-                        // ── Panel de stats ────────────────────────────
-                        if (!info.locked)
+                        // ── Panel de stats / candado / premium ────────
+                        if (!locked)
                           _statsPanel(stats, accent, s)
+                        else if (info.premium)
+                          _premiumPanel(info, s)
                         else
                           _lockedPanel(s),
 
@@ -300,7 +353,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
                     ),
 
                     // Badge seleccionado (esquina sup. derecha)
-                    if (isActive && !info.locked)
+                    if (isActive && !locked)
                       Positioned(
                         top: -2, right: -2,
                         child: _selectedBadge(s),
@@ -317,6 +370,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
 
   // ─── Avatar dentro de medallón con anillo dorado ────────────────
   Widget _avatar(CharacterInfo info, Color accent, double s) {
+    final locked = _isEffectivelyLocked(info);
     return Container(
       width: 130 * s, height: 130 * s,
       decoration: BoxDecoration(
@@ -337,7 +391,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
-              colors: info.locked
+              colors: locked
                   ? const [Color(0xFF2A2A2A), Color(0xFF111111)]
                   : [
                       accent.withOpacity(0.45),
@@ -349,10 +403,22 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
             border: Border.all(color: GameTone.goldBright.withOpacity(0.55), width: 1.4),
           ),
           child: Center(
-            child: Text(
-              info.locked ? '🔒' : info.emoji,
-              style: TextStyle(fontSize: 64 * s),
-            ),
+            child: (info.id == 'hero' || info.id == 'link')
+                ? _PlayerSpritePreview(
+                    assetPath: info.id == 'link'
+                        ? 'assets/images/player/link_face.png'
+                        : 'assets/images/player/${info.id}.png',
+                    size: 96 * s,
+                    desaturated: locked && info.premium,
+                    isSpriteSheet: info.id != 'link',
+                  )
+                : Text(
+                    locked ? (info.premium ? info.emoji : '🔒') : info.emoji,
+                    style: TextStyle(
+                      fontSize: 64 * s,
+                      color: locked && info.premium ? Colors.white70 : null,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -465,6 +531,47 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
         ),
       ]);
 
+  Widget _premiumPanel(CharacterInfo info, double s) => Container(
+    padding: EdgeInsets.all(14 * s),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFF3A2210), Color(0xFF1A0E04)],
+      ),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: GameTone.goldBright.withOpacity(0.85), width: 1.4),
+      boxShadow: [
+        BoxShadow(color: GameTone.goldTrim.withOpacity(0.35), blurRadius: 12),
+      ],
+    ),
+    child: Column(children: [
+      Text('✨ PREMIUM ✨',
+          style: TextStyle(
+            color: GameTone.textGold,
+            fontSize: 11 * s,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2.0,
+          )),
+      SizedBox(height: 6 * s),
+      Text(info.priceLabel ?? '',
+          style: TextStyle(
+            color: GameTone.textCream,
+            fontSize: 22 * s,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+            shadows: const [Shadow(color: Color(0xFF1A0E04), offset: Offset(0, 2), blurRadius: 0)],
+          )),
+      SizedBox(height: 4 * s),
+      Text('Compra única · pago seguro Stripe',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: GameTone.textCream.withOpacity(0.7),
+            fontSize: 9.5 * s,
+            fontWeight: FontWeight.w600,
+          )),
+    ]),
+  );
+
   Widget _lockedPanel(double s) => Container(
     padding: EdgeInsets.all(14 * s),
     decoration: BoxDecoration(
@@ -536,7 +643,45 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
   // ─── Botón JUGAR ────────────────────────────────────────────────
   Widget _buildPlayButton(double s) {
     final info   = CharacterCatalog.all[_selected];
-    final locked = info.locked;
+    final locked = _isEffectivelyLocked(info);
+
+    if (locked && info.premium) {
+      return GestureDetector(
+        onTap: _purchasing ? null : _purchaseCurrent,
+        child: Container(
+          height: 64 * s,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter, end: Alignment.bottomCenter,
+              colors: [Color(0xFFFFE48A), Color(0xFFE8B452), Color(0xFFB07A2A)],
+            ),
+            border: Border.all(color: const Color(0xFF1A0E04), width: 2),
+            boxShadow: [
+              BoxShadow(color: GameTone.goldTrim.withOpacity(0.55), blurRadius: 18),
+            ],
+          ),
+          child: Center(
+            child: _purchasing
+                ? const SizedBox(
+                    width: 26, height: 26,
+                    child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF1A0E04)),
+                  )
+                : Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                    Text('💳', style: TextStyle(fontSize: 18 * s)),
+                    SizedBox(width: 10 * s),
+                    Text('DESBLOQUEAR · ${info.priceLabel ?? ''}',
+                        style: TextStyle(
+                          color: const Color(0xFF1A0E04),
+                          fontSize: 18 * s,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        )),
+                  ]),
+          ),
+        ),
+      );
+    }
 
     if (locked) {
       return Container(
@@ -631,4 +776,78 @@ class _PlayBtnPainter extends CustomPainter {
   }
   @override
   bool shouldRepaint(_) => false;
+}
+
+/// Renderiza el frame frontal idle (fila 0, columna 1) de un spritesheet
+/// 96×128 estilo RPG-Maker, escalado al tamaño deseado con pixel-perfect.
+/// Usado para mostrar el personaje "de frente" en la pantalla de selección.
+class _PlayerSpritePreview extends StatelessWidget {
+  final String assetPath;
+  final double size;
+  final bool desaturated;
+  final bool isSpriteSheet;
+  const _PlayerSpritePreview({
+    required this.assetPath,
+    required this.size,
+    this.desaturated = false,
+    this.isSpriteSheet = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget image;
+    if (!isSpriteSheet) {
+      image = SizedBox(
+        width: size,
+        height: size,
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.none,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.person, size: 48, color: Colors.white70),
+        ),
+      );
+    } else {
+      // Spritesheet 96x128 (3 cols x 4 rows of 32x32).
+      // Mostrar solo el frame frontal idle: col 1, row 0.
+      const sheetCols = 3.0;
+      const sheetRows = 4.0;
+      const frameCol = 1.0;
+      const frameRow = 0.0;
+      image = SizedBox(
+        width: size,
+        height: size,
+        child: ClipRect(
+          child: OverflowBox(
+            maxWidth: size * sheetCols,
+            maxHeight: size * sheetRows,
+            alignment: Alignment(
+              -1.0 + (frameCol / (sheetCols - 1)) * 2.0,
+              -1.0 + (frameRow / (sheetRows - 1)) * 2.0,
+            ),
+            child: Image.asset(
+              assetPath,
+              width: size * sheetCols,
+              height: size * sheetRows,
+              fit: BoxFit.fill,
+              filterQuality: FilterQuality.none,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.person, size: 48, color: Colors.white70),
+            ),
+          ),
+        ),
+      );
+    }
+    if (!desaturated) return image;
+    return ColorFiltered(
+      colorFilter: const ColorFilter.matrix([
+        0.2126, 0.7152, 0.0722, 0, 0,
+        0.2126, 0.7152, 0.0722, 0, 0,
+        0.2126, 0.7152, 0.0722, 0, 0,
+        0, 0, 0, 1, 0,
+      ]),
+      child: image,
+    );
+  }
 }

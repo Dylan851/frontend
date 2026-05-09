@@ -95,7 +95,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 builder: (context, c) {
                   final w = c.maxWidth;
                   final h = c.maxHeight;
-                  final scale = (w / 720).clamp(0.65, 1.15);
+                  // Escala basada en el lado más corto: en móviles
+                  // (h pequeño en horizontal) se reduce más agresivo.
+                  final shortest = w < h ? w : h;
+                  final scale = (shortest / 460).clamp(0.55, 1.10);
                   return _buildContent(w, h, scale.toDouble());
                 },
               ),
@@ -115,53 +118,108 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   Widget _buildContent(double w, double h, double s) {
-    final pad = 12.0 * s;
-    return Stack(
-      children: [
-        Positioned(top: pad, left: pad, child: _profileCard(s)),
-        Positioned(
-          top: pad + 4,
-          right: pad,
-          child: Row(
+    final pad = 8.0 * s;
+    final isShort = h < 420; // móvil en horizontal típico
+    final isNarrow = w < 800;
+    // En móvil ocultamos el logo central (siempre) para liberar espacio
+    // y evitar que el perfil + monedas + ajustes se solapen con él.
+    return Padding(
+      padding: EdgeInsets.all(pad),
+      child: Column(
+        children: [
+          // ── Top bar: perfil | (logo solo en pantalla ancha) | monedas+ajustes
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Flexible(flex: 0, child: _profileCard(s)),
+              const Spacer(),
+              if (!isNarrow)
+                Flexible(
+                  child: IgnorePointer(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: GameLogo(
+                          title: 'ANIMAL GO!',
+                          subtitle: '',
+                          fontSize: 46 * s,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (!isNarrow) const Spacer(),
               OvalGoldChip(
                 icon: '\u{1FA99}',
                 value: '${_gs.coins}',
                 onPlusTap: () => _showCurrencyShopDialog(isGems: false),
               ),
-              SizedBox(width: 8 * s),
+              SizedBox(width: 4 * s),
               OvalGoldChip(
                 icon: '\u{1F48E}',
                 value: '${_gs.gems}',
                 onPlusTap: () => _showCurrencyShopDialog(isGems: true),
               ),
-              SizedBox(width: 8 * s),
+              SizedBox(width: 4 * s),
               _settingsBtn(s),
             ],
           ),
-        ),
-        Positioned(
-          top: pad + 4,
-          left: 0,
-          right: 0,
-          child: IgnorePointer(
+          SizedBox(height: 4 * s),
+          // ── Centro: 4 botones en cuadrícula 2x2 (compacta) ────────────
+          Expanded(
             child: Center(
-              child: GameLogo(
-                title: 'Animal GO!',
-                subtitle: '\u{1F33F}  Descubre el mundo animal  \u{1F33F}',
-                fontSize: (w < 520 ? 38 : 56) * s,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(vertical: 4 * s),
+                child: _menuGrid2x2(s, w, isShort),
               ),
             ),
           ),
-        ),
-        Positioned(
-          top: pad + 90 * s,
-          bottom: pad + 100 * s,
-          left: pad,
-          child: Center(child: _menuGrid(s, w)),
-        ),
-        Positioned(left: pad, bottom: pad, child: _mapCard(s, w)),
-        Positioned(right: pad, bottom: pad, child: _playButton(s, w)),
+          SizedBox(height: 4 * s),
+          // ── Bottom bar: mapa | play ─────────────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(flex: 3, child: _mapCard(s, w)),
+              SizedBox(width: 6 * s),
+              Expanded(flex: 2, child: _playButton(s, w)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Cuadrícula 2x2 compacta (Tienda · Animales / Misiones · Mochila),
+  /// que cabe siempre en horizontal de móvil sin solaparse con la barra
+  /// inferior ni con la barra superior.
+  Widget _menuGrid2x2(double s, double w, bool isShort) {
+    // Layout: dos columnas pegadas a los laterales, cada una con 2 pills
+    // apiladas. Espacio central libre para que se vea el fondo del menú.
+    //   IZQ: Animales (arriba) · Misiones (abajo)
+    //   DER: Tienda  (arriba) · Mochila  (abajo)
+    final pillW = ((w * 0.36).clamp(150.0, 240.0)).toDouble();
+    final gap = 10.0 * s;
+    Widget col(List<Widget> children) => Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            children[0],
+            SizedBox(height: gap),
+            children[1],
+          ],
+        );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        col([
+          MenuPill(icon: '\u{1F4D6}', label: 'Animales', width: pillW, onTap: () => _push(AppRouter.collection)),
+          MenuPill(icon: '\u{1F3AF}', label: 'Misiones', width: pillW, onTap: () => _push(AppRouter.missions)),
+        ]),
+        const Spacer(),
+        col([
+          MenuPill(icon: '\u{1F6D2}', label: 'Tienda',  width: pillW, onTap: () => _push(AppRouter.shop)),
+          MenuPill(icon: '\u{1F392}', label: 'Mochila', width: pillW, onTap: () => _push(AppRouter.inventory)),
+        ]),
       ],
     );
   }
@@ -169,8 +227,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   Widget _profileCard(double s) => GestureDetector(
         onTap: () => _push(AppRouter.profile),
         child: SizedBox(
-          width: 200 * s,
-          height: 64 * s,
+          width: 220 * s,
+          height: 68 * s,
           child: PixelFrame(
             radius: 12,
             padding: EdgeInsets.fromLTRB(6 * s, 5 * s, 8 * s, 5 * s),
@@ -186,12 +244,24 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     ),
                     border: Border.all(color: GameTone.goldTrim, width: 1.6),
                   ),
-                  child: Center(
-                    child: Text(
-                      _gs.selectedSkin,
-                      style: TextStyle(fontSize: 24 * s),
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: (_gs.googlePhotoUrl != null && _gs.googlePhotoUrl!.isNotEmpty)
+                      ? Image.network(
+                          _gs.googlePhotoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Center(
+                            child: Text(
+                              _gs.selectedSkin,
+                              style: TextStyle(fontSize: 24 * s),
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            _gs.selectedSkin,
+                            style: TextStyle(fontSize: 24 * s),
+                          ),
+                        ),
                 ),
                 SizedBox(width: 7 * s),
                 Expanded(
@@ -245,7 +315,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                                 widthFactor: AnimalCatalog.all.isEmpty
                                     ? 0
                                     : (_gs.discoveredCount /
-                                        AnimalCatalog.all.length),
+                                            AnimalCatalog.all.length)
+                                        .clamp(0.0, 1.0),
                                 alignment: Alignment.centerLeft,
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -432,59 +503,20 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     );
   }
 
-  Widget _menuGrid(double s, double w) {
-    final btnW = (w < 520 ? 210.0 : 250.0) * s;
-    final gap = 12.0 * s;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        MenuPill(
-          icon: '\u{1F6D2}',
-          label: 'Tienda',
-          width: btnW,
-          onTap: () => _push(AppRouter.shop),
-        ),
-        SizedBox(height: gap),
-        MenuPill(
-          icon: '\u{1F4D6}',
-          label: 'Animales',
-          width: btnW,
-          onTap: () => _push(AppRouter.collection),
-        ),
-        SizedBox(height: gap),
-        MenuPill(
-          icon: '\u{1F3AF}',
-          label: 'Misiones',
-          width: btnW,
-          onTap: () => _push(AppRouter.missions),
-        ),
-        SizedBox(height: gap),
-        MenuPill(
-          icon: '\u{1F392}',
-          label: 'Mochila',
-          width: btnW,
-          onTap: () => _push(AppRouter.inventory),
-        ),
-      ],
-    );
-  }
 
   Widget _mapCard(double s, double w) {
-    final cardW = (w < 520 ? 240.0 : 380.0) * s;
     return GestureDetector(
       onTap: () => _push(AppRouter.mapSelect),
       child: SizedBox(
-        width: cardW,
-        height: 86 * s,
+        height: 74 * s,
         child: PixelFrame(
           radius: 12,
           padding: EdgeInsets.fromLTRB(6 * s, 5 * s, 12 * s, 5 * s),
           child: Row(
             children: [
               Container(
-                width: 60 * s,
-                height: 60 * s,
+                width: 48 * s,
+                height: 48 * s,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: GameTone.goldTrim, width: 1.4),
@@ -495,7 +527,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                   ),
                 ),
                 child: Center(
-                  child: Text(_mapEmoji, style: TextStyle(fontSize: 30 * s)),
+                  child: Text(_mapEmoji, style: TextStyle(fontSize: 22 * s)),
                 ),
               ),
               SizedBox(width: 10 * s),
@@ -521,7 +553,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                       style: TextStyle(
                         color: GameTone.textCream,
                         fontWeight: FontWeight.w900,
-                        fontSize: 18 * s,
+                        fontSize: 14 * s,
                         height: 1.0,
                         shadows: const [
                           Shadow(
@@ -538,6 +570,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     SizedBox(height: 3 * s),
                     Text(
                       '$_mapAnimals animales \u{1F333}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: GameTone.textCream.withOpacity(0.85),
                         fontSize: 11 * s,
@@ -555,12 +589,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   Widget _playButton(double s, double w) {
-    final btnW = (w < 520 ? 180.0 : 240.0) * s;
     return GestureDetector(
       onTap: () => _push(AppRouter.characterSelect),
       child: SizedBox(
-        width: btnW,
-        height: 86 * s,
+        height: 74 * s,
         child: const _PlayBtnInline(),
       ),
     );
@@ -715,19 +747,23 @@ class _PlayBtnInlineState extends State<_PlayBtnInline>
           borderRadius: BorderRadius.circular(14),
           child: CustomPaint(
             painter: _GreenButtonPainterInline(),
-            child: const Center(
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('\u{1F33F}', style: TextStyle(fontSize: 18)),
+                  Text('\u{1F33F}', style: TextStyle(fontSize: 16)),
                   SizedBox(width: 6),
                   Text(
                     '¡JUGAR!',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
-                      fontSize: 24,
+                      fontSize: 20,
                       letterSpacing: 1.6,
                       shadows: [
                         Shadow(
@@ -754,8 +790,10 @@ class _PlayBtnInlineState extends State<_PlayBtnInline>
                     ),
                   ),
                   SizedBox(width: 6),
-                  Text('\u{1F33F}', style: TextStyle(fontSize: 18)),
+                  Text('\u{1F33F}', style: TextStyle(fontSize: 16)),
                 ],
+              ),
+              ),
               ),
             ),
           ),

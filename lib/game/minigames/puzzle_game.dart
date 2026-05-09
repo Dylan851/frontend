@@ -100,55 +100,85 @@ class _PuzzleGameState extends State<PuzzleGame> {
         child: Row(children: [
           Text(widget.animal.emoji, style: const TextStyle(fontSize: 32)),
           const SizedBox(width: 12),
-          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('¡Ordena la historia del Oso!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('Toca dos piezas para intercambiarlas y ordénalas correctamente', style: TextStyle(color: Colors.white60, fontSize: 11)),
+          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text('¡Ordena la historia del Oso!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text('Toca dos piezas para intercambiarlas y ordénalas correctamente', style: TextStyle(color: Colors.white60, fontSize: 10), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis),
           ])),
           _stat('🔄', '$_moves movimientos'),
         ])),
 
-      Expanded(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        // Grid 3x2
-        SizedBox(
-          width: 500,
-          child: Wrap(spacing: 10, runSpacing: 10, children: sorted.asMap().entries.map((e) {
-            final slotIdx = e.key;
-            final piece = e.value;
-            final selected = _selected != null && _pieces.indexOf(piece) == _selected;
-            final inPlace = piece.isInPlace;
+      Expanded(child: LayoutBuilder(builder: (context, constraints) {
+        // Compute responsive piece size based on available width
+        final availW = constraints.maxWidth - 32;
+        final spacing = 10.0;
+        // 3 columns target
+        final pieceW = ((availW - spacing * 2) / 3).clamp(90.0, 160.0);
+        final pieceH = (pieceW * 0.55).clamp(60.0, 90.0);
+        final wrapW = (pieceW * 3 + spacing * 2).clamp(0.0, availW);
 
-            return GestureDetector(
-              onTap: () => _tap(_pieces.indexOf(piece)),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 150, height: 80,
-                decoration: BoxDecoration(
-                  gradient: inPlace
-                    ? const LinearGradient(colors: [AppColors.greenAccent, AppColors.greenDeep])
-                    : selected
-                      ? LinearGradient(colors: [AppColors.gold.withOpacity(0.3), AppColors.goldDark.withOpacity(0.2)])
-                      : LinearGradient(colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)]),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: inPlace ? AppColors.greenAccent : selected ? AppColors.gold : Colors.white.withOpacity(0.2),
-                    width: inPlace || selected ? 2 : 1),
-                  boxShadow: [if (selected) BoxShadow(color: AppColors.gold.withOpacity(0.3), blurRadius: 12)],
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                SizedBox(
+                  width: wrapW,
+                  child: Wrap(spacing: spacing, runSpacing: spacing, alignment: WrapAlignment.center, children: sorted.asMap().entries.map((e) {
+                    final slotIdx = e.key;
+                    final piece = e.value;
+                    final selected = _selected != null && _pieces.indexOf(piece) == _selected;
+                    final inPlace = piece.isInPlace;
+
+                    return GestureDetector(
+                      onTap: () => _tap(_pieces.indexOf(piece)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: pieceW, height: pieceH,
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: inPlace
+                            ? const LinearGradient(colors: [AppColors.greenAccent, AppColors.greenDeep])
+                            : selected
+                              ? LinearGradient(colors: [AppColors.gold.withOpacity(0.3), AppColors.goldDark.withOpacity(0.2)])
+                              : LinearGradient(colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)]),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: inPlace ? AppColors.greenAccent : selected ? AppColors.gold : Colors.white.withOpacity(0.2),
+                            width: inPlace || selected ? 2 : 1),
+                          boxShadow: [if (selected) BoxShadow(color: AppColors.gold.withOpacity(0.3), blurRadius: 12)],
+                        ),
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                          Text(piece.emoji, style: const TextStyle(fontSize: 20)),
+                          const SizedBox(height: 2),
+                          Flexible(
+                            child: Text(piece.label,
+                              style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 9, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                              softWrap: true,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis),
+                          ),
+                          if (inPlace) const Text('✅', style: TextStyle(fontSize: 9)),
+                        ]),
+                      ),
+                    );
+                  }).toList()),
                 ),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(piece.emoji, style: const TextStyle(fontSize: 24)),
-                  const SizedBox(height: 4),
-                  Text(piece.label, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-                  if (inPlace) const Text('✅', style: TextStyle(fontSize: 10)),
-                ]),
-              ),
-            );
-          }).toList()),
-        ),
 
-        const SizedBox(height: 16),
-        Text('Orden correcto: La frase completa de izquierda a derecha →',
-          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
-      ]))),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('Orden correcto: La frase completa de izquierda a derecha →',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 9)),
+                ),
+              ]),
+            ),
+          ),
+        );
+      })),
     ]);
   }
 

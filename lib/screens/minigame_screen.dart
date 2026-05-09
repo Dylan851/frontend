@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/animal_data.dart';
 import '../data/game_state.dart';
 import '../data/item_data.dart';
+import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../game/minigames/memory_card_game.dart';
 import '../game/minigames/silhouette_game.dart';
@@ -23,11 +24,20 @@ class MinigameScreen extends StatefulWidget {
 class _MinigameScreenState extends State<MinigameScreen> {
   // Clave que forzamos a cambiar para remontar el minijuego al reintentar.
   Key _gameKey = UniqueKey();
+  // Evita doble-pop si el usuario toca el botón rápido.
+  bool _exiting = false;
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final s = (size.shortestSide / 600).clamp(0.62, 1.05);
     return WillPopScope(
-      onWillPop: _confirmExit,
+      onWillPop: () async {
+        // Si ya estamos saliendo, ignora pulsaciones repetidas para no
+        // hacer dos pops y cerrar la app sin querer.
+        if (_exiting) return false;
+        return await _confirmExit();
+      },
       child: Scaffold(
         backgroundColor: AppColors.greenDark,
         body: Stack(children: [
@@ -40,53 +50,43 @@ class _MinigameScreenState extends State<MinigameScreen> {
               ),
             ),
           ),
-          _buildMinigame(context),
-
-          // ── Barra de power-ups ──────────────────────────────────────────
-          Positioned(
-            top: 10, right: 10,
-            child: SafeArea(
-              child: _PowerUpBar(
-                onUsed: () => setState(() {}),
-                onGoldenPass: () {
-                  final gs = GameState();
-                  gs.completeMinigame(widget.animal.id, 3);
-                  _showResult(3);
-                },
-              ),
-            ),
+          Padding(
+            padding: EdgeInsets.only(top: 50 * s),
+            child: _buildMinigame(context),
           ),
 
           // ── Back / Exit to map ───────────────────────────────────────────
           Positioned(
-            top: 10,
-            left: 10,
+            top: 8,
+            left: 8,
             child: SafeArea(
               child: GestureDetector(
                 onTap: () async {
+                  if (_exiting) return;
                   if (await _confirmExit()) {
-                    if (mounted) Navigator.of(context).pop();
+                    _safeBackToMap();
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 14 * s, vertical: 10 * s),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.55),
+                    color: Colors.black.withOpacity(0.65),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppColors.badgeRed.withOpacity(0.45),
-                        width: 1),
+                        color: AppColors.badgeRed.withOpacity(0.7),
+                        width: 1.4),
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.exit_to_app_rounded,
-                        color: Colors.white, size: 16),
-                    SizedBox(width: 5),
+                        color: Colors.white, size: 22 * s),
+                    SizedBox(width: 6 * s),
                     Text('Salir al mapa',
                         style: TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold)),
+                            fontSize: 14 * s,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.4)),
                   ]),
                 ),
               ),
@@ -95,6 +95,22 @@ class _MinigameScreenState extends State<MinigameScreen> {
         ]),
       ),
     );
+  }
+
+  /// Vuelve al mapa de forma segura: si hay rutas anteriores hace `pop()`,
+  /// si no hay (minijuego abierto como root), navega al menú principal —
+  /// **nunca** deja que el sistema cierre la app.
+  void _safeBackToMap() {
+    if (!mounted || _exiting) return;
+    _exiting = true;
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      // Si por cualquier motivo el minijuego es la ruta raíz, recolocamos
+      // la pila completa al menú principal (NO pop, eso cerraría la app).
+      nav.pushNamedAndRemoveUntil(AppRouter.mainMenu, (_) => false);
+    }
   }
 
   Future<bool> _confirmExit() async {
@@ -211,7 +227,7 @@ class _MinigameScreenState extends State<MinigameScreen> {
         },
         onExitToMap: () {
           Navigator.of(context).pop(); // cierra el diálogo
-          Navigator.of(context).pop(); // cierra el minijuego → mapa
+          _safeBackToMap();              // vuelve al mapa o al menú
         },
       ),
     );
@@ -260,13 +276,15 @@ class _ResultDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = _isLoss ? AppColors.badgeRed : AppColors.greenAccent;
+    final s = (MediaQuery.sizeOf(context).shortestSide / 600).clamp(0.62, 1.05);
 
     return WillPopScope(
       onWillPop: () async => false,
       child: Dialog(
         backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.symmetric(horizontal: 24 * s, vertical: 24 * s),
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(18 * s),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
                 colors: [Color(0xFF1A4A2E), Color(0xFF0D2B1A)]),

@@ -17,20 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _fade;
   int _factsPage = 0;
 
-  // Available skins the user can pick
-  static const _skins = [
-    '\u{1F9D1}',
-    '\u{1F466}',
-    '\u{1F467}',
-    '\u{1F9D2}',
-    '\u{1F468}\u{200D}\u{1F52C}',
-    '\u{1F9D9}',
-    '\u{1F477}',
-    '\u{1F977}',
-    '\u{1F9D1}\u{200D}\u{1F680}',
-    '\u{1F916}',
-  ];
-
   static const _achievements = [
     ('first_animal', '\u{1F43E}', 'Primer Animal', 'Descubre tu primer animal'),
     ('first_items', '\u{1F4E6}', 'Recolector', 'Recoge 5 ítems'),
@@ -142,70 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: const Text('Guardar'),
                 ),
               ],
-            ));
-  }
-
-  void _pickSkin() {
-    showDialog(
-        context: context,
-        builder: (_) => Dialog(
-              backgroundColor: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)]),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: AppColors.greenAccent.withOpacity(0.3),
-                      width: 1.5),
-                ),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Text('Elige tu personaje',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16)),
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: _skins
-                        .map((s) => GestureDetector(
-                              onTap: () {
-                                setState(() => _gs.selectedSkin = s);
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                width: 52,
-                                height: 52,
-                                decoration: BoxDecoration(
-                                  color: _gs.selectedSkin == s
-                                      ? AppColors.greenAccent.withOpacity(0.2)
-                                      : Colors.white.withOpacity(0.07),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _gs.selectedSkin == s
-                                        ? AppColors.greenAccent
-                                        : Colors.white.withOpacity(0.15),
-                                    width: _gs.selectedSkin == s ? 2 : 1,
-                                  ),
-                                ),
-                                child: Center(
-                                    child: Text(s,
-                                        style: const TextStyle(fontSize: 28))),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Cancelar',
-                        style: TextStyle(color: Colors.white.withOpacity(0.6))),
-                  ),
-                ]),
-              ),
             ));
   }
 
@@ -353,9 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _avatar(double size, double s) {
-    return GestureDetector(
-      onTap: _pickSkin,
-      child: Stack(children: [
+    final url = _gs.googlePhotoUrl;
+    final hasPhoto = url != null && url.isNotEmpty;
+    return Stack(children: [
         Container(
           width: size,
           height: size,
@@ -369,9 +291,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                   color: AppColors.amber.withOpacity(0.4), blurRadius: 14 * s),
             ],
           ),
-          child: Center(
-            child: Text(_gs.selectedSkin, style: TextStyle(fontSize: 38 * s)),
-          ),
+          child: hasPhoto
+              ? ClipOval(
+                  child: Image.network(
+                    url,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Text(_gs.selectedSkin,
+                          style: TextStyle(fontSize: 38 * s)),
+                    ),
+                  ),
+                )
+              : Center(
+                  child: Text(_gs.selectedSkin,
+                      style: TextStyle(fontSize: 38 * s)),
+                ),
         ),
         Positioned(
           bottom: -2 * s,
@@ -392,8 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     letterSpacing: 1.0)),
           ),
         ),
-      ]),
-    );
+      ]);
   }
 
   String _mapName() {
@@ -415,12 +350,12 @@ class _ProfileScreenState extends State<ProfileScreen>
           width,
           minColumns: 1,
           maxColumns: 4,
-          itemWidth: width < 850 ? 280 : 220,
+          itemWidth: width < 850 ? 180 : 150,
         ),
         shrinkWrap: true,
         crossAxisSpacing: 8 * s,
         mainAxisSpacing: 8 * s,
-        childAspectRatio: 1.3,
+        childAspectRatio: 1.6,
         physics: const NeverScrollableScrollPhysics(),
         children: [
           _statCard('${_gs.discoveredCount}/${AnimalCatalog.all.length}',
@@ -456,13 +391,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                 style: const TextStyle(
                     color: AppColors.parchment,
                     fontWeight: FontWeight.w900,
-                    fontSize: 17,
+                    fontSize: 14,
                     letterSpacing: 0.6)),
             const SizedBox(height: 3),
             Text(label.toUpperCase(),
                 style: TextStyle(
                     color: AppColors.amber.withOpacity(0.85),
-                    fontSize: 8.5,
+                    fontSize: 7.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.8),
                 textAlign: TextAlign.center),
@@ -483,12 +418,12 @@ class _ProfileScreenState extends State<ProfileScreen>
               width,
               minColumns: 1,
               maxColumns: 4,
-              itemWidth: width < 850 ? 220 : 160,
+              itemWidth: width < 850 ? 160 : 120,
             ),
             shrinkWrap: true,
             crossAxisSpacing: 8 * s,
             mainAxisSpacing: 8 * s,
-            childAspectRatio: 1.0,
+            childAspectRatio: 1.15,
             physics: const NeverScrollableScrollPhysics(),
             children: _achievements.map((a) {
               final earned = _gs.hasAchievement(a.$1);
@@ -537,7 +472,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     children: [
                       Text(a.$2,
                           style: TextStyle(
-                              fontSize: 22,
+                              fontSize: 18,
                               color: earned
                                   ? null
                                   : Colors.white.withOpacity(0.2))),
@@ -547,7 +482,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               color: earned
                                   ? AppColors.parchment
                                   : AppColors.parchment.withOpacity(0.3),
-                              fontSize: 8,
+                              fontSize: 7,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.8),
                           textAlign: TextAlign.center,

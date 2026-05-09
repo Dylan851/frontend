@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../router/app_router.dart';
 import '../services/auth_service.dart';
@@ -25,15 +26,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   String? _error;
+  StreamSubscription<sb.AuthState>? _authSub;
+  bool _completingOAuth = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(_tryCompleteGoogleOAuth());
+    try {
+      _authSub = sb.Supabase.instance.client.auth.onAuthStateChange.listen((evt) {
+        final session = evt.session;
+        if (session == null || session.accessToken.isEmpty) return;
+        if (_completingOAuth) return;
+        unawaited(_tryCompleteGoogleOAuth());
+      });
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
@@ -65,12 +77,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _tryCompleteGoogleOAuth() async {
+    if (_completingOAuth) return;
+    _completingOAuth = true;
     try {
       final session = await AuthService.completeGoogleOAuthIfPossible();
       if (session == null) return;
       await _completeSession(session);
-    } catch (_) {
-      // no-op
+    } catch (e) {
+      if (mounted) {
+        setState(() =>
+            _error = e.toString().replaceFirst('Exception: ', '').trim());
+      }
+    } finally {
+      _completingOAuth = false;
     }
   }
 
@@ -99,6 +118,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+    final s = (size.shortestSide / (isLandscape ? 700 : 600)).clamp(0.62, 1.05);
     return AuthScaffold(
       child: AuthPanel(
         title: 'ANIMAL GO',
@@ -108,16 +130,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Crear cuenta',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 36,
+                  fontSize: 22 * s,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 8 * s),
               AuthTextField(
                 label: 'Nombre de usuario',
                 hint: 'Tu nombre',
@@ -128,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 6 * s),
               AuthTextField(
                 label: 'Correo electrónico',
                 hint: 'tucorreo@ejemplo.com',
@@ -144,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 6 * s),
               AuthTextField(
                 label: 'Contraseña',
                 hint: '************',
@@ -158,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 6 * s),
               AuthTextField(
                 label: 'Confirmar contraseña',
                 hint: '************',
@@ -174,47 +196,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               if (_error != null) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: 6 * s),
                 Text(
                   _error!,
-                  style: const TextStyle(
-                    color: Color(0xFFFFB4A9),
+                  style: TextStyle(
+                    color: const Color(0xFFFFB4A9),
                     fontWeight: FontWeight.w700,
+                    fontSize: 12 * s,
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+              SizedBox(height: 8 * s),
               ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: GameTone.leafGreen,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
+                  minimumSize: Size.fromHeight(40 * s),
+                  textStyle: TextStyle(fontSize: 14 * s, fontWeight: FontWeight.w800),
                 ),
                 child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? SizedBox(
+                        width: 18 * s,
+                        height: 18 * s,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('Crear cuenta'),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 6 * s),
               OutlinedButton.icon(
                 onPressed: _loading ? null : _submitGoogle,
-                icon: const Text('G',
-                    style: TextStyle(fontWeight: FontWeight.w900)),
-                label: const Text('Registrarse con Google'),
+                icon: Text('G',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13 * s)),
+                label: Text('Registrarse con Google',
+                    style: TextStyle(fontSize: 13 * s)),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+                  minimumSize: Size.fromHeight(38 * s),
                   foregroundColor: GameTone.textCream,
                   side: const BorderSide(color: GameTone.goldTrim),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 4 * s),
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 16,
+                spacing: 12,
                 children: [
                   TextButton(
                     onPressed: _loading
@@ -223,7 +248,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               context,
                               AppRouter.login,
                             ),
-                    child: const Text('¿Ya tienes cuenta? Inicia sesión'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 4 * s),
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text('¿Ya tienes cuenta? Inicia sesión',
+                        style: TextStyle(fontSize: 12 * s)),
                   ),
                   TextButton(
                     onPressed: () {
@@ -231,7 +262,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SnackBar(content: Text('Términos y privacidad pendientes.')),
                       );
                     },
-                    child: const Text('Términos y privacidad'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 4 * s),
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text('Términos y privacidad',
+                        style: TextStyle(fontSize: 12 * s)),
                   ),
                 ],
               ),

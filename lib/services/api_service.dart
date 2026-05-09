@@ -192,6 +192,26 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> deleteCurrentAccount({
+    required String token,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/player/account'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+      return _decodeResponse(response);
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.'
+      };
+    }
+  }
+
   static Future<Map<String, dynamic>> updateCurrentPlayerProfile({
     required String token,
     String? nickname,
@@ -395,6 +415,28 @@ class ApiService {
         'error': 'No se pudo iniciar el pago.'
       };
     }
+  }
+
+  /// Devuelve la lista de IDs de personajes premium comprados por el usuario.
+  static Future<List<String>> fetchOwnedCharacters({required String token}) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl$paymentsEndpoint/owned-characters'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+      final decoded = _decodeResponse(response);
+      if (decoded['success'] == true) {
+        final data = (decoded['data'] as Map?)?.cast<String, dynamic>() ?? {};
+        final list = (data['characters'] as List?)?.cast<String>() ?? const [];
+        return list;
+      }
+    } catch (_) {}
+    return const [];
   }
 
   static Future<Map<String, dynamic>> createCheckoutSession({

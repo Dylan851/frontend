@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../router/app_router.dart';
 import '../services/auth_service.dart';
@@ -22,15 +23,31 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obscure = true;
   String? _error;
+  StreamSubscription<sb.AuthState>? _authSub;
+  bool _completingOAuth = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(_tryCompleteGoogleOAuth());
+    // Escucha el callback de Supabase (deep link wildquest://login-callback/).
+    // Sin esto, tras el OAuth la sesión llega a Supabase pero la pantalla
+    // se queda quieta y el usuario no entra en la app.
+    try {
+      _authSub = sb.Supabase.instance.client.auth.onAuthStateChange.listen((evt) {
+        final session = evt.session;
+        if (session == null || session.accessToken.isEmpty) return;
+        if (_completingOAuth) return;
+        unawaited(_tryCompleteGoogleOAuth());
+      });
+    } catch (_) {
+      // Supabase no inicializado: ignoramos.
+    }
   }
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
@@ -71,12 +88,20 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _tryCompleteGoogleOAuth() async {
+    if (_completingOAuth) return;
+    _completingOAuth = true;
     try {
       final session = await AuthService.completeGoogleOAuthIfPossible();
       if (session == null) return;
       await _completeSession(session);
-    } catch (_) {
-      // no-op
+    } catch (e) {
+      // Mostramos el error real al usuario para no quedarnos en limbo.
+      if (mounted) {
+        setState(() =>
+            _error = e.toString().replaceFirst('Exception: ', '').trim());
+      }
+    } finally {
+      _completingOAuth = false;
     }
   }
 
@@ -151,6 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+    final s = (size.shortestSide / (isLandscape ? 700 : 600)).clamp(0.62, 1.05);
     return AuthScaffold(
       child: AuthPanel(
         title: 'ANIMAL GO',
@@ -160,16 +188,16 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Iniciar sesión',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: GameTone.textCream,
                   fontWeight: FontWeight.w900,
-                  fontSize: 36,
+                  fontSize: 22 * s,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 10 * s),
               AuthTextField(
                 label: 'Correo electrónico',
                 hint: 'tucorreo@ejemplo.com',
@@ -185,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 8 * s),
               AuthTextField(
                 label: 'Contraseña',
                 hint: '************',
@@ -199,57 +227,72 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               if (_error != null) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: 6 * s),
                 Text(
                   _error!,
-                  style: const TextStyle(
-                    color: Color(0xFFFFB4A9),
+                  style: TextStyle(
+                    color: const Color(0xFFFFB4A9),
                     fontWeight: FontWeight.w700,
+                    fontSize: 12 * s,
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+              SizedBox(height: 10 * s),
               ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: GameTone.leafGreen,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
+                  minimumSize: Size.fromHeight(48 * s),
+                  textStyle: TextStyle(fontSize: 16 * s, fontWeight: FontWeight.w800),
                 ),
                 child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? SizedBox(
+                        width: 18 * s,
+                        height: 18 * s,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('Entrar'),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 10 * s),
               OutlinedButton.icon(
                 onPressed: _loading ? null : _submitGoogle,
-                icon: const Text('G',
-                    style: TextStyle(fontWeight: FontWeight.w900)),
-                label: const Text('Continuar con Google'),
+                icon: Text('G',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16 * s)),
+                label: Text('Continuar con Google',
+                    style: TextStyle(fontSize: 16 * s)),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: GameTone.textCream,
+                  minimumSize: Size.fromHeight(54 * s),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
                   side: const BorderSide(color: GameTone.goldTrim),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 4 * s),
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 16,
+                spacing: 12,
                 children: [
                   TextButton(
                     onPressed: _loading
                         ? null
                         : () => Navigator.pushNamed(context, AppRouter.register),
-                    child: const Text('Crear cuenta'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 4 * s),
+                      minimumSize: const Size(0, 40),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text('Crear cuenta', style: TextStyle(fontSize: 15 * s)),
                   ),
                   TextButton(
                     onPressed: _loading ? null : _recoverPassword,
-                    child: const Text('¿Olvidaste tu contraseña?'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8 * s, vertical: 4 * s),
+                      minimumSize: const Size(0, 40),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text('¿Olvidaste tu contraseña?',
+                        style: TextStyle(fontSize: 15 * s)),
                   ),
                 ],
               ),

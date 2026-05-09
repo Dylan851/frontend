@@ -199,7 +199,7 @@ class AnimalCatalog {
       wikiFact: 'Wikipedia: Sus scrofa domesticus fue domesticado hace unos 9.000 años y está considerado uno de los mamíferos más inteligentes.',
     ),
     AnimalData(
-      id: 'goose', name: 'Ganso', emoji: '🪿', habitat: 'Lago',
+      id: 'goose', name: 'Ganso', emoji: '🦆', habitat: 'Lago',
       description: 'Aves acuáticas que forman vínculos de pareja duraderos.',
       funFacts: ['Vuelan en formación V', 'Son muy territoriales'],
       minigame: MinigameType.colorMatch,

@@ -10,15 +10,18 @@
 import 'package:bonfire/bonfire.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
-import '../../data/game_state.dart';
 
 // ─── Catálogo de personajes ────────────────────────────────────────────────
 class CharacterInfo {
-  final String id;         // id del sprite (player/{id}_down.png …)
+  final String id;         // id del sprite (player/{id}.png)
   final String name;       // Nombre mostrado en selección
   final String emoji;      // Emoji representativo en la UI del menú
   final int    colorValue; // Color de acento (ARGB)
-  final bool   locked;     // true → no seleccionable aún
+  final bool   locked;     // true → no seleccionable hasta cumplir condición
+  // Premium: si está definido, la única forma de desbloquear es comprarlo.
+  final bool    premium;
+  final String? packId;       // pack del backend (Stripe) que lo desbloquea
+  final String? priceLabel;   // texto a mostrar (p.ej. "4.99 €")
 
   const CharacterInfo({
     required this.id,
@@ -26,6 +29,9 @@ class CharacterInfo {
     required this.emoji,
     required this.colorValue,
     this.locked = false,
+    this.premium = false,
+    this.packId,
+    this.priceLabel,
   });
 }
 
@@ -33,8 +39,8 @@ class CharacterCatalog {
   CharacterCatalog._();
 
   // ▸ Añade aquí más personajes cuando tengas sus sprites pixel-art.
-  //   Copia los 4 PNG (down/left/right/up) en assets/images/player/
-  //   con el prefijo igual al campo `id`.
+  //   Copia el PNG (96×128, 3 cols × 4 filas de 32×32) en
+  //   assets/images/player/ con el prefijo igual al campo `id`.
   static const List<CharacterInfo> all = [
     CharacterInfo(
       id:         'hero',
@@ -42,18 +48,18 @@ class CharacterCatalog {
       emoji:      '🧑',
       colorValue: 0xFF56E39F,   // verde acento
     ),
+    // ── Personaje premium: Link (4.99€ via Stripe) ────────────────────
+    //   Sprite: assets/images/player/link.png (96×128, 3×4 frames de 32×32).
+    //   Pack en backend: 'character_link' (currency_type='character').
     CharacterInfo(
-      id:         'hero',       // ← mismos sprites hasta tener pixel-art propio
-      name:       'Aventurera',
-      emoji:      '👧',
-      colorValue: 0xFFFF6B9D,   // rosa
-    ),
-    CharacterInfo(
-      id:         'hero',       // ← mismos sprites hasta tener pixel-art propio
-      name:       'Sabio',
-      emoji:      '🧙',
-      colorValue: 0xFF9B59B6,   // púrpura
+      id:         'link',
+      name:       'Link',
+      emoji:      '⚔️',
+      colorValue: 0xFF6BBA5B,
       locked:     true,
+      premium:    true,
+      packId:     'character_link',
+      priceLabel: '4.99 €',
     ),
   ];
 

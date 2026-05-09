@@ -287,11 +287,14 @@ class MapIntroOverlay extends StatelessWidget {
             ),
           ),
           Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(22),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 420),
-                padding: const EdgeInsets.all(24),
+                constraints: BoxConstraints(
+                  maxWidth: 480,
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.96,
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
@@ -308,18 +311,20 @@ class MapIntroOverlay extends StatelessWidget {
                   ],
                 ),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(d.emoji, style: const TextStyle(fontSize: 64)),
-                  const SizedBox(height: 6),
+                  Text(d.emoji, style: const TextStyle(fontSize: 28)),
+                  const SizedBox(height: 2),
                   Text(d.title,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                           color: AppColors.gold,
-                          fontSize: 20,
+                          fontSize: 13,
                           fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 6),
                   // Story
+                  Flexible(child: SingleChildScrollView(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.28),
                       borderRadius: BorderRadius.circular(12),
@@ -329,14 +334,14 @@ class MapIntroOverlay extends StatelessWidget {
                     child: Text(d.story,
                         style: TextStyle(
                             color: Colors.white.withOpacity(0.88),
-                            fontSize: 13,
-                            height: 1.5)),
+                            fontSize: 10,
+                            height: 1.4)),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   // Objetivo
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: AppColors.greenAccent.withOpacity(0.14),
                       borderRadius: BorderRadius.circular(12),
@@ -360,16 +365,18 @@ class MapIntroOverlay extends StatelessWidget {
                           Text(d.objective,
                               style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 13,
-                                  height: 1.45)),
+                                  fontSize: 10,
+                                  height: 1.4)),
                         ]),
                   ),
-                  const SizedBox(height: 18),
+                  ])),
+                  ),
+                  const SizedBox(height: 8),
                   GestureDetector(
                     onTap: onClose,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 12),
+                          horizontal: 24, vertical: 9),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(colors: [
                           AppColors.gold,

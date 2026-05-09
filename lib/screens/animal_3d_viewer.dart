@@ -5,9 +5,12 @@
 //
 // Los modelos GLB viven en assets/models/{animalId}.glb
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import '../data/animal_data.dart';
+import '../services/model_cache_service.dart';
 import '../theme/app_theme.dart';
 
 /// IDs de animales que tienen modelo 3D disponible.
@@ -33,6 +36,13 @@ class _Animal3DViewerState extends State<Animal3DViewer>
   late final AnimationController _hintCtrl;
   late final Animation<double> _hintAnim;
   bool _loading = true;
+  double _prefetchProgress = 0.0;
+  // Progreso simulado mientras el visor parsea el modelo (post-prefetch).
+  double _viewerProgress = 0.0;
+  Timer? _viewerTicker;
+  Timer? _safetyTimer;
+  String? _resolvedSrc;
+  String? _loadError;
   List<String> _animations = const [];
   String? _currentAnim;
 
@@ -42,13 +52,61 @@ class _Animal3DViewerState extends State<Animal3DViewer>
     _hintCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+    );
     _hintAnim = CurvedAnimation(parent: _hintCtrl, curve: Curves.easeInOut);
+    // Visor 3D deshabilitado: no precargamos modelos.
+  }
+
+  Future<void> _startPrefetch() async {
+    final assetPath = 'assets/models/${widget.animal.id}.glb';
+    try {
+      final localPath = await ModelCacheService.prefetch(
+        assetPath,
+        onProgress: (p) {
+          if (!mounted) return;
+          setState(() => _prefetchProgress = p);
+        },
+      );
+      if (!mounted) return;
+      setState(() => _resolvedSrc = localPath);
+      _startViewerProgress();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e.toString();
+        _resolvedSrc = assetPath; // fallback al asset directo
+      });
+      _startViewerProgress();
+    }
+  }
+
+  /// Animación + safety net mientras el visor parsea el modelo. Sin esto la
+  /// barra se queda atascada al 85 % si el visor no emite `onLoad`.
+  void _startViewerProgress() {
+    _viewerTicker?.cancel();
+    _viewerProgress = 0.0;
+    _viewerTicker = Timer.periodic(const Duration(milliseconds: 120), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() {
+        _viewerProgress = _viewerProgress + (0.99 - _viewerProgress) * 0.05;
+      });
+      if (_viewerProgress > 0.985) t.cancel();
+    });
+    _safetyTimer?.cancel();
+    _safetyTimer = Timer(const Duration(seconds: 8), () {
+      if (!mounted || !_loading) return;
+      setState(() => _loading = false);
+    });
   }
 
   @override
   void dispose() {
     _hintCtrl.dispose();
+    _viewerTicker?.cancel();
+    _safetyTimer?.cancel();
     super.dispose();
   }
 
@@ -74,7 +132,72 @@ class _Animal3DViewerState extends State<Animal3DViewer>
   @override
   Widget build(BuildContext context) {
     final a = widget.animal;
-    final modelPath = 'assets/models/${a.id}.glb';
+    // Placeholder "Próximamente" — el visor 3D real está deshabilitado
+    // porque los modelos GLB son demasiado pesados para móvil sin optimizar.
+    return Scaffold(
+      backgroundColor: const Color(0xFF050E08),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            radius: 1.0,
+            colors: [Color(0xFF1A3A22), Color(0xFF071A0F), Color(0xFF030906)],
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(a.emoji, style: const TextStyle(fontSize: 96)),
+                const SizedBox(height: 16),
+                Text(a.name.toUpperCase(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 24,
+                        letterSpacing: 2)),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1C94D).withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFF1C94D), width: 1.4),
+                  ),
+                  child: const Text('VISOR 3D · PRÓXIMAMENTE',
+                      style: TextStyle(
+                          color: Color(0xFFF1C94D),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          letterSpacing: 1.6)),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Estamos optimizando los modelos 3D para que funcionen en móviles.\nVuelve pronto.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _unusedOriginalBuild(BuildContext context) {
+    final a = widget.animal;
+    final double overallProgress = _resolvedSrc == null
+        ? (_prefetchProgress * 0.70).clamp(0.0, 0.70)
+        : (_loading
+            ? (0.70 + _viewerProgress * 0.29).clamp(0.70, 0.99)
+            : 1.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF050E08),
@@ -90,45 +213,107 @@ class _Animal3DViewerState extends State<Animal3DViewer>
         ),
 
         // ── Visor 3D ──────────────────────────────────────────────────
-        Positioned.fill(
-          child: Flutter3DViewer(
-            controller: _controller,
-            src: modelPath,
-            progressBarColor: GameTone.goldTrim,
-            enableTouch: true,
-            activeGestureInterceptor: true,
-            onLoad: (_) {
-              if (mounted) setState(() => _loading = false);
-              _loadAnimations();
-            },
-            onError: (e) {
-              if (mounted) setState(() => _loading = false);
-            },
+        if (_resolvedSrc != null)
+          Positioned.fill(
+            child: Flutter3DViewer(
+              controller: _controller,
+              src: _resolvedSrc!,
+              progressBarColor: GameTone.goldTrim,
+              enableTouch: true,
+              activeGestureInterceptor: true,
+              onLoad: (_) {
+                if (mounted) setState(() => _loading = false);
+                _loadAnimations();
+              },
+              onError: (e) {
+                if (mounted) {
+                  setState(() {
+                    _loading = false;
+                    _loadError = e.toString();
+                  });
+                }
+              },
+            ),
           ),
-        ),
 
-        // ── Hint de gesto (se desvanece al cargar) ────────────────────
+        // ── Overlay de carga con barra real de progreso ──────────────
         if (_loading)
-          const Center(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              SizedBox(
-                width: 48, height: 48,
-                child: CircularProgressIndicator(
-                  color: GameTone.goldTrim,
-                  strokeWidth: 3,
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xCC050E08),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.view_in_ar_rounded,
+                            color: GameTone.goldTrim, size: 48),
+                        const SizedBox(height: 14),
+                        Text(
+                          (_loadError != null)
+                              ? 'No se pudo cargar el modelo'
+                              : 'Cargando modelo 3D…',
+                          style: const TextStyle(
+                            color: GameTone.textCream,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        // Barra de progreso real (0 → 1).
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0A0500),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                  color: GameTone.goldTrim.withOpacity(0.6),
+                                  width: 1),
+                            ),
+                            child: Stack(children: [
+                              FractionallySizedBox(
+                                widthFactor: overallProgress
+                                    .clamp(0.0, 1.0)
+                                    .toDouble(),
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0xFFFFE48A),
+                                        Color(0xFFE8B452),
+                                        Color(0xFFB07A2A),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ]),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${(overallProgress * 100).toStringAsFixed(0)} %',
+                          style: TextStyle(
+                            color: GameTone.textGold.withOpacity(0.9),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(height: 16),
-              Text(
-                'Cargando modelo 3D...',
-                style: TextStyle(
-                  color: GameTone.textCream,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  letterSpacing: 0.6,
-                ),
-              ),
-            ]),
+            ),
           ),
 
         // ── Cabecera con back + título ────────────────────────────────
