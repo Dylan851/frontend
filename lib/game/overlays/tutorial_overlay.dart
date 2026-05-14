@@ -3,7 +3,8 @@
 //  · [TutorialOverlay]   → explicación general de la app (primera vez)
 //  · [MapIntroOverlay]   → historia/objetivo del mapa (primera vez por mapa)
 //
-// Ambos son saltables y usan un sistema de "slides" con next/skip.
+// Estilo "Cozy Pixel Adventure": marco de madera + acentos dorados, igual
+// que la tienda y el menú principal.
 
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
@@ -84,124 +85,167 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   Widget build(BuildContext context) {
     final s = TutorialOverlay.slides[_i];
     final isLast = _i == TutorialOverlay.slides.length - 1;
+    final scale =
+        (MediaQuery.sizeOf(context).shortestSide / 600).clamp(0.62, 1.05);
     return Material(
       color: Colors.black.withOpacity(0.78),
       child: SafeArea(
         child: Stack(children: [
-          // Skip top-right
+          // Skip top-right (wooden plaque).
           Positioned(
-            top: 10, right: 10,
+            top: 10,
+            right: 10,
             child: GestureDetector(
               onTap: _skip,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12 * scale, vertical: 7 * scale),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
+                  ),
+                  borderRadius: BorderRadius.circular(10 * scale),
+                  border:
+                      Border.all(color: GameTone.goldTrim, width: 1.4 * scale),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.45),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2)),
+                  ],
                 ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text('Saltar',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12)),
-                  SizedBox(width: 4),
-                  Icon(Icons.skip_next_rounded, color: Colors.white, size: 16),
+                        color: GameTone.textCream,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12 * scale,
+                        letterSpacing: 0.4,
+                        shadows: const [
+                          Shadow(
+                              color: Color(0xFF1A0E04),
+                              offset: Offset(0, 2),
+                              blurRadius: 0),
+                        ],
+                      )),
+                  SizedBox(width: 4 * scale),
+                  Icon(Icons.skip_next_rounded,
+                      color: GameTone.textCream, size: 16 * scale),
                 ]),
               ),
             ),
           ),
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
+              padding: EdgeInsets.symmetric(horizontal: 22 * scale),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: Container(
+                child: ConstrainedBox(
                   key: ValueKey(_i),
-                  constraints: const BoxConstraints(maxWidth: 380),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)],
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                        color: AppColors.greenAccent.withOpacity(0.5),
-                        width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.greenAccent.withOpacity(0.25),
-                          blurRadius: 30),
-                    ],
-                  ),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text(s.emoji, style: const TextStyle(fontSize: 72)),
-                    const SizedBox(height: 10),
-                    Text(s.title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
+                  constraints: BoxConstraints(maxWidth: 400 * scale),
+                  child: PixelFrame(
+                    radius: 18 * scale,
+                    innerFill: GameTone.panelDark,
+                    padding: EdgeInsets.fromLTRB(
+                        20 * scale, 18 * scale, 20 * scale, 18 * scale),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Text(s.emoji, style: TextStyle(fontSize: 64 * scale)),
+                      SizedBox(height: 8 * scale),
+                      ShaderMask(
+                        shaderCallback: (b) => const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xFFFFE48A),
+                            Color(0xFFE8B452),
+                            Color(0xFFB07A2A),
+                          ],
+                        ).createShader(b),
+                        child: Text(
+                          s.title,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 10),
-                    Text(s.body,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Colors.white.withOpacity(0.82),
-                            fontSize: 14,
-                            height: 1.4)),
-                    const SizedBox(height: 20),
-                    // Dots
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        TutorialOverlay.slides.length,
-                        (i) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: i == _i ? 16 : 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: i == _i
-                                ? AppColors.greenAccent
-                                : Colors.white.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(4),
+                            fontSize: 20 * scale,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                            shadows: const [
+                              Shadow(
+                                  color: Color(0xFF1A0E04),
+                                  offset: Offset(-2, 0),
+                                  blurRadius: 0),
+                              Shadow(
+                                  color: Color(0xFF1A0E04),
+                                  offset: Offset(2, 0),
+                                  blurRadius: 0),
+                              Shadow(
+                                  color: Color(0xFF1A0E04),
+                                  offset: Offset(0, 2),
+                                  blurRadius: 0),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: _next,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 28, vertical: 12),
+                      SizedBox(height: 10 * scale),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10 * scale, vertical: 8 * scale),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [
-                            AppColors.greenAccent,
-                            AppColors.greenDeep
-                          ]),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                                color:
-                                    AppColors.greenAccent.withOpacity(0.4),
-                                blurRadius: 14),
-                          ],
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF3A2210), Color(0xFF1A0E04)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(10 * scale),
+                          border: Border.all(
+                              color: GameTone.goldTrim.withOpacity(0.7),
+                              width: 1.3),
                         ),
                         child: Text(
-                          isLast ? '¡Empezar!' : 'Siguiente →',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 14),
+                          s.body,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.parchment.withOpacity(0.92),
+                            fontSize: 13 * scale,
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                  ]),
+                      SizedBox(height: 16 * scale),
+                      // Dots
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          TutorialOverlay.slides.length,
+                          (i) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            margin: EdgeInsets.symmetric(horizontal: 3 * scale),
+                            width: i == _i ? 16 * scale : 7 * scale,
+                            height: 7 * scale,
+                            decoration: BoxDecoration(
+                              color: i == _i
+                                  ? GameTone.goldBright
+                                  : GameTone.woodOuter,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: GameTone.goldTrim.withOpacity(0.7),
+                                  width: 1),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 14 * scale),
+                      _woodBtn(
+                        label: isLast ? '¡Empezar!' : 'Siguiente →',
+                        onTap: _next,
+                        primary: true,
+                        scale: scale,
+                      ),
+                    ]),
+                  ),
                 ),
               ),
             ),
@@ -217,9 +261,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 class MapIntroOverlay extends StatelessWidget {
   final String mapId;
   final VoidCallback onClose;
-  const MapIntroOverlay({super.key, required this.mapId, required this.onClose});
+  const MapIntroOverlay(
+      {super.key, required this.mapId, required this.onClose});
 
-  static const Map<String, ({String title, String emoji, String story, String objective})> _data = {
+  static const Map<String,
+      ({String title, String emoji, String story, String objective})> _data = {
     'jungle': (
       title: 'Aldea Canta — El principio',
       emoji: '🌿',
@@ -257,146 +303,191 @@ class MapIntroOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = _data[mapId] ?? _data['jungle']!;
+    final scale =
+        (MediaQuery.sizeOf(context).shortestSide / 600).clamp(0.62, 1.05);
     return Material(
       color: Colors.black.withOpacity(0.82),
       child: SafeArea(
         child: Stack(children: [
           Positioned(
-            top: 10, right: 10,
+            top: 10,
+            right: 10,
             child: GestureDetector(
               onTap: onClose,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12 * scale, vertical: 7 * scale),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
+                  ),
+                  borderRadius: BorderRadius.circular(10 * scale),
+                  border:
+                      Border.all(color: GameTone.goldTrim, width: 1.4 * scale),
                 ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text('Saltar',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12)),
-                  SizedBox(width: 4),
+                          color: GameTone.textCream,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12 * scale)),
+                  SizedBox(width: 4 * scale),
                   Icon(Icons.skip_next_rounded,
-                      color: Colors.white, size: 16),
+                      color: GameTone.textCream, size: 16 * scale),
                 ]),
               ),
             ),
           ),
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Container(
+              padding: EdgeInsets.all(12 * scale),
+              child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: 480,
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.96,
+                  maxWidth: 480 * scale,
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.92,
                 ),
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A4A2E), Color(0xFF0D2B1A)],
-                  ),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                      color: AppColors.gold.withOpacity(0.55), width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                        color: AppColors.gold.withOpacity(0.22),
-                        blurRadius: 30),
-                  ],
-                ),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(d.emoji, style: const TextStyle(fontSize: 28)),
-                  const SizedBox(height: 2),
-                  Text(d.title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: AppColors.gold,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 6),
-                  // Story
-                  Flexible(child: SingleChildScrollView(
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.28),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.1)),
-                    ),
-                    child: Text(d.story,
-                        style: TextStyle(
-                            color: Colors.white.withOpacity(0.88),
-                            fontSize: 10,
-                            height: 1.4)),
-                  ),
-                  const SizedBox(height: 6),
-                  // Objetivo
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.greenAccent.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.greenAccent.withOpacity(0.5)),
-                    ),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: const [
-                            Icon(Icons.flag_rounded,
-                                color: AppColors.greenAccent, size: 16),
-                            SizedBox(width: 6),
-                            Text('Tu objetivo',
-                                style: TextStyle(
-                                    color: AppColors.greenAccent,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 12)),
-                          ]),
-                          const SizedBox(height: 6),
-                          Text(d.objective,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  height: 1.4)),
-                        ]),
-                  ),
-                  ])),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: onClose,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 9),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [
-                          AppColors.gold,
-                          AppColors.goldDark,
-                        ]),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                              color: AppColors.gold.withOpacity(0.4),
-                              blurRadius: 14),
+                child: PixelFrame(
+                  radius: 18 * scale,
+                  innerFill: GameTone.panelDark,
+                  padding: EdgeInsets.fromLTRB(
+                      16 * scale, 14 * scale, 16 * scale, 14 * scale),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(d.emoji, style: TextStyle(fontSize: 36 * scale)),
+                    SizedBox(height: 4 * scale),
+                    ShaderMask(
+                      shaderCallback: (b) => const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFFFFE48A),
+                          Color(0xFFE8B452),
+                          Color(0xFFB07A2A),
                         ],
-                      ),
-                      child: const Text('¡A la aventura!',
+                      ).createShader(b),
+                      child: Text(d.title,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 14)),
+                            color: Colors.white,
+                            fontSize: 18 * scale,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.6,
+                            shadows: const [
+                              Shadow(
+                                  color: Color(0xFF1A0E04),
+                                  offset: Offset(-2, 0),
+                                  blurRadius: 0),
+                              Shadow(
+                                  color: Color(0xFF1A0E04),
+                                  offset: Offset(2, 0),
+                                  blurRadius: 0),
+                              Shadow(
+                                  color: Color(0xFF1A0E04),
+                                  offset: Offset(0, 2),
+                                  blurRadius: 0),
+                            ],
+                          )),
                     ),
-                  ),
-                ]),
+                    SizedBox(height: 10 * scale),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(10 * scale),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF3A2210),
+                                      Color(0xFF1A0E04)
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(10 * scale),
+                                  border: Border.all(
+                                      color: GameTone.goldTrim
+                                          .withOpacity(0.7),
+                                      width: 1.3),
+                                ),
+                                child: Text(d.story,
+                                    style: TextStyle(
+                                      color: AppColors.parchment
+                                          .withOpacity(0.9),
+                                      fontSize: 11.5 * scale,
+                                      height: 1.45,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                              ),
+                              SizedBox(height: 8 * scale),
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(10 * scale),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF1F4A2C),
+                                      Color(0xFF0E2914),
+                                    ],
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(10 * scale),
+                                  border: Border.all(
+                                      color:
+                                          AppColors.amber.withOpacity(0.55),
+                                      width: 1.4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: AppColors.amber
+                                            .withOpacity(0.18),
+                                        blurRadius: 8),
+                                  ],
+                                ),
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(children: [
+                                        Icon(Icons.flag_rounded,
+                                            color: GameTone.goldBright,
+                                            size: 16 * scale),
+                                        SizedBox(width: 6 * scale),
+                                        Text('Tu objetivo',
+                                            style: TextStyle(
+                                              color: GameTone.textGold,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 12 * scale,
+                                              letterSpacing: 0.5,
+                                            )),
+                                      ]),
+                                      SizedBox(height: 6 * scale),
+                                      Text(d.objective,
+                                          style: TextStyle(
+                                            color: GameTone.textCream,
+                                            fontSize: 11.5 * scale,
+                                            height: 1.45,
+                                            fontWeight: FontWeight.w600,
+                                          )),
+                                    ]),
+                              ),
+                            ]),
+                      ),
+                    ),
+                    SizedBox(height: 12 * scale),
+                    _woodBtn(
+                      label: '¡A la aventura!',
+                      onTap: onClose,
+                      primary: true,
+                      scale: scale,
+                    ),
+                  ]),
+                ),
               ),
             ),
           ),
@@ -404,4 +495,55 @@ class MapIntroOverlay extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _woodBtn({
+  required String label,
+  required VoidCallback onTap,
+  required bool primary,
+  required double scale,
+}) {
+  final colors = primary
+      ? const [Color(0xFF6BBA5B), Color(0xFF3A7A3A), Color(0xFF1F4E2A)]
+      : const [Color(0xFF6B4423), Color(0xFF3A2210)];
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding:
+          EdgeInsets.symmetric(horizontal: 24 * scale, vertical: 11 * scale),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: colors,
+        ),
+        borderRadius: BorderRadius.circular(11 * scale),
+        border: Border.all(
+            color: GameTone.goldTrim, width: primary ? 1.8 : 1.4),
+        boxShadow: [
+          if (primary)
+            BoxShadow(
+                color: const Color(0xFF6BE095).withOpacity(0.4),
+                blurRadius: 14),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.45),
+              blurRadius: 5,
+              offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Text(label,
+          style: TextStyle(
+            color: GameTone.textCream,
+            fontWeight: FontWeight.w900,
+            fontSize: 14 * scale,
+            letterSpacing: 0.6,
+            shadows: const [
+              Shadow(
+                  color: Color(0xFF1A0E04),
+                  offset: Offset(0, 2),
+                  blurRadius: 0),
+            ],
+          )),
+    ),
+  );
 }

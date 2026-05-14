@@ -39,60 +39,69 @@ class _MinigameScreenState extends State<MinigameScreen> {
         return await _confirmExit();
       },
       child: Scaffold(
-        backgroundColor: AppColors.greenDark,
-        body: Stack(children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF0D2B1A), Color(0xFF1A4A2E)],
-              ),
+        backgroundColor: AppColors.forestNight,
+        body: MenuBackdrop(
+          dim: 0.62,
+          child: Stack(children: [
+            Padding(
+              padding: EdgeInsets.only(top: 56 * s),
+              child: _buildMinigame(context),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 50 * s),
-            child: _buildMinigame(context),
-          ),
 
-          // ── Back / Exit to map ───────────────────────────────────────────
-          Positioned(
-            top: 8,
-            left: 8,
-            child: SafeArea(
-              child: GestureDetector(
-                onTap: () async {
-                  if (_exiting) return;
-                  if (await _confirmExit()) {
-                    _safeBackToMap();
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 14 * s, vertical: 10 * s),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.65),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppColors.badgeRed.withOpacity(0.7),
-                        width: 1.4),
+            // ── Back / Exit to map ───────────────────────────────────────────
+            Positioned(
+              top: 8,
+              left: 8,
+              child: SafeArea(
+                child: GestureDetector(
+                  onTap: () async {
+                    if (_exiting) return;
+                    if (await _confirmExit()) {
+                      _safeBackToMap();
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14 * s, vertical: 9 * s),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF6B4423), Color(0xFF3A2210)],
+                      ),
+                      borderRadius: BorderRadius.circular(11 * s),
+                      border: Border.all(
+                          color: GameTone.goldTrim, width: 1.5 * s),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3)),
+                      ],
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.exit_to_app_rounded,
+                          color: GameTone.textCream, size: 20 * s),
+                      SizedBox(width: 6 * s),
+                      Text('Salir al mapa',
+                          style: TextStyle(
+                              color: GameTone.textCream,
+                              fontSize: 13 * s,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                              shadows: const [
+                                Shadow(
+                                    color: Color(0xFF1A0E04),
+                                    offset: Offset(0, 2),
+                                    blurRadius: 0),
+                              ])),
+                    ]),
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.exit_to_app_rounded,
-                        color: Colors.white, size: 22 * s),
-                    SizedBox(width: 6 * s),
-                    Text('Salir al mapa',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14 * s,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.4)),
-                  ]),
                 ),
               ),
             ),
-          ),
-        ]),
+          ]),
+        ),
       ),
     );
   }
@@ -119,45 +128,66 @@ class _MinigameScreenState extends State<MinigameScreen> {
       barrierColor: Colors.black.withOpacity(0.6),
       builder: (_) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-                colors: [Color(0xFF1A4A2E), Color(0xFF0D2B1A)]),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: AppColors.badgeRed.withOpacity(0.4), width: 2),
-          ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('🚪', style: TextStyle(fontSize: 44)),
-            const SizedBox(height: 10),
-            const Text('¿Salir del minijuego?',
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: PixelFrame(
+            radius: 16,
+            innerFill: GameTone.panelDark,
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('🚪', style: TextStyle(fontSize: 44)),
+              const SizedBox(height: 8),
+              ShaderMask(
+                shaderCallback: (b) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFE48A),
+                    Color(0xFFE8B452),
+                    Color(0xFFB07A2A),
+                  ],
+                ).createShader(b),
+                child: const Text('¿Salir del minijuego?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      letterSpacing: 0.6,
+                      shadows: [
+                        Shadow(
+                            color: Color(0xFF1A0E04),
+                            offset: Offset(0, 2),
+                            blurRadius: 0),
+                      ],
+                    )),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Perderás tu progreso actual y volverás al mapa.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17)),
-            const SizedBox(height: 6),
-            Text(
-              'Perderás tu progreso actual y volverás al mapa.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: Colors.white.withOpacity(0.7), fontSize: 12),
-            ),
-            const SizedBox(height: 18),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _choiceBtn(
-                label: 'Seguir jugando',
-                color: AppColors.greenAccent,
-                onTap: () => Navigator.of(context).pop(false),
+                    color: AppColors.parchment.withOpacity(0.78),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 12),
-              _choiceBtn(
-                label: 'Salir al mapa',
-                color: AppColors.badgeRed,
-                onTap: () => Navigator.of(context).pop(true),
-              ),
+              const SizedBox(height: 16),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                _choiceBtn(
+                  label: 'Seguir',
+                  primary: true,
+                  onTap: () => Navigator.of(context).pop(false),
+                ),
+                const SizedBox(width: 10),
+                _choiceBtn(
+                  label: 'Salir',
+                  primary: false,
+                  danger: true,
+                  onTap: () => Navigator.of(context).pop(true),
+                ),
+              ]),
             ]),
-          ]),
+          ),
         ),
       ),
     );
@@ -236,22 +266,53 @@ class _MinigameScreenState extends State<MinigameScreen> {
 
 Widget _choiceBtn({
   required String label,
-  required Color color,
   required VoidCallback onTap,
+  bool primary = false,
+  bool danger = false,
 }) {
+  final colors = danger
+      ? const [Color(0xFFD86060), Color(0xFF8A2A2A)]
+      : primary
+          ? const [Color(0xFF6BBA5B), Color(0xFF3A7A3A), Color(0xFF1F4E2A)]
+          : const [Color(0xFF6B4423), Color(0xFF3A2210)];
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.7), width: 1.5),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: colors,
+        ),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(
+            color: GameTone.goldTrim, width: primary ? 1.8 : 1.4),
+        boxShadow: [
+          if (primary)
+            BoxShadow(
+                color: const Color(0xFF6BE095).withOpacity(0.4),
+                blurRadius: 12),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.45),
+              blurRadius: 5,
+              offset: const Offset(0, 3)),
+        ],
       ),
       child: Text(
         label,
-        style: TextStyle(
-            color: color, fontWeight: FontWeight.bold, fontSize: 12),
+        style: const TextStyle(
+          color: GameTone.textCream,
+          fontWeight: FontWeight.w900,
+          fontSize: 13,
+          letterSpacing: 0.5,
+          shadows: [
+            Shadow(
+                color: Color(0xFF1A0E04),
+                offset: Offset(0, 2),
+                blurRadius: 0),
+          ],
+        ),
       ),
     ),
   );
@@ -275,123 +336,131 @@ class _ResultDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = _isLoss ? AppColors.badgeRed : AppColors.greenAccent;
     final s = (MediaQuery.sizeOf(context).shortestSide / 600).clamp(0.62, 1.05);
 
     return WillPopScope(
       onWillPop: () async => false,
       child: Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.symmetric(horizontal: 24 * s, vertical: 24 * s),
-        child: Container(
-          padding: EdgeInsets.all(18 * s),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-                colors: [Color(0xFF1A4A2E), Color(0xFF0D2B1A)]),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: accent.withOpacity(0.45), width: 2),
-            boxShadow: [
-              BoxShadow(color: accent.withOpacity(0.15), blurRadius: 30),
-            ],
-          ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(
-              _isLoss ? '😿' : animal.emoji,
-              style: const TextStyle(fontSize: 60),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _isLoss
-                  ? '¡Sigue intentando!'
-                  : stars == 3
-                      ? '¡Perfecto! 🎉'
-                      : '¡Muy bien! 😊',
-              style: TextStyle(
-                color: accent,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+        insetPadding:
+            EdgeInsets.symmetric(horizontal: 24 * s, vertical: 24 * s),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 420 * s),
+          child: PixelFrame(
+            radius: 18 * s,
+            innerFill: GameTone.panelDark,
+            padding:
+                EdgeInsets.fromLTRB(20 * s, 16 * s, 20 * s, 18 * s),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(
+                _isLoss ? '😿' : animal.emoji,
+                style: TextStyle(fontSize: 56 * s),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                3,
-                (i) => Text(
-                  i < stars ? '⭐' : '☆',
-                  style: const TextStyle(fontSize: 34),
+              SizedBox(height: 8 * s),
+              ShaderMask(
+                shaderCallback: (b) => LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: _isLoss
+                      ? const [
+                          Color(0xFFFFC8C8),
+                          Color(0xFFE87B7B),
+                          Color(0xFFA03A3A),
+                        ]
+                      : const [
+                          Color(0xFFFFE48A),
+                          Color(0xFFE8B452),
+                          Color(0xFFB07A2A),
+                        ],
+                ).createShader(b),
+                child: Text(
+                  _isLoss
+                      ? '¡Sigue intentando!'
+                      : stars == 3
+                          ? '¡Perfecto! 🎉'
+                          : '¡Muy bien! 😊',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22 * s,
+                    letterSpacing: 0.8,
+                    shadows: const [
+                      Shadow(
+                          color: Color(0xFF1A0E04),
+                          offset: Offset(-2, 0),
+                          blurRadius: 0),
+                      Shadow(
+                          color: Color(0xFF1A0E04),
+                          offset: Offset(2, 0),
+                          blurRadius: 0),
+                      Shadow(
+                          color: Color(0xFF1A0E04),
+                          offset: Offset(0, 2),
+                          blurRadius: 0),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _isLoss
-                  ? 'Puedes volver al mapa o intentarlo de nuevo.'
-                  : '+${stars * 50} puntos · +${stars * 10} 🪙',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: _isLoss
-                    ? Colors.white.withOpacity(0.75)
-                    : AppColors.greenAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+              SizedBox(height: 8 * s),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  3,
+                  (i) => Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 2 * s),
+                    child: Text(
+                      i < stars ? '⭐' : '☆',
+                      style: TextStyle(fontSize: 34 * s),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 18),
-            // Botonera: siempre deja salir al mapa, y ofrece reintentar.
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _dialogBtn(
-                icon: Icons.map_rounded,
-                label: 'Salir al mapa',
-                color: _isLoss
-                    ? AppColors.greenAccent
-                    : AppColors.greenAccent,
-                onTap: onExitToMap,
-                primary: !_isLoss,
+              SizedBox(height: 8 * s),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12 * s, vertical: 8 * s),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3A2210), Color(0xFF1A0E04)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10 * s),
+                  border: Border.all(
+                      color: GameTone.goldTrim.withOpacity(0.7),
+                      width: 1.3),
+                ),
+                child: Text(
+                  _isLoss
+                      ? 'Puedes volver al mapa o intentarlo de nuevo.'
+                      : '+${stars * 50} puntos · +${stars * 10} 🪙',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _isLoss
+                        ? AppColors.parchment.withOpacity(0.85)
+                        : GameTone.textGold,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12 * s,
+                  ),
+                ),
               ),
-              const SizedBox(width: 10),
-              _dialogBtn(
-                icon: Icons.refresh_rounded,
-                label: _isLoss ? 'Reintentar' : 'Jugar otra vez',
-                color: _isLoss ? AppColors.badgeRed : AppColors.gold,
-                onTap: onRetry,
-                primary: _isLoss,
-              ),
+              SizedBox(height: 16 * s),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                _choiceBtn(
+                  label: 'Salir al mapa',
+                  onTap: onExitToMap,
+                  primary: !_isLoss,
+                ),
+                SizedBox(width: 10 * s),
+                _choiceBtn(
+                  label: _isLoss ? 'Reintentar' : 'Otra vez',
+                  onTap: onRetry,
+                  primary: _isLoss,
+                ),
+              ]),
             ]),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  Widget _dialogBtn({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required bool primary,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: primary ? color.withOpacity(0.3) : color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.7), width: 1.5),
-          boxShadow: primary
-              ? [BoxShadow(color: color.withOpacity(0.35), blurRadius: 10)]
-              : null,
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-                color: color, fontWeight: FontWeight.bold, fontSize: 12),
           ),
-        ]),
+        ),
       ),
     );
   }

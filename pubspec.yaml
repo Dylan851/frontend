@@ -20,6 +20,7 @@ dependencies:
   flutter_stripe: ^11.5.0
   google_fonts: ^6.2.1
   path_provider: ^2.1.2
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -48,5 +49,5 @@ flutter:
     - assets/images/backgrounds/
     - assets/maps/
     - assets/models/
-    # Audio de proximidad de animales — añade aquí cuando tengas los sonidos
-    # - assets/audio/animals/
+    # Audio de proximidad de animales
+    - assets/audio/animals/

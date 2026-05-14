@@ -39,7 +39,10 @@ class _MapSelectScreenState extends State<MapSelectScreen>
   }
 
   bool _canUnlock(MapWorld m) {
-    if (m == MapCatalog.all.first) return _gs.level >= m.requiredLevel;
+    // Rutas reales de Kanto disponibles: 1 (jungle), 3 (savanna), 9 (farm).
+    // Cada una se desbloquea al alcanzar su nivel mínimo.
+    const real = {'jungle', 'savanna', 'farm'};
+    if (real.contains(m.id)) return _gs.level >= m.requiredLevel;
     return false;
   }
 

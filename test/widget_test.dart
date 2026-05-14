@@ -1,30 +1,21 @@
-// This is a basic Flutter widget test.
+// test/widget_test.dart
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Smoke test mínimo del entry point. Las suites detalladas están en
+// `test/data/`, `test/widgets/` y `test/config/`. Este archivo se mantiene
+// como punto de comprobación rápido del binding de tests.
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:animalgo_game/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:animalgo_game/data/game_state.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const AnimalGoApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('binding inicializa y GameState es accesible', (tester) async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    final gs = GameState();
+    expect(gs, isNotNull);
+    expect(identical(GameState(), gs), isTrue,
+        reason: 'GameState debe ser singleton');
   });
 }

@@ -1,15 +1,149 @@
-# 🌿 AnimalGO — RPG Educativo de Animales
+# AnimalGO — RPG Educativo de Animales
 
 Flutter + Bonfire 3.16 · Landscape · Tiled JSON maps
 
 ---
 
-## 🚀 Cómo ejecutar
+## Prerrequisitos
+
+Antes de ejecutar o compilar la app, asegúrate de tener:
+
+- Flutter instalado y disponible en el `PATH`
+- Android Studio o Android SDK instalado
+- Un dispositivo Android conectado por USB o un emulador activo
+- Las dependencias del proyecto descargadas con `flutter pub get`
+
+Puedes comprobar que el entorno está bien configurado con:
+
+```bash
+flutter doctor
+```
+
+## Cómo ejecutar
 
 ```bash
 flutter pub get
 flutter run
 ```
+
+### Android APK
+
+Para generar un APK de prueba:
+
+```bash
+flutter build apk
+```
+
+Para generar un APK optimizado de release:
+
+```bash
+flutter build apk --release
+```
+
+El archivo generado queda en:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+Si quieres instalarlo directamente en un dispositivo Android conectado:
+
+```bash
+flutter install
+```
+
+Si necesitas distribuir la app en Google Play, lo habitual es generar un
+Android App Bundle:
+
+```bash
+flutter build appbundle --release
+```
+
+El archivo se genera en:
+
+```text
+build/app/outputs/bundle/release/app-release.aab
+```
+
+## Tests
+
+La carpeta `test/` contiene tests unitarios y widget tests del cliente
+Flutter. La prioridad esta en la logica de juego pura y en los componentes
+visuales reutilizables, evitando dependencias de red, plataforma o motor
+grafico real.
+
+### Ejecutar tests
+
+Desde `frontend/`:
+
+```bash
+# Todos los tests
+flutter test
+
+# Una suite concreta
+flutter test test/data/game_state_test.dart
+
+# Con cobertura
+flutter test --coverage
+```
+
+Para visualizar la cobertura:
+
+```bash
+# Linux/macOS
+genhtml coverage/lcov.info -o coverage/html
+
+# Windows (PowerShell)
+flutter pub global activate coverage
+flutter pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info
+```
+
+### Estructura de tests
+
+```text
+test/
+├── widget_test.dart
+├── config/
+│   └── api_config_test.dart
+├── data/
+│   ├── animal_data_test.dart
+│   ├── item_data_test.dart
+│   ├── mission_data_test.dart
+│   ├── food_atlas_test.dart
+│   └── game_state_test.dart
+└── widgets/
+    └── theme_widgets_test.dart
+```
+
+### Cobertura actual
+
+| Suite | Foco | Tests aprox. |
+|---|---|---|
+| `animal_data_test.dart` | Catalogo de animales, `copyWith`, `findById` | 11 |
+| `item_data_test.dart` | Catalogo de tienda, categorias y power-ups | 9 |
+| `mission_data_test.dart` | Progreso, reclamacion y catalogo de misiones | 10 |
+| `food_atlas_test.dart` | Atlas de comida y coordenadas | 4 |
+| `game_state_test.dart` | Progreso, economia, inventario, buffs y reset | 19 |
+| `api_config_test.dart` | Endpoints y helpers de `ApiConfig` | 8 |
+| `theme_widgets_test.dart` | Componentes visuales del tema | 14 |
+| `widget_test.dart` | Smoke test del binding | 1 |
+| **Total** | - | **~76 casos** |
+
+### Convenciones
+
+- Los tests son independientes y resetean `GameState` cuando corresponde.
+- No salen a red ni arrancan motores graficos como `bonfire` o `flame`.
+- Los widget tests usan un `MaterialApp` minimo en lugar de `AnimalGoApp`.
+
+### Fuera de alcance actual
+
+- Pantallas y mapas que dependen del motor real.
+- Servicios con red, Stripe o Supabase.
+- Vistas con dependencias nativas como `flutter_3d_controller`.
+- Persistencia end-to-end fuera de `SharedPreferences.setMockInitialValues({})`.
+
+Estas areas conviene cubrirlas con `integration_test` en emulador o
+dispositivo real.
 
 ### Android — deshabilitar Impeller
 En `android/app/src/main/AndroidManifest.xml`, dentro de `<application>`:
@@ -26,7 +160,7 @@ flutter build web --web-renderer=canvaskit
 
 ---
 
-## 🗂️ Estructura del proyecto
+## Estructura del proyecto
 
 ```
 animalgo_game/
@@ -78,7 +212,7 @@ animalgo_game/
         │   ├── hud_overlay.dart      ← HUD in-game
         │   └── encounter_overlay.dart← Panel de encuentro con animal
         └── minigames/
-            ├── taming_game.dart      ← 🆕 Paddle domesticación (3 fases)
+            ├── taming_game.dart      ← Paddle domesticación (3 fases)
             ├── memory_card_game.dart ← Parejas de cartas (Búho)
             ├── silhouette_game.dart  ← Adivina la silueta (Zorro)
             ├── trivia_game.dart      ← Verdadero/Falso (Ciervo)
@@ -89,7 +223,7 @@ animalgo_game/
 
 ---
 
-## 🗺️ Mapas Tiled
+## Mapas Tiled
 
 ### Format
 JSON estándar de Tiled con 3 capas:
@@ -114,20 +248,20 @@ En `game_screen.dart` se usa `GameState().savedX/savedY` (defecto 5,5).
 
 ---
 
-## 🐾 Animales y dónde encontrarlos
+## Animales y dónde encontrarlos
 
-| Animal | Emoji | Tile (col, row) | Minijuego |
-|--------|-------|-----------------|-----------|
-| Zorro Rojo | 🦊 | (10, 10) | 🏓 Paddle domesticación |
-| Búho Real  | 🦉 | (30, 4)  | 🃏 Parejas de cartas |
-| Ciervo     | 🦌 | (22, 16) | ❓ Verdadero/Falso |
-| Mariposa   | 🦋 | (14, 20) | 🎨 Colorea el animal |
-| Oso Pardo  | 🐻 | (34, 19) | 🧩 Puzzle de piezas |
-| Rana       | 🐸 | (24, 8)  | 🎵 Empareja sonidos |
+| Animal | Tile (col, row) | Minijuego |
+|--------|-----------------|-----------|
+| Zorro Rojo | (10, 10) | Paddle domesticación |
+| Búho Real  | (30, 4)  | Parejas de cartas |
+| Ciervo     | (22, 16) | Verdadero/Falso |
+| Mariposa   | (14, 20) | Colorea el animal |
+| Oso Pardo  | (34, 19) | Puzzle de piezas |
+| Rana       | (24, 8)  | Empareja sonidos |
 
 ---
 
-## 🎮 Controles
+## Controles
 
 | Plataforma | Movimiento | Interactuar |
 |------------|-----------|-------------|
@@ -138,7 +272,7 @@ El jugador activa automáticamente el encuentro con el animal al acercarse (sens
 
 ---
 
-## 🎨 Spritesheet del héroe
+## Spritesheet del héroe
 
 Extraído del tileset2, el héroe azul tiene:
 - **6 frames** por dirección  
@@ -155,7 +289,7 @@ hero_up.png:    [f0][f1][f2][f3][f4][f5]   ← camina hacia arriba
 
 ---
 
-## 📦 Dependencias
+## Dependencias
 
 ```yaml
 bonfire: ^3.16.1   # Motor RPG sobre Flame
