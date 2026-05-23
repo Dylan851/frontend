@@ -4,6 +4,78 @@ Flutter + Bonfire 3.16 · Landscape · Tiled JSON maps
 
 ---
 
+## Ejecutar en local paso a paso
+
+Esta es la forma recomendada para que un tutor pueda lanzar la aplicacion en
+local.
+
+### 1. Levantar primero el backend
+
+Desde el repositorio `backend`, sigue el README de backend y arranca la API en:
+
+```text
+http://localhost:8000
+```
+
+En esta configuracion, el backend corre en local pero sigue usando la base de
+datos y la autenticacion en la nube.
+
+### 2. Comprobar Flutter
+
+```bash
+flutter doctor
+```
+
+### 3. Descargar dependencias
+
+```bash
+flutter pub get
+```
+
+### 4. Lanzar el frontend segun el dispositivo
+
+#### Web
+
+```bash
+flutter run -d chrome --web-port 8080 --dart-define=API_BASE_URL=http://localhost:8000
+```
+
+#### Android Emulator
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
+```
+
+#### Movil fisico
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://IP_DEL_PC:8000
+```
+
+Sustituye `IP_DEL_PC` por la IP local del ordenador donde corre el backend.
+
+### 5. Variables opcionales
+
+Solo hacen falta si quieres probar login con Google / Supabase o Stripe desde
+el frontend:
+
+```bash
+--dart-define=SUPABASE_URL=...
+--dart-define=SUPABASE_ANON_KEY=...
+--dart-define=STRIPE_PUBLISHABLE_KEY=...
+```
+
+Ejemplo web completo:
+
+```bash
+flutter run -d chrome --web-port 8080 --dart-define=API_BASE_URL=http://localhost:8000 --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+```
+
+### 6. Nota importante sobre CORS
+
+Para web local, usa preferiblemente `--web-port 8080`, porque el backend ya
+acepta ese origen por defecto.
+
 ## Prerrequisitos
 
 Antes de ejecutar o compilar la app, asegúrate de tener:
@@ -23,8 +95,10 @@ flutter doctor
 
 ```bash
 flutter pub get
-flutter run
 ```
+
+Para ejecutar la app contra el backend local, usa los comandos del apartado
+`Ejecutar en local paso a paso`.
 
 ### Android APK
 
