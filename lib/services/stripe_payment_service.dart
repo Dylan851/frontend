@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 import 'api_service.dart';
@@ -22,14 +22,48 @@ class CurrencyPack {
   });
 }
 
+class PurchaseCanceledException implements Exception {
+  const PurchaseCanceledException();
+}
+
 class StripePaymentService {
   static const packs = <CurrencyPack>[
-    CurrencyPack(id: 'coins_100', title: '100 Monedas', currencyType: 'coins', quantity: 100, priceLabel: '0.99 EUR'),
-    CurrencyPack(id: 'coins_500', title: '500 Monedas', currencyType: 'coins', quantity: 500, priceLabel: '2.99 EUR'),
-    CurrencyPack(id: 'coins_1000', title: '1000 Monedas', currencyType: 'coins', quantity: 1000, priceLabel: '4.99 EUR'),
-    CurrencyPack(id: 'diamonds_10', title: '10 Diamantes', currencyType: 'diamonds', quantity: 10, priceLabel: '1.99 EUR'),
-    CurrencyPack(id: 'diamonds_30', title: '30 Diamantes', currencyType: 'diamonds', quantity: 30, priceLabel: '4.99 EUR'),
-    CurrencyPack(id: 'diamonds_75', title: '75 Diamantes', currencyType: 'diamonds', quantity: 75, priceLabel: '9.99 EUR'),
+    CurrencyPack(
+        id: 'coins_100',
+        title: '100 Monedas',
+        currencyType: 'coins',
+        quantity: 100,
+        priceLabel: '0.99 EUR'),
+    CurrencyPack(
+        id: 'coins_500',
+        title: '500 Monedas',
+        currencyType: 'coins',
+        quantity: 500,
+        priceLabel: '2.99 EUR'),
+    CurrencyPack(
+        id: 'coins_1000',
+        title: '1000 Monedas',
+        currencyType: 'coins',
+        quantity: 1000,
+        priceLabel: '4.99 EUR'),
+    CurrencyPack(
+        id: 'diamonds_10',
+        title: '10 Diamantes',
+        currencyType: 'diamonds',
+        quantity: 10,
+        priceLabel: '1.99 EUR'),
+    CurrencyPack(
+        id: 'diamonds_30',
+        title: '30 Diamantes',
+        currencyType: 'diamonds',
+        quantity: 30,
+        priceLabel: '4.99 EUR'),
+    CurrencyPack(
+        id: 'diamonds_75',
+        title: '75 Diamantes',
+        currencyType: 'diamonds',
+        quantity: 75,
+        priceLabel: '9.99 EUR'),
   ];
 
   /// Sincroniza con el backend la lista de personajes premium ya comprados
@@ -72,14 +106,17 @@ class StripePaymentService {
     return _buyPackMobileSheet(session.token, session.playerId!, packId);
   }
 
-  static Future<String> _buyPackMobileSheet(String token, String playerId, String packId) async {
+  static Future<String> _buyPackMobileSheet(
+      String token, String playerId, String packId) async {
     final intent = await ApiService.createPaymentIntent(
       token: token,
       userId: playerId,
       packId: packId,
     );
     if (intent['success'] != true) {
-      throw Exception((intent['detail'] ?? intent['error'] ?? 'No se pudo crear el pago.').toString());
+      throw Exception(
+          (intent['detail'] ?? intent['error'] ?? 'No se pudo crear el pago.')
+              .toString());
     }
 
     final data = (intent['data'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -94,7 +131,14 @@ class StripePaymentService {
         merchantDisplayName: 'AnimalGO',
       ),
     );
-    await Stripe.instance.presentPaymentSheet();
+    try {
+      await Stripe.instance.presentPaymentSheet();
+    } on StripeException catch (e) {
+      if (isUserCancellation(e)) {
+        throw const PurchaseCanceledException();
+      }
+      rethrow;
+    }
 
     final refreshed = await AuthService.restoreSession();
     if (refreshed != null) {
@@ -103,7 +147,8 @@ class StripePaymentService {
     return 'Pago completado. Tu saldo se actualizará tras confirmar Stripe.';
   }
 
-  static Future<String> _buyPackWebCheckout(String token, String playerId, String packId) async {
+  static Future<String> _buyPackWebCheckout(
+      String token, String playerId, String packId) async {
     final checkout = await ApiService.createCheckoutSession(
       token: token,
       userId: playerId,
@@ -112,7 +157,10 @@ class StripePaymentService {
       cancelUrl: 'http://localhost:8080/#/payments?result=cancel',
     );
     if (checkout['success'] != true) {
-      throw Exception((checkout['detail'] ?? checkout['error'] ?? 'No se pudo crear Stripe Checkout.').toString());
+      throw Exception((checkout['detail'] ??
+              checkout['error'] ??
+              'No se pudo crear Stripe Checkout.')
+          .toString());
     }
 
     final data = (checkout['data'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -127,5 +175,23 @@ class StripePaymentService {
     }
 
     return 'Redirigiendo a Stripe Checkout...';
+  }
+
+  static bool isUserCancellation(Object error) {
+    if (error is PurchaseCanceledException) {
+      return true;
+    }
+    if (error is! StripeException) {
+      return false;
+    }
+
+    final stripeError = error.error;
+    if (stripeError.code == FailureCode.Canceled) {
+      return true;
+    }
+
+    final localized = (stripeError.localizedMessage ?? '').toLowerCase();
+    final generic = (stripeError.message ?? '').toLowerCase();
+    return localized.contains('cancel') || generic.contains('cancel');
   }
 }
