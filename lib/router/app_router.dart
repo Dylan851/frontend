@@ -42,8 +42,7 @@ abstract class AppRouter {
 
   static Route<dynamic> generateRoute(RouteSettings s) {
     final routeUri = parseRoute(s.name);
-    final routeName = routeUri.path;
-    switch (routeName) {
+    switch (routeUri.path) {
       case loading:
         return _fade(const LoadingScreen());
       case mainMenu:
@@ -74,9 +73,7 @@ abstract class AppRouter {
         return _slide(const MissionsScreen());
       case payments:
         return _slide(
-          PaymentsScreen(
-            checkoutResult: routeUri.queryParameters['result'],
-          ),
+          PaymentsScreen(checkoutResult: routeUri.queryParameters['result']),
         );
       case minigame:
         final animal = s.arguments as AnimalData;

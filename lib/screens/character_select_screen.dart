@@ -7,6 +7,7 @@
 //   1. Añade sus 4 sprites PNG en assets/images/player/{id}_down/left/right/up.png
 //   2. Declara un CharacterInfo en CharacterCatalog.all (player_character.dart)
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../game/actors/player_character.dart';
 import '../data/game_state.dart';

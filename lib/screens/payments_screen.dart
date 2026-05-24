@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 
 import '../services/stripe_payment_service.dart';
 import '../theme/app_theme.dart';
@@ -20,15 +19,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   bool _loading = false;
   String? _packId;
 
-  @override
-  void initState() {
-    super.initState();
-    if (kIsWeb && widget.checkoutResult == 'cancel') {
-      // Retorno normal desde Stripe: no mostrar error ni hacer nada extra.
-      return;
-    }
-  }
-
   Future<void> _buy(String packId) async {
     setState(() {
       _loading = true;
@@ -40,7 +30,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
     } on PurchaseCanceledException {
-      // El usuario cerró Stripe de forma voluntaria; no mostramos error.
+      // El usuario cerro Stripe de forma voluntaria.
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

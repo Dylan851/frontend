@@ -427,7 +427,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text(msg)));
                   } on PurchaseCanceledException {
-                    // El usuario salió de Stripe sin completar la compra.
+                    // El usuario salio de Stripe sin completar la compra.
                   } catch (e) {
                     if (!mounted || !context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
