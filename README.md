@@ -4,6 +4,20 @@ Flutter + Bonfire 3.16 · Landscape · Tiled JSON maps
 
 ---
 
+## Importante para la entrega
+
+Si recibes el proyecto en un `.zip`, para arrancar el frontend usa esta
+carpeta:
+
+```text
+proyecto/frontend
+```
+
+El frontend no usa archivo `.env` para ejecutarse en local. La URL del backend
+se pasa por linea de comandos con `--dart-define=API_BASE_URL=...`.
+
+---
+
 ## Ejecutar en local paso a paso
 
 Esta es la forma recomendada para que un tutor pueda lanzar la aplicacion en
