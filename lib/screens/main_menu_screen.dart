@@ -212,13 +212,29 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         col([
-          MenuPill(icon: '\u{1F4D6}', label: 'Animales', width: pillW, onTap: () => _push(AppRouter.collection)),
-          MenuPill(icon: '\u{1F3AF}', label: 'Misiones', width: pillW, onTap: () => _push(AppRouter.missions)),
+          MenuPill(
+              icon: '\u{1F4D6}',
+              label: 'Animales',
+              width: pillW,
+              onTap: () => _push(AppRouter.collection)),
+          MenuPill(
+              icon: '\u{1F3AF}',
+              label: 'Misiones',
+              width: pillW,
+              onTap: () => _push(AppRouter.missions)),
         ]),
         const Spacer(),
         col([
-          MenuPill(icon: '\u{1F6D2}', label: 'Tienda',  width: pillW, onTap: () => _push(AppRouter.shop)),
-          MenuPill(icon: '\u{1F392}', label: 'Mochila', width: pillW, onTap: () => _push(AppRouter.inventory)),
+          MenuPill(
+              icon: '\u{1F6D2}',
+              label: 'Tienda',
+              width: pillW,
+              onTap: () => _push(AppRouter.shop)),
+          MenuPill(
+              icon: '\u{1F392}',
+              label: 'Mochila',
+              width: pillW,
+              onTap: () => _push(AppRouter.inventory)),
         ]),
       ],
     );
@@ -245,7 +261,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     border: Border.all(color: GameTone.goldTrim, width: 1.6),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: (_gs.googlePhotoUrl != null && _gs.googlePhotoUrl!.isNotEmpty)
+                  child: (_gs.googlePhotoUrl != null &&
+                          _gs.googlePhotoUrl!.isNotEmpty)
                       ? Image.network(
                           _gs.googlePhotoUrl!,
                           fit: BoxFit.cover,
@@ -409,6 +426,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     setState(() {});
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text(msg)));
+                  } on PurchaseCanceledException {
+                    // El usuario salio de Stripe sin completar la compra.
                   } catch (e) {
                     if (!mounted || !context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -502,7 +521,6 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       },
     );
   }
-
 
   Widget _mapCard(double s, double w) {
     return GestureDetector(
@@ -750,50 +768,50 @@ class _PlayBtnInlineState extends State<_PlayBtnInline>
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('\u{1F33F}', style: TextStyle(fontSize: 16)),
-                  SizedBox(width: 6),
-                  Text(
-                    '¡JUGAR!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 20,
-                      letterSpacing: 1.6,
-                      shadows: [
-                        Shadow(
-                          color: Color(0xFF0E2C18),
-                          offset: Offset(-2, 0),
-                          blurRadius: 0,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('\u{1F33F}', style: TextStyle(fontSize: 16)),
+                      SizedBox(width: 6),
+                      Text(
+                        '¡JUGAR!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                          letterSpacing: 1.6,
+                          shadows: [
+                            Shadow(
+                              color: Color(0xFF0E2C18),
+                              offset: Offset(-2, 0),
+                              blurRadius: 0,
+                            ),
+                            Shadow(
+                              color: Color(0xFF0E2C18),
+                              offset: Offset(2, 0),
+                              blurRadius: 0,
+                            ),
+                            Shadow(
+                              color: Color(0xFF0E2C18),
+                              offset: Offset(0, -2),
+                              blurRadius: 0,
+                            ),
+                            Shadow(
+                              color: Color(0xFF0E2C18),
+                              offset: Offset(0, 3),
+                              blurRadius: 0,
+                            ),
+                          ],
                         ),
-                        Shadow(
-                          color: Color(0xFF0E2C18),
-                          offset: Offset(2, 0),
-                          blurRadius: 0,
-                        ),
-                        Shadow(
-                          color: Color(0xFF0E2C18),
-                          offset: Offset(0, -2),
-                          blurRadius: 0,
-                        ),
-                        Shadow(
-                          color: Color(0xFF0E2C18),
-                          offset: Offset(0, 3),
-                          blurRadius: 0,
-                        ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(width: 6),
+                      Text('\u{1F33F}', style: TextStyle(fontSize: 16)),
+                    ],
                   ),
-                  SizedBox(width: 6),
-                  Text('\u{1F33F}', style: TextStyle(fontSize: 16)),
-                ],
-              ),
-              ),
+                ),
               ),
             ),
           ),

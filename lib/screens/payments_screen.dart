@@ -4,7 +4,12 @@ import '../services/stripe_payment_service.dart';
 import '../theme/app_theme.dart';
 
 class PaymentsScreen extends StatefulWidget {
-  const PaymentsScreen({super.key});
+  final String? checkoutResult;
+
+  const PaymentsScreen({
+    super.key,
+    this.checkoutResult,
+  });
 
   @override
   State<PaymentsScreen> createState() => _PaymentsScreenState();
@@ -22,7 +27,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     try {
       final message = await StripePaymentService.buyPack(packId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    } on PurchaseCanceledException {
+      // El usuario cerro Stripe de forma voluntaria.
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -51,7 +59,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         children: [
           const Text(
             'Monedas = recurso normal. Diamantes = recurso premium y mas caro.',
-            style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+            style:
+                TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           ...StripePaymentService.packs.map((pack) {
@@ -60,10 +69,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             return Card(
               color: const Color(0xFF143421),
               child: ListTile(
-                title: Text(pack.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                title: Text(pack.title,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w800)),
                 subtitle: Text(
                   '${premium ? "Premium" : "Normal"} - ${pack.priceLabel}',
-                  style: TextStyle(color: premium ? Colors.lightBlueAccent : Colors.amberAccent),
+                  style: TextStyle(
+                      color: premium
+                          ? Colors.lightBlueAccent
+                          : Colors.amberAccent),
                 ),
                 trailing: ElevatedButton(
                   onPressed: _loading ? null : () => _buy(pack.id),
