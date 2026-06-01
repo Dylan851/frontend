@@ -69,6 +69,49 @@ el frontend:
 Para web local, usa preferiblemente `--web-port 8080`, porque el backend ya
 acepta ese origen por defecto.
 
+### 7. Prueba de pagos con Stripe
+
+Para probar la compra de monedas o diamantes en entorno local, el backend debe
+estar arrancado en `http://localhost:8000` y el frontend en `http://localhost:8080`.
+
+El backend debe tener configuradas las claves de Stripe en modo prueba dentro de
+`backend/.env`:
+
+```env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+FRONTEND_URL=http://localhost:8080
+```
+
+Para que Stripe confirme la compra al backend local y se actualicen las monedas
+o diamantes, ejecuta Stripe CLI en otra terminal:
+
+```bash
+stripe listen --forward-to localhost:8000/stripe/webhook
+```
+
+Stripe mostrara un valor parecido a `whsec_...`. Ese valor debe copiarse en
+`STRIPE_WEBHOOK_SECRET` y despues reiniciar el backend.
+
+En Stripe Checkout se puede usar cualquier correo de prueba, por ejemplo:
+
+```text
+test@animalgo.com
+```
+
+Tarjeta de prueba para pago correcto:
+
+```text
+Numero: 4242 4242 4242 4242
+Fecha: 12/34
+CVC: 123
+Nombre: Test AnimalGO
+Codigo postal: 28001
+```
+
+No usar tarjetas reales. Esta tarjeta solo funciona con claves de prueba
+`sk_test_...` y `pk_test_...`.
+
 ---
 
 ## Ejecucion rapida
@@ -78,6 +121,78 @@ flutter pub get
 flutter run
 ```
 
+
+## Crear APK Android
+
+Antes de crear el APK, descarga las dependencias:
+
+```bash
+flutter pub get
+```
+
+### APK de prueba
+
+Genera un APK de prueba con:
+
+```bash
+flutter build apk --debug
+```
+
+El archivo generado queda en:
+
+```text
+build/app/outputs/flutter-apk/app-debug.apk
+```
+
+### APK de release
+
+Genera un APK optimizado con:
+
+```bash
+flutter build apk --release
+```
+
+El archivo generado queda en:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+### APK conectado al backend local
+
+Si el APK se va a probar contra el backend local, hay que indicar la URL correcta del backend al compilar.
+
+Para Android Emulator:
+
+```bash
+flutter build apk --debug --dart-define=API_BASE_URL=http://10.0.2.2:8000
+```
+
+Para movil fisico conectado a la misma red que el ordenador:
+
+```bash
+flutter build apk --debug --dart-define=API_BASE_URL=http://IP_DEL_PC:8000
+```
+
+Sustituye `IP_DEL_PC` por la IP local del ordenador donde esta arrancado el backend.
+
+### Instalar el APK en un dispositivo
+
+Con un dispositivo Android conectado por USB o un emulador abierto:
+
+```bash
+flutter install
+```
+
+Tambien se puede instalar manualmente el archivo `.apk` generado desde la carpeta `build/app/outputs/flutter-apk/`.
+
+Si necesitas Stripe dentro del APK, compila anadiendo tambien la clave publica de Stripe en modo prueba:
+
+```bash
+flutter build apk --debug --dart-define=API_BASE_URL=http://10.0.2.2:8000 --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+---
 ### Android
 
 Si necesitas deshabilitar Impeller, anade esto en

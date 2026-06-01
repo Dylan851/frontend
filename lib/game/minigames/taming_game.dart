@@ -1,6 +1,6 @@
 // lib/game/minigames/taming_game.dart
 //
-// MINIJUEGO: DOMESTICACIÓN 🐾
+// Minijuego de domesticación
 // ─────────────────────────────────────────────────────────────────────────────
 // El jugador maneja un paddle horizontal para devolver una pelota de "amor"
 // (comida/corazones) hacia el animal. Cada vez que la pelota toca al animal

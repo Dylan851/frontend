@@ -133,7 +133,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             components: [..._buildAnimals(), ..._buildItems(), ..._buildBorders()],
             cameraConfig: CameraConfig(
               speed: 4.0, // más bajo = cámara más suave; infinito = instantáneo
-              zoom: 2.6, // algo menos de zoom para mejor visibilidad
+              zoom: 2.2, // cámara un poco más atrás para mayor visibilidad
               moveOnlyMapArea: true,
             ),
             playerControllers: [
@@ -288,9 +288,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   List<CollectibleItem> _buildItems() {
     final gs = GameState();
-    // 10 ítems por mapa, SOLO en tiles caminables. Semilla estable por mapa
-    // para que los ítems recogidos no reaparezcan (collectedMapItems compara por id).
-    final rng = math.Random(gs.currentMapId.hashCode);
+    // 10 ítems por mapa, SOLO en tiles caminables. Semilla aleatoria: cada
+    // entrada al mapa re-spawnea items en posiciones distintas. Items recogidos
+    // desaparecen en tiempo real pero re-aparecen al volver a entrar.
+    final rng = math.Random();
     final walk = MapWalkable.byMap[_walkKey] ?? const <(int, int)>[];
     if (walk.isEmpty) return const [];
     // Ítems sueltos (no cofres): dan recursos pequeños.
@@ -308,8 +309,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         tries++;
       } while (used.contains(p) && tries < 30);
       used.add(p);
-      final id = '${gs.currentMapId}_item_$i';
-      if (gs.isMapItemCollected(id)) continue;
+      final id = '${gs.currentMapId}_item_${i}_${DateTime.now().microsecondsSinceEpoch}_${rng.nextInt(1 << 30)}';
       items.add(CollectibleItem(
         position: Vector2(p.$1 * _tile, p.$2 * _tile),
         itemType: lootTypes[rng.nextInt(lootTypes.length)],
@@ -335,8 +335,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         tries++;
       } while (used.contains(p) && tries < 40);
       used.add(p);
-      final chestId = '${gs.currentMapId}_chest_$i';
-      if (gs.isChestOpened(chestId)) continue;
+      final chestId = '${gs.currentMapId}_chest_${i}_${DateTime.now().microsecondsSinceEpoch}_${rng.nextInt(1 << 30)}';
       items.add(CollectibleItem(
         position: Vector2(p.$1 * _tile, p.$2 * _tile),
         itemType: i == 0 ? ItemType.treasureChest : ItemType.chest,

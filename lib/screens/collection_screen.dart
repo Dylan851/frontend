@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import '../data/animal_data.dart';
 import '../data/game_state.dart';
+import '../data/item_data.dart';
 import '../theme/app_theme.dart';
 import 'animal_3d_viewer.dart';
 
@@ -396,6 +397,13 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
                               : Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(3))))),
 
+          // Barra de afecto + botón alimentar
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _AffectionPanel(animal: a, state: widget.state, onChanged: () => setState(() {})),
+          ),
+
           // Botón "Ver en 3D" (solo si hay modelo disponible)
           if (animalHas3DModel(a.id)) ...[
             const SizedBox(height: 8),
@@ -471,4 +479,271 @@ class _AnimalDetailDialogState extends State<_AnimalDetailDialog> {
           borderRadius: BorderRadius.circular(8)),
       child: Text(text,
           style: const TextStyle(color: Colors.white70, fontSize: 10)));
+}
+
+// ─────────────────────────────────────────────
+//  AFFECTION PANEL + FOOD PICKER
+// ─────────────────────────────────────────────
+class _AffectionPanel extends StatelessWidget {
+  final AnimalData animal;
+  final GameState state;
+  final VoidCallback onChanged;
+  const _AffectionPanel({
+    required this.animal,
+    required this.state,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = state.affectionPercent(animal.id);
+    final value = state.getAffection(animal.id);
+    final mood = state.affectionMood(animal.id);
+    final isMax = value >= GameState.affectionMax;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Text('❤️', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            const Text('Afecto',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12)),
+            const Spacer(),
+            Text('$value / ${GameState.affectionMax}',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.75),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(width: 8),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(mood,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700)),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Stack(children: [
+              Container(height: 10, color: Colors.white.withOpacity(0.08)),
+              FractionallySizedBox(
+                widthFactor: pct,
+                child: Container(
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      Color(0xFFFF6B8A),
+                      Color(0xFFFFC371),
+                    ]),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: isMax
+                ? null
+                : () async {
+                    await showDialog(
+                      context: context,
+                      builder: (_) => _FoodPickerDialog(
+                        animal: animal,
+                        state: state,
+                        onFed: onChanged,
+                      ),
+                    );
+                    onChanged();
+                  },
+            child: Opacity(
+              opacity: isMax ? 0.55 : 1.0,
+              child: Container(
+                width: double.infinity,
+                height: 34,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFE3884B), Color(0xFFB05A1F)],
+                  ),
+                  border: Border.all(color: GameTone.goldTrim, width: 1.4),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  isMax ? '¡Está totalmente feliz!' : '🍎  ALIMENTAR',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FoodPickerDialog extends StatefulWidget {
+  final AnimalData animal;
+  final GameState state;
+  final VoidCallback onFed;
+  const _FoodPickerDialog({
+    required this.animal,
+    required this.state,
+    required this.onFed,
+  });
+
+  @override
+  State<_FoodPickerDialog> createState() => _FoodPickerDialogState();
+}
+
+class _FoodPickerDialogState extends State<_FoodPickerDialog> {
+  String? _lastFeedback;
+
+  List<ShopItem> _availableFoods() {
+    return ShopCatalog.food
+        .where((f) => widget.state.getQty(f.id) > 0)
+        .toList();
+  }
+
+  void _feed(ShopItem food) {
+    final gain = widget.state.feedAnimal(widget.animal.id, food.id);
+    setState(() {
+      _lastFeedback = gain > 0
+          ? '${widget.animal.name} ganó +$gain de afecto con ${food.name}'
+          : 'No pudiste alimentar a ${widget.animal.name}';
+    });
+    widget.onFed();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final foods = _availableFoods();
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+              colors: [Color(0xFF1B4A2E), Color(0xFF0D2B1A)]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: AppColors.greenAccent.withOpacity(0.3), width: 1.4),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            Text('🍽️ Alimentar a ${widget.animal.name}',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14)),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const Icon(Icons.close, color: Colors.white70, size: 18),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          if (foods.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              child: Text(
+                'No tienes comida. Compra alimentos en la tienda.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.75), fontSize: 12),
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.5),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: foods.map((f) {
+                    final qty = widget.state.getQty(f.id);
+                    return GestureDetector(
+                      onTap: () => _feed(f),
+                      child: Container(
+                        width: 88,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.15)),
+                        ),
+                        child: Column(children: [
+                          Text(f.emoji,
+                              style: const TextStyle(fontSize: 26)),
+                          const SizedBox(height: 4),
+                          Text(f.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11)),
+                          const SizedBox(height: 2),
+                          Text('x$qty',
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700)),
+                        ]),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          if (_lastFeedback != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.greenAccent.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(_lastFeedback!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ]),
+      ),
+    );
+  }
 }

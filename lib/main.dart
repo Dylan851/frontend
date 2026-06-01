@@ -26,8 +26,12 @@ Future<void> main() async {
   ]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   if (!kIsWeb && ApiConfig.stripePublishableKey.trim().isNotEmpty) {
-    Stripe.publishableKey = ApiConfig.stripePublishableKey.trim();
-    await Stripe.instance.applySettings();
+    try {
+      Stripe.publishableKey = ApiConfig.stripePublishableKey.trim();
+      await Stripe.instance.applySettings();
+    } catch (e) {
+      debugPrint('Stripe init failed: $e');
+    }
   }
   // Cargar progreso persistido antes de arrancar la UI.
   await GameState().load();

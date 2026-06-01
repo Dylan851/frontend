@@ -247,7 +247,7 @@ class _TriviaGameState extends State<TriviaGame> {
       if (_current < _questions.length - 1) {
         setState(() { _current++; _answered = null; _showExplanation = false; });
       } else {
-        // 7 preguntas: 6-7 aciertos=3★, 4-5=2★, 0-3=1★
+        // 7 preguntas: 6-7 aciertos=3 estrellas, 4-5=2, 0-3=1
         final stars = _correct >= 6 ? 3 : _correct >= 4 ? 2 : 1;
         widget.onComplete(stars);
       }

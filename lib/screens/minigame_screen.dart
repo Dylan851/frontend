@@ -197,12 +197,12 @@ class _MinigameScreenState extends State<MinigameScreen> {
   Widget _buildMinigame(BuildContext context) {
     void onComplete(int stars) {
       final gs = GameState();
-      // Golden Pass: se juega la animación pero se fuerza 3★ aquí también
+      // Golden Pass: se juega la animación pero se fuerza 3 estrellas aquí
       // (redundante con completeMinigame, que ya lo fuerza, pero permite
       // mostrar el resultado correcto).
       final displayStars =
           gs.hasPendingEffect(ItemEffect.goldenPass) ? 3 : stars;
-      // Revive: si pierde (≤1★) y tiene el pergamino activo, reintento gratis.
+      // Revive: si pierde (1 estrella o menos) y tiene el pergamino activo, reintento gratis.
       if (displayStars <= 1 && gs.hasPendingEffect(ItemEffect.reviveScroll)) {
         gs.consumeEffect(ItemEffect.reviveScroll);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -583,7 +583,7 @@ class _PowerUpBarState extends State<_PowerUpBar> {
     if (ok) {
       setState(() {});
       widget.onUsed();
-      // El Pase Dorado completa el minijuego inmediatamente con 3★.
+      // El Pase Dorado completa el minijuego inmediatamente con 3 estrellas.
       if (item.effect == ItemEffect.goldenPass) {
         Future.delayed(const Duration(milliseconds: 600), widget.onGoldenPass);
       }

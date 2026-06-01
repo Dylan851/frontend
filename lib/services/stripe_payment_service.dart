@@ -149,12 +149,13 @@ class StripePaymentService {
 
   static Future<String> _buyPackWebCheckout(
       String token, String playerId, String packId) async {
+    final origin = Uri.base.origin;
     final checkout = await ApiService.createCheckoutSession(
       token: token,
       userId: playerId,
       packId: packId,
-      successUrl: 'http://localhost:8080/#/payments?result=success',
-      cancelUrl: 'http://localhost:8080/#/payments?result=cancel',
+      successUrl: '$origin/#/payments?result=success',
+      cancelUrl: '$origin/#/payments?result=cancel',
     );
     if (checkout['success'] != true) {
       throw Exception((checkout['detail'] ??

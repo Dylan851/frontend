@@ -210,7 +210,7 @@ class _InventoryScreenState extends State<InventoryScreen>
         child: Row(
           children: _cats.map((c) {
             final active = _selectedCat == c.$1;
-            // Split label "🍎 Comida" → icon + label
+            // Separa la etiqueta "emoji Comida" en icono + texto
             final parts = c.$2.split(' ');
             final hasEmoji = parts.length > 1 && parts.first.isNotEmpty;
             return Padding(

@@ -232,7 +232,7 @@ class AnimalNpc extends SimpleNpc with Sensor {
     _playerNear = true;
 
     // ─────────────────────────────────────────────────────────────────────
-    // 🔊 SONIDO DE PROXIMIDAD
+    // Sonido de proximidad
     // Cuando el jugador se acerca a un animal se reproduce su sonido.
     // Pasos para activarlo:
     //   1. Añade `flame_audio` en pubspec.yaml (dependencies).

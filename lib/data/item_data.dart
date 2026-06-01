@@ -213,7 +213,7 @@ abstract class MapCatalog {
       primaryColor: Color(0xFF5C7A2E), secondaryColor: Color(0xFF8BB53A),
     ),
     // MapWorld(
-    //   id: 'ocean', name: 'Ruta Costera', emoji: '🌊',
+    //   id: 'ocean', name: 'Ruta Costera',
     //   description: 'Ruta 11 de Kanto — sendero junto al mar.',
     //   animalsCount: 6, itemsCount: 10, requiredLevel: 7,
     //   primaryColor: Color(0xFF0D4A7A), secondaryColor: Color(0xFF1A7FC4),

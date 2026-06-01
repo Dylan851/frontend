@@ -114,13 +114,16 @@ class CollectibleItem extends GameDecoration with Sensor {
   @override
   void update(double dt) {
     super.update(dt);
-    if (_collected) return;
-    _time += dt;
-
     if (_animating) {
       _collectAnim += dt * 3;
       if (_collectAnim >= 1.0) removeFromParent();
+      return;
     }
+    if (_collected) {
+      removeFromParent();
+      return;
+    }
+    _time += dt;
   }
 
   @override

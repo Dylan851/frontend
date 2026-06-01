@@ -82,6 +82,10 @@ class GameState {
   // Consumidos automÃ¡ticamente al entrar/finalizar el minijuego.
   final Set<ItemEffect> _pendingMinigameEffects = <ItemEffect>{};
 
+  // ── Afecto por animal (0..100) ──────────────────────────
+  final Map<String, int> animalAffection = {};
+  static const int affectionMax = 100;
+
   // â”€â”€ Mapa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   double savedX = 0;
   double savedY = 0;
@@ -196,6 +200,38 @@ class GameState {
   /// Limpia los buffs pendientes (al salir del minijuego sin terminar, etc.).
   void clearPendingEffects() {
     _pendingMinigameEffects.clear();
+  }
+
+  // ── Afecto ────────────────────────────────────────────
+  int getAffection(String animalId) => animalAffection[animalId] ?? 0;
+  double affectionPercent(String animalId) =>
+      (getAffection(animalId) / affectionMax).clamp(0.0, 1.0);
+
+  /// Etiqueta de estado de ánimo según el nivel actual de afecto.
+  String affectionMood(String animalId) {
+    final v = getAffection(animalId);
+    if (v >= 90) return 'Eufórico';
+    if (v >= 70) return 'Muy feliz';
+    if (v >= 45) return 'Contento';
+    if (v >= 20) return 'Curioso';
+    if (v > 0)   return 'Desconfiado';
+    return 'Hambriento';
+  }
+
+  /// Alimenta a un animal con un item del inventario.
+  /// Devuelve la cantidad de afecto ganada (0 si falla).
+  int feedAnimal(String animalId, String foodId) {
+    if ((inventory[foodId] ?? 0) <= 0) return 0;
+    final item = ShopCatalog.findById(foodId);
+    if (item == null || item.category != ItemCategory.food) return 0;
+    // Ganancia: base 8 + magnitud/5 (apple=12, steak=18, drumstick=28…).
+    final gain = 8 + (item.magnitude ~/ 5);
+    final current = getAffection(animalId);
+    final next = math.min(affectionMax, current + gain);
+    final delta = next - current;
+    animalAffection[animalId] = next;
+    useItem(foodId); // consume 1 y autosave
+    return delta;
   }
 
   // â”€â”€ Inventario â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -361,6 +397,7 @@ class GameState {
         'maxXp': maxXp,
         'currentMapId': currentMapId,
         'inventory': inventory,
+        'animalAffection': animalAffection,
         'equipped': equipped,
         'savedX': savedX,
         'savedY': savedY,
@@ -413,6 +450,12 @@ class GameState {
       inventory.clear();
       (j['inventory'] as Map).forEach((k, v) {
         if (v is int) inventory[k.toString()] = v;
+      });
+    }
+    if (j['animalAffection'] is Map) {
+      animalAffection.clear();
+      (j['animalAffection'] as Map).forEach((k, v) {
+        if (v is int) animalAffection[k.toString()] = v.clamp(0, affectionMax);
       });
     }
     if (j['equipped'] is Map) {
@@ -486,6 +529,7 @@ class GameState {
     completedMinigames.clear();
     earnedAchievements.clear();
     inventory.clear();
+    animalAffection.clear();
     openedChests.clear();
     _pendingMinigameEffects.clear();
     hasSeenAppTutorial = false;

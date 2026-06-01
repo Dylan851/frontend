@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../router/app_router.dart';
+import '../services/auth_service.dart';
 import '../services/stripe_payment_service.dart';
 import '../theme/app_theme.dart';
 
@@ -18,6 +20,33 @@ class PaymentsScreen extends StatefulWidget {
 class _PaymentsScreenState extends State<PaymentsScreen> {
   bool _loading = false;
   String? _packId;
+
+  @override
+  void initState() {
+    super.initState();
+    final result = widget.checkoutResult;
+    if (result != null && result.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final isSuccess = result == 'success';
+        final msg = isSuccess
+            ? 'Pago completado. Tu saldo se actualizará en breve.'
+            : 'Pago cancelado.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        if (isSuccess) {
+          final session = await AuthService.restoreSession();
+          if (session != null) {
+            await AuthService.refreshSessionFromServer(session);
+          }
+        }
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRouter.mainMenu,
+          (_) => false,
+        );
+      });
+    }
+  }
 
   Future<void> _buy(String packId) async {
     setState(() {
